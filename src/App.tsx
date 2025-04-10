@@ -34,7 +34,7 @@ const App = () => {
         console.error("Failed to initialize database:", error);
         toast({
           title: "Database Error",
-          description: "Failed to connect to Supabase. Please check your environment variables.",
+          description: "Failed to connect to Supabase. Check your connection.",
           variant: "destructive",
         });
         setDbError(true);
