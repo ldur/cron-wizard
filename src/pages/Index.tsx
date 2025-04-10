@@ -21,7 +21,7 @@ const sampleJobs: CronJob[] = [
     name: "Daily Database Backup",
     command: "https://api.example.com/backup",
     cronExpression: "0 2 * * *",
-    status: "active",
+    status: "active" as const,
     nextRun: calculateNextRun("0 2 * * *"),
   },
   {
@@ -29,7 +29,7 @@ const sampleJobs: CronJob[] = [
     name: "Weekly Analytics Report",
     command: "https://api.example.com/analytics/weekly",
     cronExpression: "0 9 * * 1",
-    status: "active",
+    status: "active" as const,
     nextRun: calculateNextRun("0 9 * * 1"),
   },
   {
@@ -37,7 +37,7 @@ const sampleJobs: CronJob[] = [
     name: "Monthly Invoice Generation",
     command: "https://api.example.com/billing/generate-invoices",
     cronExpression: "0 0 1 * *",
-    status: "paused",
+    status: "paused" as const,
     nextRun: calculateNextRun("0 0 1 * *"),
   },
 ];

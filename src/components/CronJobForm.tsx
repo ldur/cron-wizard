@@ -31,6 +31,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
   const [humanReadable, setHumanReadable] = useState<string>('Every hour');
   const [schedulePreview, setSchedulePreview] = useState<string[]>([]);
 
+  // This effect only runs once when the component mounts or when the job prop changes
   useEffect(() => {
     if (job?.cronExpression) {
       const parts = job.cronExpression.split(' ');
@@ -44,6 +45,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
     }
   }, [job]);
 
+  // Update cron expression when individual parts change
   useEffect(() => {
     const newCronExpression = `${minutes} ${hours} ${dayOfMonth} ${month} ${dayOfWeek}`;
     setCronExpression(newCronExpression);
@@ -58,9 +60,11 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
 
   const handleNaturalLanguageChange = (input: string) => {
     setNaturalLanguage(input);
-    
+  };
+
+  const handleNaturalLanguageProcess = () => {
     try {
-      const cron = convertToCron(input);
+      const cron = convertToCron(naturalLanguage);
       if (cron) {
         const parts = cron.split(' ');
         if (parts.length === 5) {
@@ -154,6 +158,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                     placeholder="Every day at 3am"
                     value={naturalLanguage}
                     onChange={(e) => handleNaturalLanguageChange(e.target.value)}
+                    onBlur={handleNaturalLanguageProcess}
                   />
                   <p className="text-xs text-muted-foreground">
                     Examples: "every hour", "every day at 2pm", "every Monday at 9am"
