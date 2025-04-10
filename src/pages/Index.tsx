@@ -99,7 +99,7 @@ const Index = () => {
       job.id === id
         ? {
             ...job,
-            status: job.status === "active" ? "paused" : "active",
+            status: job.status === "active" ? "paused" as const : "active" as const,
           }
         : job
     );
