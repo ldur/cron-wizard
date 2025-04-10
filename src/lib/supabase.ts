@@ -2,10 +2,19 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/supabase';
 
+// Check if environment variables are available
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+}
+
+// Create Supabase client
+export const supabase = createClient<Database>(
+  supabaseUrl || '',
+  supabaseAnonKey || ''
+);
 
 // Function to initialize the database with our table and test data
 export const initializeDatabase = async () => {
@@ -20,7 +29,7 @@ export const initializeDatabase = async () => {
       console.log('Table might not exist yet, will attempt to create it');
       
       // We'd typically execute the SQL here, but in Lovable with Supabase,
-      // you should execute the SQL in the Supabase dashboard SQL editor
+      // you should execute the SQL from src/migrations/create_cron_jobs_table.sql in your Supabase SQL editor
       console.log('Please execute the SQL from src/migrations/create_cron_jobs_table.sql in your Supabase SQL editor');
       
       return false;
