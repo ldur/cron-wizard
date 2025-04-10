@@ -9,80 +9,113 @@ import CronJobForm from "@/components/CronJobForm";
 import EmptyState from "@/components/EmptyState";
 import DashboardStats from "@/components/DashboardStats";
 import { CronJob } from "@/types/CronJob";
-import { calculateNextRun } from "@/utils/cronCalculator";
 import { useToast } from "@/hooks/use-toast";
-
-const generateId = () => Math.random().toString(36).substring(2, 9);
-
-// Sample initial data for the demo
-const sampleJobs: CronJob[] = [
-  {
-    id: generateId(),
-    name: "Daily Database Backup",
-    command: "https://api.example.com/backup",
-    cronExpression: "0 2 * * *",
-    status: "active" as const,
-    nextRun: calculateNextRun("0 2 * * *"),
-  },
-  {
-    id: generateId(),
-    name: "Weekly Analytics Report",
-    command: "https://api.example.com/analytics/weekly",
-    cronExpression: "0 9 * * 1",
-    status: "active" as const,
-    nextRun: calculateNextRun("0 9 * * 1"),
-  },
-  {
-    id: generateId(),
-    name: "Monthly Invoice Generation",
-    command: "https://api.example.com/billing/generate-invoices",
-    cronExpression: "0 0 1 * *",
-    status: "paused" as const,
-    nextRun: calculateNextRun("0 0 1 * *"),
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  fetchCronJobs, 
+  createCronJob, 
+  updateCronJob, 
+  deleteCronJob,
+  toggleCronJobStatus 
+} from "@/services/cronJobService";
 
 const Index = () => {
-  const [jobs, setJobs] = useState<CronJob[]>(sampleJobs);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | undefined>(undefined);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Query to fetch jobs
+  const { data: jobs = [], isLoading, error } = useQuery({
+    queryKey: ['cronJobs'],
+    queryFn: fetchCronJobs,
+  });
+
+  // Mutations for CRUD operations
+  const createJobMutation = useMutation({
+    mutationFn: createCronJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
+      setIsFormVisible(false);
+      toast({
+        title: "Job Created",
+        description: "The cron job has been created successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to create job: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateJobMutation = useMutation({
+    mutationFn: ({ id, job }: { id: string; job: Partial<Omit<CronJob, 'id' | 'nextRun'>> }) => 
+      updateCronJob(id, job),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
+      setEditingJob(undefined);
+      setIsFormVisible(false);
+      toast({
+        title: "Job Updated",
+        description: "The cron job has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update job: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteJobMutation = useMutation({
+    mutationFn: deleteCronJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
+      toast({
+        title: "Job Deleted",
+        description: "The cron job has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete job: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'active' | 'paused' }) => 
+      toggleCronJobStatus(id, status),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
+      toast({
+        title: data.status === "active" ? "Job Activated" : "Job Paused",
+        description: `The job "${data.name}" has been ${data.status === "active" ? "activated" : "paused"}.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to toggle job status: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleAddJob = (newJob: Omit<CronJob, "id" | "nextRun">) => {
-    const jobToAdd: CronJob = {
-      id: generateId(),
-      ...newJob,
-      nextRun: calculateNextRun(newJob.cronExpression),
-    };
-
-    setJobs([...jobs, jobToAdd]);
-    setIsFormVisible(false);
-    toast({
-      title: "Job Created",
-      description: "The cron job has been created successfully.",
-    });
+    createJobMutation.mutate(newJob);
   };
 
   const handleUpdateJob = (updatedJob: Omit<CronJob, "id" | "nextRun">) => {
     if (!editingJob) return;
-
-    const updatedJobs = jobs.map((job) =>
-      job.id === editingJob.id
-        ? {
-            ...job,
-            ...updatedJob,
-            nextRun: calculateNextRun(updatedJob.cronExpression),
-          }
-        : job
-    );
-
-    setJobs(updatedJobs);
-    setEditingJob(undefined);
-    setIsFormVisible(false);
-    toast({
-      title: "Job Updated",
-      description: "The cron job has been updated successfully.",
-    });
+    updateJobMutation.mutate({ id: editingJob.id, job: updatedJob });
   };
 
   const handleEdit = (job: CronJob) => {
@@ -91,25 +124,16 @@ const Index = () => {
   };
 
   const handleDelete = (id: string) => {
-    setJobs(jobs.filter((job) => job.id !== id));
+    if (confirm("Are you sure you want to delete this job?")) {
+      deleteJobMutation.mutate(id);
+    }
   };
 
   const handleToggleStatus = (id: string) => {
-    const updatedJobs = jobs.map((job) =>
-      job.id === id
-        ? {
-            ...job,
-            status: job.status === "active" ? "paused" as const : "active" as const,
-          }
-        : job
-    );
-    setJobs(updatedJobs);
-    
-    const job = updatedJobs.find(j => j.id === id);
-    toast({
-      title: job?.status === "active" ? "Job Activated" : "Job Paused",
-      description: `The job "${job?.name}" has been ${job?.status === "active" ? "activated" : "paused"}.`,
-    });
+    const job = jobs.find(j => j.id === id);
+    if (job) {
+      toggleStatusMutation.mutate({ id, status: job.status });
+    }
   };
 
   const handleFormCancel = () => {
@@ -117,20 +141,30 @@ const Index = () => {
     setEditingJob(undefined);
   };
 
-  // Function to simulate real-time job executions
+  // Error handling for the main query
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Update nextRun times for a more dynamic UI
-      setJobs((prevJobs) =>
-        prevJobs.map((job) => ({
-          ...job,
-          nextRun: job.status === "active" ? calculateNextRun(job.cronExpression) : job.nextRun,
-        }))
-      );
-    }, 30000); // Update every 30 seconds
+    if (error) {
+      toast({
+        title: "Error Loading Jobs",
+        description: "There was a problem loading your cron jobs.",
+        variant: "destructive",
+      });
+      console.error("Error fetching cron jobs:", error);
+    }
+  }, [error, toast]);
 
-    return () => clearInterval(interval);
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading cron jobs...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
