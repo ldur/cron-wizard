@@ -63,6 +63,8 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
   };
 
   const handleNaturalLanguageProcess = () => {
+    if (!naturalLanguage.trim()) return;
+    
     try {
       const cron = convertToCron(naturalLanguage);
       if (cron) {
@@ -74,7 +76,10 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
           setMonth(parts[3]);
           setDayOfWeek(parts[4]);
           setCronExpression(cron);
-          setActiveTab("builder");
+          
+          // Update human readable description
+          const readable = parseSchedule(cron);
+          setHumanReadable(readable);
           
           // Generate next run times
           generateNextRunTimes(cron);
@@ -82,6 +87,14 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
       }
     } catch (error) {
       console.log("Could not parse natural language:", error);
+    }
+  };
+
+  // Add a keydown handler for the Enter key to process natural language input
+  const handleNaturalLanguageKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleNaturalLanguageProcess();
     }
   };
 
@@ -102,6 +115,11 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // If we're in natural language tab and there's input, process it before submitting
+    if (activeTab === "natural" && naturalLanguage.trim()) {
+      handleNaturalLanguageProcess();
+    }
     
     onSubmit({
       name,
@@ -153,13 +171,22 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
               
               <TabsContent value="natural" className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Input
-                    className="natural-language-input"
-                    placeholder="Every day at 3am"
-                    value={naturalLanguage}
-                    onChange={(e) => handleNaturalLanguageChange(e.target.value)}
-                    onBlur={handleNaturalLanguageProcess}
-                  />
+                  <div className="flex space-x-2">
+                    <Input
+                      className="natural-language-input flex-grow"
+                      placeholder="Every day at 3am"
+                      value={naturalLanguage}
+                      onChange={(e) => handleNaturalLanguageChange(e.target.value)}
+                      onKeyDown={handleNaturalLanguageKeyDown}
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={handleNaturalLanguageProcess}
+                      variant="secondary"
+                    >
+                      Parse
+                    </Button>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Examples: "every hour", "every day at 2pm", "every Monday at 9am"
                   </p>

@@ -24,6 +24,10 @@ export const parseSchedule = (cronExpression: string): string => {
     return 'Every 15 minutes';
   }
   
+  if (minute === '*/30' && hour === '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
+    return 'Every 30 minutes';
+  }
+  
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '1-5') {
     return 'Every weekday at 9am';
   }
@@ -32,12 +36,41 @@ export const parseSchedule = (cronExpression: string): string => {
     return 'Every Monday at 9am';
   }
   
+  if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '2') {
+    return 'Every Tuesday at 9am';
+  }
+  
+  if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '3') {
+    return 'Every Wednesday at 9am';
+  }
+  
+  if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '4') {
+    return 'Every Thursday at 9am';
+  }
+  
+  if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '5') {
+    return 'Every Friday at 9am';
+  }
+  
+  if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '6') {
+    return 'Every Saturday at 9am';
+  }
+  
+  if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '0') {
+    return 'Every Sunday at 9am';
+  }
+  
   if (minute === '0' && hour !== '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
     return `Daily at ${formatHour(parseInt(hour))}`;
   }
 
   if (minute !== '*' && hour !== '*' && dayOfMonth === '*' && month === '*' && dayOfWeek !== '*') {
-    return `Every ${formatDayOfWeek(dayOfWeek)} at ${formatHour(parseInt(hour))}:${formatMinute(parseInt(minute))}`;
+    const days = parseDaysOfWeek(dayOfWeek);
+    return `Every ${days} at ${formatHour(parseInt(hour))}:${formatMinute(parseInt(minute))}`;
+  }
+  
+  if (minute !== '*' && hour !== '*' && dayOfMonth !== '*' && month === '*' && dayOfWeek === '*') {
+    return `Monthly on day ${dayOfMonth} at ${formatHour(parseInt(hour))}:${formatMinute(parseInt(minute))}`;
   }
 
   return `Custom schedule (${cronExpression})`;
@@ -64,6 +97,10 @@ export const convertToCron = (naturalLanguage: string): string => {
   
   if (lowercased.includes('every hour')) {
     return '0 * * * *';
+  }
+  
+  if (lowercased.includes('daily at midnight') || lowercased.includes('every day at midnight')) {
+    return '0 0 * * *';
   }
 
   // "At 8am every day"
@@ -119,6 +156,27 @@ export const convertToCron = (naturalLanguage: string): string => {
     
     return `${minute} ${hour} ${day} * *`;
   }
+  
+  // "At 2:30pm every Tuesday and Thursday"
+  const multiDayMatch = lowercased.match(/(?:at|every) (\d+)(?::(\d+))?\s*(am|pm)? (?:every|on) ((?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:(?:,| and) (?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))*)/);
+  if (multiDayMatch) {
+    let hour = parseInt(multiDayMatch[1]);
+    const minute = multiDayMatch[2] ? parseInt(multiDayMatch[2]) : 0;
+    const meridiem = multiDayMatch[3];
+    const daysText = multiDayMatch[4];
+    
+    if (meridiem === 'pm' && hour < 12) hour += 12;
+    if (meridiem === 'am' && hour === 12) hour = 0;
+    
+    const days = daysText
+      .split(/,| and /)
+      .map(day => day.trim())
+      .filter(day => !!day)
+      .map(day => convertDayToNumber(day))
+      .join(',');
+    
+    return `${minute} ${hour} * * ${days}`;
+  }
 
   // Default to every hour if we can't parse
   return '0 * * * *';
@@ -153,6 +211,29 @@ const formatDayOfWeek = (dayOfWeek: string): string => {
     '5': 'Friday',
     '6': 'Saturday',
   };
+  
+  return days[dayOfWeek] || dayOfWeek;
+};
+
+const parseDaysOfWeek = (dayOfWeek: string): string => {
+  if (dayOfWeek === '1-5') return 'weekday';
+  if (dayOfWeek === '0,6') return 'weekend';
+  
+  const days: Record<string, string> = {
+    '0': 'Sunday',
+    '1': 'Monday',
+    '2': 'Tuesday',
+    '3': 'Wednesday',
+    '4': 'Thursday',
+    '5': 'Friday',
+    '6': 'Saturday',
+  };
+  
+  if (dayOfWeek.includes(',')) {
+    const daysList = dayOfWeek.split(',').map(d => days[d] || d);
+    const lastDay = daysList.pop();
+    return `${daysList.join(', ')} and ${lastDay}`;
+  }
   
   return days[dayOfWeek] || dayOfWeek;
 };
