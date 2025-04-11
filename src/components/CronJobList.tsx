@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code } from "lucide-react";
+import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Lambda } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
+import CronJobIacDialog from "./CronJobIacDialog";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -25,6 +26,8 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
   const { toast } = useToast();
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [sortBy, setSortBy] = useState<'name' | 'nextRun' | 'status'>('nextRun');
+  const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
+  const [isIacDialogOpen, setIsIacDialogOpen] = useState(false);
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this job?")) {
@@ -43,6 +46,11 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
       setSortBy(field);
       setSortOrder('asc');
     }
+  };
+
+  const handleShowIacCode = (job: CronJob) => {
+    setSelectedJob(job);
+    setIsIacDialogOpen(true);
   };
 
   const getSortIcon = (field: 'name' | 'nextRun' | 'status') => {
@@ -122,26 +130,25 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center">
-                        {job.isApi ? (
-                          <>
-                            <Globe className="h-4 w-4 text-blue-500 mr-2" />
-                            <span className="text-sm truncate max-w-[150px]">
-                              {job.endpointName || "API Endpoint"}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <Code className="h-4 w-4 text-amber-500 mr-2" />
-                            <span className="text-sm truncate max-w-[150px]">
-                              {job.endpointName || "Lambda Function"}
-                            </span>
-                          </>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-0 h-auto mr-2"
+                          onClick={() => handleShowIacCode(job)}
+                        >
+                          {job.isApi ? (
+                            <Globe className="h-4 w-4 text-blue-500" />
+                          ) : (
+                            <Lambda className="h-4 w-4 text-amber-500" />
+                          )}
+                        </Button>
+                        <span className="text-sm truncate max-w-[150px]">
+                          {job.endpointName || (job.isApi ? "API Endpoint" : "Lambda Function")}
+                        </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {job.isApi ? "API Endpoint" : "Lambda Function"}: 
-                      {job.endpointName || "Not specified"}
+                      Click to view IAC code for: {job.endpointName || (job.isApi ? "API Endpoint" : "Lambda Function")}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -202,6 +209,12 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
           </CardContent>
         </Card>
       ))}
+
+      <CronJobIacDialog 
+        isOpen={isIacDialogOpen}
+        onOpenChange={setIsIacDialogOpen}
+        job={selectedJob}
+      />
     </div>
   );
 };
