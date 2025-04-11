@@ -21,6 +21,9 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     cronExpression: job.cron_expression,
     status: job.status,
     nextRun: calculateNextRun(job.cron_expression),
+    isApi: job.is_api,
+    endpointName: job.endpoint_name,
+    iacCode: job.iac_code,
   }));
 };
 
@@ -32,6 +35,9 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       command: job.command,
       cron_expression: job.cronExpression,
       status: job.status,
+      is_api: job.isApi,
+      endpoint_name: job.endpointName,
+      iac_code: job.iacCode,
     })
     .select()
     .single();
@@ -48,16 +54,22 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     cronExpression: data.cron_expression,
     status: data.status,
     nextRun: calculateNextRun(data.cron_expression),
+    isApi: data.is_api,
+    endpointName: data.endpoint_name,
+    iacCode: data.iac_code,
   };
 };
 
 export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
   const updateData: any = {};
   
-  if (job.name) updateData.name = job.name;
-  if (job.command) updateData.command = job.command;
-  if (job.cronExpression) updateData.cron_expression = job.cronExpression;
-  if (job.status) updateData.status = job.status;
+  if (job.name !== undefined) updateData.name = job.name;
+  if (job.command !== undefined) updateData.command = job.command;
+  if (job.cronExpression !== undefined) updateData.cron_expression = job.cronExpression;
+  if (job.status !== undefined) updateData.status = job.status;
+  if (job.isApi !== undefined) updateData.is_api = job.isApi;
+  if (job.endpointName !== undefined) updateData.endpoint_name = job.endpointName;
+  if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
   
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -78,6 +90,9 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     cronExpression: data.cron_expression,
     status: data.status,
     nextRun: calculateNextRun(data.cron_expression),
+    isApi: data.is_api,
+    endpointName: data.endpoint_name,
+    iacCode: data.iac_code,
   };
 };
 
@@ -115,5 +130,8 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     cronExpression: data.cron_expression,
     status: data.status,
     nextRun: calculateNextRun(data.cron_expression),
+    isApi: data.is_api,
+    endpointName: data.endpoint_name,
+    iacCode: data.iac_code,
   };
 };

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp } from "lucide-react";
+import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem 
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
 
@@ -84,16 +85,17 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
       <div className="flex justify-between items-center py-2 px-4 bg-muted/30 rounded-md text-sm font-medium">
         <button 
           onClick={() => handleSort('name')}
-          className="flex items-center gap-1 w-1/3"
+          className="flex items-center gap-1 w-1/4"
         >
           Name {getSortIcon('name')}
         </button>
         <button 
           onClick={() => handleSort('nextRun')}
-          className="flex items-center gap-1 w-1/3"
+          className="flex items-center gap-1 w-1/4"
         >
           Next Run {getSortIcon('nextRun')}
         </button>
+        <div className="w-1/4">Target</div>
         <button 
           onClick={() => handleSort('status')}
           className="flex items-center gap-1 w-1/6"
@@ -107,13 +109,42 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         <Card key={job.id} className="overflow-hidden">
           <CardContent className="p-0">
             <div className="flex items-center justify-between p-4">
-              <div className="w-1/3">
+              <div className="w-1/4">
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{job.cronExpression}</p>
               </div>
-              <div className="w-1/3 flex items-center">
+              <div className="w-1/4 flex items-center">
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
                 <span className="text-sm">{new Date(job.nextRun).toLocaleString()}</span>
+              </div>
+              <div className="w-1/4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center">
+                        {job.isApi ? (
+                          <>
+                            <Globe className="h-4 w-4 text-blue-500 mr-2" />
+                            <span className="text-sm truncate max-w-[150px]">
+                              {job.endpointName || "API Endpoint"}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Code className="h-4 w-4 text-amber-500 mr-2" />
+                            <span className="text-sm truncate max-w-[150px]">
+                              {job.endpointName || "Lambda Function"}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {job.isApi ? "API Endpoint" : "Lambda Function"}: 
+                      {job.endpointName || "Not specified"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="w-1/6">
                 <Badge 

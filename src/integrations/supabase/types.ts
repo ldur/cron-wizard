@@ -14,7 +14,10 @@ export type Database = {
           command: string
           created_at: string | null
           cron_expression: string
+          endpoint_name: string | null
+          iac_code: string | null
           id: string
+          is_api: boolean
           name: string
           status: string
           updated_at: string | null
@@ -23,7 +26,10 @@ export type Database = {
           command: string
           created_at?: string | null
           cron_expression: string
+          endpoint_name?: string | null
+          iac_code?: string | null
           id?: string
+          is_api?: boolean
           name: string
           status: string
           updated_at?: string | null
@@ -32,7 +38,10 @@ export type Database = {
           command?: string
           created_at?: string | null
           cron_expression?: string
+          endpoint_name?: string | null
+          iac_code?: string | null
           id?: string
+          is_api?: boolean
           name?: string
           status?: string
           updated_at?: string | null
