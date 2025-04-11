@@ -41,12 +41,8 @@ const SettingsForm = ({ setting, onSubmit, onCancel }: SettingsFormProps) => {
   });
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    // Ensure iacCode is passed as a string
-    onSubmit({
-      name: data.name,
-      iacDescription: data.iacDescription,
-      iacCode: data.iacCode
-    });
+    // Pass data directly, no need for special handling of iacCode
+    onSubmit(data);
   };
 
   return (

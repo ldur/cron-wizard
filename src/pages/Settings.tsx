@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -93,14 +92,10 @@ const Settings = () => {
 
   const handleUpdateSetting = (data: Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!editingSetting) return;
-    // Ensure we're passing a plain object with string values
+    // No need for special handling of iacCode, pass the data directly
     updateSettingMutation.mutate({ 
       id: editingSetting.id, 
-      setting: {
-        name: data.name,
-        iacDescription: data.iacDescription,
-        iacCode: data.iacCode
-      }
+      setting: data
     });
   };
 
