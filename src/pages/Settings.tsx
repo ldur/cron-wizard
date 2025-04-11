@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import SettingsList from "@/components/SettingsList";
 import SettingsForm from "@/components/SettingsForm";
-import { Settings } from "@/types/Settings";
+import type { Settings } from "@/types/Settings";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
