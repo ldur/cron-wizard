@@ -42,10 +42,23 @@ const CronJobIacDialog = ({ isOpen, onOpenChange, job }: CronJobIacDialogProps) 
           <span>TypeScript IAC Code</span>
         </div>
         
-        <ScrollArea className="flex-1 border rounded-md bg-slate-950 text-slate-50 dark:bg-slate-950">
+        <ScrollArea className="flex-1 border rounded-md bg-[#1A1F2C] text-[#C8C8C9]">
           {job.iacCode ? (
-            <pre className="p-4 text-sm language-typescript overflow-visible">
-              <code className="language-typescript">{job.iacCode}</code>
+            <pre className="p-4 text-sm overflow-visible">
+              <code className="language-typescript font-mono">
+                {job.iacCode.replace(/import\s/g, '<span class="text-[#9b87f5]">import </span>')
+                  .replace(/export\s/g, '<span class="text-[#9b87f5]">export </span>')
+                  .replace(/const\s/g, '<span class="text-[#9b87f5]">const </span>')
+                  .replace(/let\s/g, '<span class="text-[#9b87f5]">let </span>')
+                  .replace(/function\s/g, '<span class="text-[#9b87f5]">function </span>')
+                  .replace(/return\s/g, '<span class="text-[#9b87f5]">return </span>')
+                  .replace(/new\s/g, '<span class="text-[#9b87f5]">new </span>')
+                  .replace(/if\s/g, '<span class="text-[#9b87f5]">if </span>')
+                  .replace(/else\s/g, '<span class="text-[#9b87f5]">else </span>')
+                  .replace(/(["'])(?:(?=(\\?))\2.)*?\1/g, '<span class="text-[#F97316]">$&</span>')
+                  .replace(/\b(\d+)\b/g, '<span class="text-[#0EA5E9]">$&</span>')
+                  .replace(/true|false|null|undefined/g, '<span class="text-[#0EA5E9]">$&</span>')}
+              </code>
             </pre>
           ) : (
             <div className="p-4 text-sm text-muted-foreground italic">
