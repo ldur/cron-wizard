@@ -42,10 +42,10 @@ const CronJobIacDialog = ({ isOpen, onOpenChange, job }: CronJobIacDialogProps) 
           <span>TypeScript IAC Code</span>
         </div>
         
-        <ScrollArea className="flex-1 border rounded-md bg-slate-50 dark:bg-slate-950">
+        <ScrollArea className="flex-1 border rounded-md bg-slate-950 text-slate-50 dark:bg-slate-950">
           {job.iacCode ? (
-            <pre className="p-4 text-sm overflow-auto whitespace-pre-wrap">
-              <code>{job.iacCode}</code>
+            <pre className="p-4 text-sm language-typescript overflow-visible">
+              <code className="language-typescript">{job.iacCode}</code>
             </pre>
           ) : (
             <div className="p-4 text-sm text-muted-foreground italic">
