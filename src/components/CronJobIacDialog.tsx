@@ -2,7 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lambda, Globe, Code } from "lucide-react";
+import { Terminal, Globe, Code } from "lucide-react";
 
 interface CronJobIacDialogProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ const CronJobIacDialog = ({ isOpen, onOpenChange, job }: CronJobIacDialogProps) 
             {job.isApi ? (
               <Globe className="h-5 w-5 text-blue-500" />
             ) : (
-              <Lambda className="h-5 w-5 text-amber-500" />
+              <Terminal className="h-5 w-5 text-amber-500" />
             )}
             <span>
               {job.isApi ? "API Endpoint" : "Lambda Function"}: {job.name}

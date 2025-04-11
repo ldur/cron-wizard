@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Lambda } from "lucide-react";
+import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -139,7 +139,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                           {job.isApi ? (
                             <Globe className="h-4 w-4 text-blue-500" />
                           ) : (
-                            <Lambda className="h-4 w-4 text-amber-500" />
+                            <Terminal className="h-4 w-4 text-amber-500" />
                           )}
                         </Button>
                         <span className="text-sm truncate max-w-[150px]">
