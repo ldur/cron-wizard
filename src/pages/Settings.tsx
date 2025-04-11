@@ -60,6 +60,7 @@ const Settings = () => {
       });
     },
     onError: (error) => {
+      console.error("Update error:", error);
       toast({
         title: "Error",
         description: `Failed to update setting: ${error.message}`,
@@ -92,9 +93,14 @@ const Settings = () => {
 
   const handleUpdateSetting = (data: Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!editingSetting) return;
+    // Ensure we're passing a plain object with string values
     updateSettingMutation.mutate({ 
       id: editingSetting.id, 
-      setting: data 
+      setting: {
+        name: data.name,
+        iacDescription: data.iacDescription,
+        iacCode: data.iacCode
+      }
     });
   };
 

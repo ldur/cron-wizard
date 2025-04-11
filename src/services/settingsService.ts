@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { Settings } from '@/types/Settings';
+import type { Settings } from '@/types/Settings';
 
 export const fetchSettings = async (): Promise<Settings[]> => {
   const { data, error } = await supabase
@@ -51,7 +51,7 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
     .insert({
       name: setting.name,
       iac_description: setting.iacDescription,
-      iac_code: setting.iacCode,
+      iac_code: setting.iacCode, // This should already be a string
     })
     .select()
     .single();
@@ -76,7 +76,7 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
   
   if (setting.name !== undefined) updateData.name = setting.name;
   if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
-  if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode;
+  if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode; // This should be a string
   
   const { data, error } = await supabase
     .from('settings')

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings } from "@/types/Settings";
+import type { Settings } from "@/types/Settings";
 
 // Define form validation schema
 const formSchema = z.object({
@@ -40,9 +40,18 @@ const SettingsForm = ({ setting, onSubmit, onCancel }: SettingsFormProps) => {
     },
   });
 
+  const handleSubmit = (data: z.infer<typeof formSchema>) => {
+    // Ensure iacCode is passed as a string
+    onSubmit({
+      name: data.name,
+      iacDescription: data.iacDescription,
+      iacCode: data.iacCode
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
