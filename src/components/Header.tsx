@@ -1,38 +1,45 @@
 
-import { CalendarClock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Calendar, Clock, Settings as SettingsIcon } from "lucide-react";
 
 const Header = () => {
-  const { toast } = useToast();
-
-  const handleNewFeature = () => {
-    toast({
-      title: "Coming Soon",
-      description: "This feature is under development and will be available soon.",
-    });
-  };
+  const location = useLocation();
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="border-b border-border">
-      <div className="container mx-auto py-4 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CalendarClock className="h-7 w-7 text-wizard" />
-          <h1 className="text-2xl font-bold tracking-tight">CronWizard</h1>
+    <header className="sticky top-0 z-10 w-full border-b bg-background/95 backdrop-blur">
+      <div className="container flex h-16 items-center">
+        <div className="flex items-center gap-2 font-bold">
+          <Clock className="h-5 w-5" />
+          <span>CronWizard</span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleNewFeature}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        
+        <nav className="flex items-center space-x-4 ml-6 text-sm font-medium">
+          <Link
+            to="/"
+            className={`flex items-center gap-1 px-3 py-2 rounded-md ${
+              isActive("/") 
+                ? "bg-primary/10 text-primary" 
+                : "hover:bg-muted transition-colors"
+            }`}
           >
-            Documentation
-          </button>
-          <button
-            onClick={handleNewFeature}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors ml-4"
+            <Calendar className="h-4 w-4" />
+            <span>Jobs</span>
+          </Link>
+          
+          <Link
+            to="/settings"
+            className={`flex items-center gap-1 px-3 py-2 rounded-md ${
+              isActive("/settings") 
+                ? "bg-primary/10 text-primary" 
+                : "hover:bg-muted transition-colors"
+            }`}
           >
-            Settings
-          </button>
-        </div>
+            <SettingsIcon className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </nav>
       </div>
     </header>
   );
