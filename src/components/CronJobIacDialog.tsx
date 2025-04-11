@@ -18,6 +18,31 @@ interface CronJobIacDialogProps {
 const CronJobIacDialog = ({ isOpen, onOpenChange, job }: CronJobIacDialogProps) => {
   if (!job) return null;
 
+  // Function to apply syntax highlighting to the code
+  const highlightCode = (code: string): string => {
+    if (!code) return '';
+    
+    return code
+      // Keywords
+      .replace(/\b(import|export|from|const|let|var|function|return|new|class|extends|interface|type|if|else|for|while|switch|case|break|continue|try|catch|throw|async|await|typeof|instanceof)\b/g, '<span class="text-[#9b87f5]">$1</span>')
+      // Types
+      .replace(/\b(string|number|boolean|null|undefined|any|void|object|Array|Promise|Record|Map|Set)\b/g, '<span class="text-[#86e1fc]">$1</span>')
+      // Comments
+      .replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, '<span class="text-[#6a737d]">$1</span>')
+      // Strings
+      .replace(/(["'`])(.*?)\1/g, '<span class="text-[#F97316]">$1$2$1</span>')
+      // Numbers
+      .replace(/\b(\d+)\b/g, '<span class="text-[#0EA5E9]">$1</span>')
+      // Boolean, null, undefined
+      .replace(/\b(true|false|null|undefined)\b/g, '<span class="text-[#ff79c6]">$1</span>')
+      // Methods and properties
+      .replace(/(\.\s*[\w$]+)(?=\s*\()/g, '<span class="text-[#79B8FF]">$1</span>')
+      // Brackets and punctuation
+      .replace(/([(){}[\]<>])/g, '<span class="text-[#d8dee9]">$1</span>')
+      // Special characters
+      .replace(/([+\-*/%&|^!=<>?:;.,])/g, '<span class="text-[#89DDFF]">$1</span>');
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] flex flex-col">
@@ -44,21 +69,11 @@ const CronJobIacDialog = ({ isOpen, onOpenChange, job }: CronJobIacDialogProps) 
         
         <ScrollArea className="flex-1 border rounded-md bg-[#1A1F2C] text-[#C8C8C9]">
           {job.iacCode ? (
-            <pre className="p-4 text-sm overflow-visible">
-              <code className="language-typescript font-mono">
-                {job.iacCode.replace(/import\s/g, '<span class="text-[#9b87f5]">import </span>')
-                  .replace(/export\s/g, '<span class="text-[#9b87f5]">export </span>')
-                  .replace(/const\s/g, '<span class="text-[#9b87f5]">const </span>')
-                  .replace(/let\s/g, '<span class="text-[#9b87f5]">let </span>')
-                  .replace(/function\s/g, '<span class="text-[#9b87f5]">function </span>')
-                  .replace(/return\s/g, '<span class="text-[#9b87f5]">return </span>')
-                  .replace(/new\s/g, '<span class="text-[#9b87f5]">new </span>')
-                  .replace(/if\s/g, '<span class="text-[#9b87f5]">if </span>')
-                  .replace(/else\s/g, '<span class="text-[#9b87f5]">else </span>')
-                  .replace(/(["'])(?:(?=(\\?))\2.)*?\1/g, '<span class="text-[#F97316]">$&</span>')
-                  .replace(/\b(\d+)\b/g, '<span class="text-[#0EA5E9]">$&</span>')
-                  .replace(/true|false|null|undefined/g, '<span class="text-[#0EA5E9]">$&</span>')}
-              </code>
+            <pre className="p-4 text-sm overflow-visible whitespace-pre-wrap">
+              <code 
+                className="font-mono"
+                dangerouslySetInnerHTML={{ __html: highlightCode(job.iacCode) }}
+              />
             </pre>
           ) : (
             <div className="p-4 text-sm text-muted-foreground italic">
