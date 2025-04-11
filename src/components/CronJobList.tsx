@@ -112,7 +112,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                 <p className="text-xs text-muted-foreground mt-1">{job.cronExpression}</p>
               </div>
               <div className="w-1/3 flex items-center">
-                <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
+                <Calendar className="h-4 w-4 text-blue-500 mr-2" />
                 <span className="text-sm">{new Date(job.nextRun).toLocaleString()}</span>
               </div>
               <div className="w-1/6">
@@ -129,25 +129,38 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   variant="ghost" 
                   onClick={() => onToggleStatus(job.id)}
                   title={job.status === 'active' ? 'Pause' : 'Resume'}
+                  className="text-amber-500 hover:text-amber-600 hover:bg-amber-50"
                 >
-                  {job.status === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  {job.status === 'active' ? 
+                    <Pause className="h-4 w-4" /> : 
+                    <Play className="h-4 w-4" />
+                  }
                 </Button>
                 <Button 
                   size="icon" 
                   variant="ghost" 
                   onClick={() => onEdit(job)}
                   title="Edit"
+                  className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" title="More Options">
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      title="Delete"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => handleDelete(job.id)}>
+                  <DropdownMenuContent align="end" className="w-40 bg-white">
+                    <DropdownMenuItem 
+                      onClick={() => handleDelete(job.id)}
+                      className="text-red-500 focus:text-red-600 focus:bg-red-50"
+                    >
                       <Trash className="h-4 w-4 mr-2" />
                       <span>Delete</span>
                     </DropdownMenuItem>
