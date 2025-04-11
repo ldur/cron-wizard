@@ -78,16 +78,21 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
   if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
   if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode;
   
+  // Use maybeSingle instead of single to avoid "no rows" error
   const { data, error } = await supabase
     .from('settings')
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error updating setting:', error);
     throw error;
+  }
+
+  if (!data) {
+    throw new Error('Setting not found');
   }
 
   return {
