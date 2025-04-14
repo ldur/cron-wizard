@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { CronJob } from "@/types/CronJob";
 import { convertToCron, parseSchedule } from "@/utils/cronParser";
+import { ScheduleGroup } from "@/services/scheduleGroupService";
+import { useQuery } from "@tanstack/react-query";
+import { fetchScheduleGroups } from "@/services/scheduleGroupService";
 
 interface CronJobFormProps {
   job?: CronJob;
@@ -35,6 +38,13 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
   const [endpointName, setEndpointName] = useState<string>(job?.endpointName || '');
   const [iacCode, setIacCode] = useState<string>(job?.iacCode || '');
   const [targetTab, setTargetTab] = useState<string>("basic");
+  const [groupId, setGroupId] = useState<string | null>(job?.groupId || null);
+
+  // Fetch schedule groups
+  const { data: groups = [] } = useQuery({
+    queryKey: ['scheduleGroups'],
+    queryFn: fetchScheduleGroups,
+  });
 
   // This effect only runs once when the component mounts or when the job prop changes
   useEffect(() => {
@@ -133,7 +143,8 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
       status: job?.status || 'active',
       isApi,
       endpointName,
-      iacCode
+      iacCode,
+      groupId
     });
   };
 
@@ -174,6 +185,24 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                   onChange={(e) => setCommand(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="groupId">Schedule Group</Label>
+                <Select value={groupId || ''} onValueChange={(value) => setGroupId(value === '' ? null : value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a group (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Group similar jobs together for better organization
+                </p>
               </div>
 
               <div className="space-y-2">
