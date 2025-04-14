@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Users, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import SettingsList from "@/components/SettingsList";
@@ -13,8 +14,10 @@ import {
   updateSetting, 
   deleteSetting 
 } from "@/services/settingsService";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Settings = () => {
+const SettingsPage = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingSetting, setEditingSetting] = useState<Settings | undefined>(undefined);
   const { toast } = useToast();
@@ -143,14 +146,58 @@ const Settings = () => {
       <Header />
       
       <main className="flex-grow container mx-auto px-4 py-8">
+        {!isFormVisible && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>IAC Settings</CardTitle>
+                  <CardDescription>
+                    Manage Infrastructure as Code templates
+                  </CardDescription>
+                </div>
+                <SettingsIcon className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create and manage reusable Infrastructure as Code templates for your cron jobs.
+                </p>
+                <Button onClick={() => setIsFormVisible(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New IAC Setting
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>Schedule Groups</CardTitle>
+                  <CardDescription>
+                    Organize your cron jobs by groups
+                  </CardDescription>
+                </div>
+                <Users className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create logical groups to organize your cron jobs for better management.
+                </p>
+                <Button asChild>
+                  <Link to="/schedule-groups">
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Groups
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold tracking-tight">IAC Settings</h2>
-          {!isFormVisible && (
-            <Button onClick={() => setIsFormVisible(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Setting
-            </Button>
-          )}
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isFormVisible ? "IAC Settings" : "Settings"}
+          </h2>
           {isFormVisible && (
             <Button variant="outline" onClick={handleFormCancel}>
               <X className="h-4 w-4 mr-2" />
@@ -185,4 +232,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SettingsPage;
