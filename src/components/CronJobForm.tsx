@@ -30,7 +30,7 @@ const formSchema = z.object({
   isApi: z.boolean(),
   endpointName: z.string().optional(),
   iacCode: z.string().optional(),
-  groupId: z.string().optional(),
+  groupId: z.string().nullable(), // Changed to nullable to properly handle the 'None' value
 });
 
 interface CronJobFormProps {
@@ -59,13 +59,23 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || "",
       iacCode: job?.iacCode || "",
-      groupId: job?.groupId || undefined,
+      groupId: job?.groupId || null, // Changed to null for 'None' value
     },
   });
 
+  // Handle form submission
+  const handleFormSubmit = (data: z.infer<typeof formSchema>) => {
+    // Convert null groupId to undefined for API compatibility
+    const formattedData = {
+      ...data,
+      groupId: data.groupId || undefined,
+    };
+    onSubmit(formattedData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Mode selection */}
         <div className="flex items-center space-x-4 mb-4">
           <Button 
@@ -166,7 +176,8 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                   <FormLabel>Schedule Group</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    defaultValue={field.value || undefined}
+                    value={field.value || undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -177,9 +188,9 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {isLoadingGroups ? (
-                        <SelectItem value="" disabled>Loading groups...</SelectItem>
+                        <SelectItem value="loading" disabled>Loading groups...</SelectItem>
                       ) : (
                         scheduleGroups.map((group) => (
                           <SelectItem key={group.id} value={group.id}>
