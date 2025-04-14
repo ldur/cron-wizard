@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,14 +15,34 @@ import {
   createCronJob, 
   updateCronJob, 
   deleteCronJob,
-  toggleCronJobStatus 
+  toggleCronJobStatus,
+  fetchGroups
 } from "@/services/cronJobService";
 
 const Index = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | undefined>(undefined);
+  const [groups, setGroups] = useState<any[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch groups
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const fetchedGroups = await fetchGroups();
+        setGroups(fetchedGroups);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load job groups",
+          variant: "destructive",
+        });
+      }
+    };
+    loadGroups();
+  }, []);
 
   // Query to fetch jobs
   const { data: jobs = [], isLoading, error } = useQuery({
@@ -141,7 +160,15 @@ const Index = () => {
     setEditingJob(undefined);
   };
 
-  // Error handling for the main query
+  // Filtering logic
+  const filteredJobs = jobs.filter(job => 
+    (!selectedGroup || job.groupId === selectedGroup)
+  );
+
+  const filterByStatus = (status: 'active' | 'paused') => 
+    filteredJobs.filter(job => job.status === status);
+
+  // Error handling
   useEffect(() => {
     if (error) {
       toast({
@@ -153,6 +180,7 @@ const Index = () => {
     }
   }, [error, toast]);
 
+  // Render loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -199,34 +227,54 @@ const Index = () => {
           <>
             {jobs.length > 0 ? (
               <>
+                <div className="mb-4 flex items-center space-x-2">
+                  <span>Group:</span>
+                  <select 
+                    value={selectedGroup || ''} 
+                    onChange={(e) => setSelectedGroup(e.target.value || null)}
+                    className="border rounded px-2 py-1"
+                  >
+                    <option value="">All Groups</option>
+                    {groups.map(group => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
                 <div className="mb-6">
                   <DashboardStats jobs={jobs} />
                 </div>
+                
                 <Tabs defaultValue="all">
                   <TabsList className="mb-4">
                     <TabsTrigger value="all">All Jobs</TabsTrigger>
                     <TabsTrigger value="active">Active</TabsTrigger>
                     <TabsTrigger value="paused">Paused</TabsTrigger>
                   </TabsList>
+                  
                   <TabsContent value="all">
                     <CronJobList
-                      jobs={jobs}
+                      jobs={filteredJobs}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onToggleStatus={handleToggleStatus}
                     />
                   </TabsContent>
+                  
                   <TabsContent value="active">
                     <CronJobList
-                      jobs={jobs.filter((job) => job.status === "active")}
+                      jobs={filterByStatus('active')}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onToggleStatus={handleToggleStatus}
                     />
                   </TabsContent>
+                  
                   <TabsContent value="paused">
                     <CronJobList
-                      jobs={jobs.filter((job) => job.status === "paused")}
+                      jobs={filterByStatus('paused')}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onToggleStatus={handleToggleStatus}

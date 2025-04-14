@@ -1,12 +1,29 @@
-
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
 
+// Fetch groups
+export const fetchGroups = async () => {
+  const { data, error } = await supabase
+    .from('schedule_groups')
+    .select('*')
+    .order('created_at');
+
+  if (error) {
+    console.error('Error fetching groups:', error);
+    throw error;
+  }
+
+  return data;
+};
+
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
   const { data, error } = await supabase
     .from('cron_jobs')
-    .select('*')
+    .select(`
+      *,
+      schedule_groups (name)
+    `)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -24,9 +41,12 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     isApi: job.is_api,
     endpointName: job.endpoint_name,
     iacCode: job.iac_code,
+    groupId: job.group_id,
+    groupName: job.schedule_groups?.name || 'Default',
   }));
 };
 
+// Update existing CRUD methods to include group_id
 export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -38,8 +58,12 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
+      group_id: job.groupId, // Add group_id to insertion
     })
-    .select()
+    .select(`
+      *,
+      schedule_groups (name)
+    `)
     .single();
 
   if (error) {
@@ -57,9 +81,12 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
+    groupId: data.group_id,
+    groupName: data.schedule_groups?.name || 'Default',
   };
 };
 
+// Update existing methods similarly to include group handling
 export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
   const updateData: any = {};
   
@@ -70,12 +97,16 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.isApi !== undefined) updateData.is_api = job.isApi;
   if (job.endpointName !== undefined) updateData.endpoint_name = job.endpointName;
   if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
+  if (job.groupId !== undefined) updateData.group_id = job.groupId;
   
   const { data, error } = await supabase
     .from('cron_jobs')
     .update(updateData)
     .eq('id', id)
-    .select()
+    .select(`
+      *,
+      schedule_groups (name)
+    `)
     .single();
 
   if (error) {
@@ -93,6 +124,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
+    groupId: data.group_id,
+    groupName: data.schedule_groups?.name || 'Default',
   };
 };
 
@@ -115,7 +148,10 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     .from('cron_jobs')
     .update({ status: newStatus })
     .eq('id', id)
-    .select()
+    .select(`
+      *,
+      schedule_groups (name)
+    `)
     .single();
 
   if (error) {
@@ -133,5 +169,7 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
+    groupId: data.group_id,
+    groupName: data.schedule_groups?.name || 'Default',
   };
 };
