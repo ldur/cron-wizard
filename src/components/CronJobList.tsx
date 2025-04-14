@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal } from "lucide-react";
+import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,17 +93,18 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
       <div className="flex justify-between items-center py-2 px-4 bg-muted/30 rounded-md text-sm font-medium">
         <button 
           onClick={() => handleSort('name')}
-          className="flex items-center gap-1 w-1/4"
+          className="flex items-center gap-1 w-1/5"
         >
           Name {getSortIcon('name')}
         </button>
+        <div className="w-1/5">Group</div>
         <button 
           onClick={() => handleSort('nextRun')}
-          className="flex items-center gap-1 w-1/4"
+          className="flex items-center gap-1 w-1/5"
         >
           Next Run {getSortIcon('nextRun')}
         </button>
-        <div className="w-1/4">Target</div>
+        <div className="w-1/5">Target</div>
         <button 
           onClick={() => handleSort('status')}
           className="flex items-center gap-1 w-1/6"
@@ -117,15 +118,19 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         <Card key={job.id} className="overflow-hidden">
           <CardContent className="p-0">
             <div className="flex items-center justify-between p-4">
-              <div className="w-1/4">
+              <div className="w-1/5">
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{job.cronExpression}</p>
               </div>
-              <div className="w-1/4 flex items-center">
+              <div className="w-1/5 flex items-center">
+                <FolderTree className="h-4 w-4 text-blue-500 mr-2" />
+                <span className="text-sm">{job.groupName || "Default"}</span>
+              </div>
+              <div className="w-1/5 flex items-center">
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
                 <span className="text-sm">{new Date(job.nextRun).toLocaleString()}</span>
               </div>
-              <div className="w-1/4">
+              <div className="w-1/5">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -211,7 +216,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
       ))}
 
       <CronJobIacDialog 
-        isOpen={isIacDialogOpen}
+        open={isIacDialogOpen}
         onOpenChange={setIsIacDialogOpen}
         job={selectedJob}
       />

@@ -140,7 +140,7 @@ const SettingsList = ({ settings, onEdit, onDelete }: SettingsListProps) => {
 
       {/* IAC Code Dialog */}
       <CronJobIacDialog
-        isOpen={!!viewIacSetting}
+        open={!!viewIacSetting}
         onOpenChange={() => setViewIacSetting(null)}
         job={viewIacSetting}
       />
