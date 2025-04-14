@@ -25,6 +25,7 @@ const Index = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | undefined>(undefined);
   const [selectedGroupId, setSelectedGroupId] = useState<string | "all">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "active" | "paused">("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -45,6 +46,11 @@ const Index = () => {
       ? fetchCronJobs() 
       : fetchCronJobsByGroup(selectedGroupId),
   });
+
+  // Filtered jobs based on both group and status filters
+  const filteredJobs = activeTab === "all" 
+    ? jobs 
+    : jobs.filter(job => job.status === activeTab);
 
   // Mutations for CRUD operations
   const createJobMutation = useMutation({
@@ -160,6 +166,10 @@ const Index = () => {
     setSelectedGroupId(value);
   };
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as "all" | "active" | "paused");
+  };
+
   // Error handling for the main query
   useEffect(() => {
     if (error) {
@@ -222,56 +232,40 @@ const Index = () => {
                   <DashboardStats jobs={jobs} />
                 </div>
                 <div className="flex items-center justify-between mb-4">
-                  <Tabs defaultValue="all">
-                    <TabsList>
-                      <TabsTrigger value="all">All Jobs</TabsTrigger>
-                      <TabsTrigger value="active">Active</TabsTrigger>
-                      <TabsTrigger value="paused">Paused</TabsTrigger>
-                    </TabsList>
-                  
-                    <TabsContent value="all">
-                      <CronJobList
-                        jobs={jobs}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onToggleStatus={handleToggleStatus}
-                      />
-                    </TabsContent>
-                    <TabsContent value="active">
-                      <CronJobList
-                        jobs={jobs.filter((job) => job.status === "active")}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onToggleStatus={handleToggleStatus}
-                      />
-                    </TabsContent>
-                    <TabsContent value="paused">
-                      <CronJobList
-                        jobs={jobs.filter((job) => job.status === "paused")}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onToggleStatus={handleToggleStatus}
-                      />
-                    </TabsContent>
-                  </Tabs>
-                  
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <Select value={selectedGroupId} onValueChange={handleGroupChange}>
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Filter by group" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Groups</SelectItem>
-                        {groups.map((group) => (
-                          <SelectItem key={group.id} value={group.id}>
-                            {group.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center gap-4">
+                    <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange}>
+                      <TabsList>
+                        <TabsTrigger value="all">All Jobs</TabsTrigger>
+                        <TabsTrigger value="active">Active</TabsTrigger>
+                        <TabsTrigger value="paused">Paused</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-muted-foreground" />
+                      <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Filter by group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Groups</SelectItem>
+                          {groups.map((group) => (
+                            <SelectItem key={group.id} value={group.id}>
+                              {group.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
+                
+                <CronJobList
+                  jobs={filteredJobs}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onToggleStatus={handleToggleStatus}
+                />
               </>
             ) : (
               <EmptyState onCreateNew={() => setIsFormVisible(true)} />
