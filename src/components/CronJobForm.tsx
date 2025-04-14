@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -101,7 +102,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
     // Convert null groupId to undefined for API compatibility
     const formattedData = {
       ...data,
-      groupId: data.groupId || undefined,
+      groupId: data.groupId === 'none' ? null : data.groupId,
     };
     onSubmit(formattedData);
   };
@@ -287,8 +288,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                   <FormLabel>Schedule Group</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value || undefined}
-                    value={field.value || undefined}
+                    defaultValue={field.value || "none"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -321,7 +321,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
           </div>
         </div>
 
-        {form.getValues("isApi") && (
+        {form.watch("isApi") && (
           <FormField
             control={form.control}
             name="endpointName"

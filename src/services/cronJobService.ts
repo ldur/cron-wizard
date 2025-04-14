@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -165,7 +166,7 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
   };
 };
 
-// New function to fetch jobs by group
+// Function to fetch jobs by group
 export const fetchCronJobsByGroup = async (groupId: string): Promise<CronJob[]> => {
   const { data, error } = await supabase
     .from('cron_jobs')

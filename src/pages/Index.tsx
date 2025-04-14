@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -231,32 +232,30 @@ const Index = () => {
                 <div className="mb-6">
                   <DashboardStats jobs={jobs} />
                 </div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange}>
-                      <TabsList>
-                        <TabsTrigger value="all">All Jobs</TabsTrigger>
-                        <TabsTrigger value="active">Active</TabsTrigger>
-                        <TabsTrigger value="paused">Paused</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                    
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <Select value={selectedGroupId} onValueChange={handleGroupChange}>
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Filter by group" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Groups</SelectItem>
-                          {groups.map((group) => (
-                            <SelectItem key={group.id} value={group.id}>
-                              {group.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange}>
+                    <TabsList>
+                      <TabsTrigger value="all">All Jobs</TabsTrigger>
+                      <TabsTrigger value="active">Active</TabsTrigger>
+                      <TabsTrigger value="paused">Paused</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Groups</SelectItem>
+                        {groups.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 
