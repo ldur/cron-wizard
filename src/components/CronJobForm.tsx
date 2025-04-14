@@ -195,57 +195,41 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     const preview = parseSchedule(cronExpression);
     setSchedulePreview(preview);
   };
-  
-  // Handlers for cron component changes
-  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMinute(e.target.value);
-    updateCronExpression();
-  };
-  
-  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHour(e.target.value);
-    updateCronExpression();
-  };
-  
-  const handleDayOfMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDayOfMonth(e.target.value);
-    updateCronExpression();
-  };
-  
-  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMonth(e.target.value);
-    updateCronExpression();
-  };
-  
-  const handleDayOfWeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDayOfWeek(e.target.value);
-    updateCronExpression();
-  };
 
-  // Dropdown select handlers
+  // Dropdown select handlers with direct update to cron expression
   const handleMinuteSelect = (value: string) => {
     setMinute(value);
-    updateCronExpression();
+    setTimeout(() => {
+      updateCronExpression();
+    }, 0);
   };
 
   const handleHourSelect = (value: string) => {
     setHour(value);
-    updateCronExpression();
+    setTimeout(() => {
+      updateCronExpression();
+    }, 0);
   };
 
   const handleDayOfMonthSelect = (value: string) => {
     setDayOfMonth(value);
-    updateCronExpression();
+    setTimeout(() => {
+      updateCronExpression();
+    }, 0);
   };
 
   const handleMonthSelect = (value: string) => {
     setMonth(value);
-    updateCronExpression();
+    setTimeout(() => {
+      updateCronExpression();
+    }, 0);
   };
 
   const handleDayOfWeekSelect = (value: string) => {
     setDayOfWeek(value);
-    updateCronExpression();
+    setTimeout(() => {
+      updateCronExpression();
+    }, 0);
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
@@ -387,191 +371,101 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 {/* Minute */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Minute (0-59)</label>
-                  <div className="flex items-center">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          <span>{minute}</span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-0">
-                        <div className="max-h-60 overflow-y-auto">
-                          {minuteOptions.map((value) => (
-                            <button
-                              key={value}
-                              className={`w-full px-4 py-2 text-left hover:bg-accent ${
-                                value === minute ? "bg-accent" : ""
-                              }`}
-                              onClick={() => handleMinuteSelect(value)}
-                            >
-                              {value}
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <div className="relative w-full">
-                      <Input
-                        value={minute}
-                        onChange={handleMinuteChange}
-                        placeholder="0"
-                        className="mt-2 w-full"
-                      />
-                    </div>
-                  </div>
+                  <Select 
+                    value={minute} 
+                    onValueChange={handleMinuteSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select minute" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto">
+                      {minuteOptions.map((value) => (
+                        <SelectItem key={`minute-${value}`} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Hour */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Hour (0-23)</label>
-                  <div className="flex items-center">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          <span>{hour}</span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-0">
-                        <div className="max-h-60 overflow-y-auto">
-                          {hourOptions.map((value) => (
-                            <button
-                              key={value}
-                              className={`w-full px-4 py-2 text-left hover:bg-accent ${
-                                value === hour ? "bg-accent" : ""
-                              }`}
-                              onClick={() => handleHourSelect(value)}
-                            >
-                              {value}
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <div className="relative w-full">
-                      <Input
-                        value={hour}
-                        onChange={handleHourChange}
-                        placeholder="0"
-                        className="mt-2 w-full"
-                      />
-                    </div>
-                  </div>
+                  <Select 
+                    value={hour} 
+                    onValueChange={handleHourSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select hour" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto">
+                      {hourOptions.map((value) => (
+                        <SelectItem key={`hour-${value}`} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Day of Month */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Day (1-31)</label>
-                  <div className="flex items-center">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          <span>{dayOfMonth}</span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-0">
-                        <div className="max-h-60 overflow-y-auto">
-                          {dayOptions.map((value) => (
-                            <button
-                              key={value}
-                              className={`w-full px-4 py-2 text-left hover:bg-accent ${
-                                value === dayOfMonth ? "bg-accent" : ""
-                              }`}
-                              onClick={() => handleDayOfMonthSelect(value)}
-                            >
-                              {value}
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <div className="relative w-full">
-                      <Input
-                        value={dayOfMonth}
-                        onChange={handleDayOfMonthChange}
-                        placeholder="*"
-                        className="mt-2 w-full"
-                      />
-                    </div>
-                  </div>
+                  <Select 
+                    value={dayOfMonth} 
+                    onValueChange={handleDayOfMonthSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto">
+                      {dayOptions.map((value) => (
+                        <SelectItem key={`day-${value}`} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Month */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Month (1-12)</label>
-                  <div className="flex items-center">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          <span>{monthNames[month as keyof typeof monthNames] || month}</span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-0">
-                        <div className="max-h-60 overflow-y-auto">
-                          {monthOptions.map((value) => (
-                            <button
-                              key={value}
-                              className={`w-full px-4 py-2 text-left hover:bg-accent ${
-                                value === month ? "bg-accent" : ""
-                              }`}
-                              onClick={() => handleMonthSelect(value)}
-                            >
-                              {monthNames[value as keyof typeof monthNames] || value}
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <div className="relative w-full">
-                      <Input
-                        value={month}
-                        onChange={handleMonthChange}
-                        placeholder="*"
-                        className="mt-2 w-full"
-                      />
-                    </div>
-                  </div>
+                  <Select 
+                    value={month} 
+                    onValueChange={handleMonthSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select month" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto">
+                      {monthOptions.map((value) => (
+                        <SelectItem key={`month-${value}`} value={value}>
+                          {monthNames[value as keyof typeof monthNames] || value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Day of Week */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Weekday (0-6)</label>
-                  <div className="flex items-center">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          <span>{weekdayNames[dayOfWeek as keyof typeof weekdayNames] || dayOfWeek}</span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-0">
-                        <div className="max-h-60 overflow-y-auto">
-                          {weekdayOptions.map((value) => (
-                            <button
-                              key={value}
-                              className={`w-full px-4 py-2 text-left hover:bg-accent ${
-                                value === dayOfWeek ? "bg-accent" : ""
-                              }`}
-                              onClick={() => handleDayOfWeekSelect(value)}
-                            >
-                              {weekdayNames[value as keyof typeof weekdayNames] || value}
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <div className="relative w-full">
-                      <Input
-                        value={dayOfWeek}
-                        onChange={handleDayOfWeekChange}
-                        placeholder="*"
-                        className="mt-2 w-full"
-                      />
-                    </div>
-                  </div>
+                  <Select 
+                    value={dayOfWeek} 
+                    onValueChange={handleDayOfWeekSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select weekday" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto">
+                      {weekdayOptions.map((value) => (
+                        <SelectItem key={`weekday-${value}`} value={value}>
+                          {weekdayNames[value as keyof typeof weekdayNames] || value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -582,10 +476,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                   <FormItem>
                     <FormLabel>Cron Expression</FormLabel>
                     <FormControl>
-                      <Input placeholder="0 0 * * *" {...field} onChange={(e) => {
-                        field.onChange(e);
-                        parseCronExpression(e.target.value);
-                      }} />
+                      <Input placeholder="0 0 * * *" {...field} readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
