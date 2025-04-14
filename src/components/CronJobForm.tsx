@@ -144,6 +144,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     // Also update the preview
     const preview = parseSchedule(cronExpression);
     setSchedulePreview(preview);
+    
+    // Force a re-render by triggering a state update
+    form.trigger("cronExpression");
   };
 
   // Update form when job or groups change
@@ -180,7 +183,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     
     // Parse the expression to update individual fields
     parseCronExpression(cronExpression);
-  }, [form.getValues("cronExpression"), cronMode]);
+  }, [form.watch("cronExpression"), cronMode]);
 
   // Handler for natural language input
   const handleNaturalLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,17 +192,25 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   
   // Apply natural language update
   const applyNaturalLanguage = () => {
-    const cronExpression = convertToCron(naturalLanguage);
-    form.setValue("cronExpression", cronExpression);
-    
-    // Update the schedule preview
-    const preview = parseSchedule(cronExpression);
-    setSchedulePreview(preview);
-    
-    toast({
-      title: "Schedule Updated",
-      description: "Natural language converted to cron expression",
-    });
+    try {
+      const cronExpression = convertToCron(naturalLanguage);
+      form.setValue("cronExpression", cronExpression);
+      
+      // Update the schedule preview
+      const preview = parseSchedule(cronExpression);
+      setSchedulePreview(preview);
+      
+      toast({
+        title: "Schedule Updated",
+        description: "Natural language converted to cron expression",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to convert natural language to cron expression",
+        variant: "destructive",
+      });
+    }
   };
 
   // Dropdown select handlers with direct update to cron expression
