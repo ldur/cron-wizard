@@ -38,7 +38,7 @@ export const calculateNextRun = (cronExpression: string): string => {
       if (currentDay < start || currentDay > end) {
         // Move to the next occurrence of the start day
         const daysToAdd = (start - currentDay + 7) % 7;
-        nextRun.setDate(nextRun.getDate() + daysToAdd);
+        nextRun.setDate(nextRun.getDate() + (daysToAdd === 0 ? 7 : daysToAdd));
       }
     } else if (dayOfWeek.includes(',')) {
       // Handle lists like 1,3,5 (Monday, Wednesday, Friday)
@@ -64,7 +64,7 @@ export const calculateNextRun = (cronExpression: string): string => {
       if (currentDay !== targetDay) {
         // Calculate days to add to reach the target day
         const daysToAdd = (targetDay - currentDay + 7) % 7;
-        nextRun.setDate(nextRun.getDate() + daysToAdd);
+        nextRun.setDate(nextRun.getDate() + (daysToAdd === 0 ? 7 : daysToAdd));
       }
     }
   }

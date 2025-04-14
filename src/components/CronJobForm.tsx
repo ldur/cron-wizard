@@ -221,30 +221,41 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     }
   };
 
-  // Dropdown select handlers with immediate update to cron expression
+  // Dropdown select handlers with direct update to cron expression
   const handleMinuteSelect = (value: string) => {
     setMinute(value);
-    setTimeout(() => updateCronExpression(), 0);
+    // Use requestAnimationFrame to ensure this executes after state update
+    requestAnimationFrame(() => {
+      updateCronExpression();
+    });
   };
 
   const handleHourSelect = (value: string) => {
     setHour(value);
-    setTimeout(() => updateCronExpression(), 0);
+    requestAnimationFrame(() => {
+      updateCronExpression();
+    });
   };
 
   const handleDayOfMonthSelect = (value: string) => {
     setDayOfMonth(value);
-    setTimeout(() => updateCronExpression(), 0);
+    requestAnimationFrame(() => {
+      updateCronExpression();
+    });
   };
 
   const handleMonthSelect = (value: string) => {
     setMonth(value);
-    setTimeout(() => updateCronExpression(), 0);
+    requestAnimationFrame(() => {
+      updateCronExpression();
+    });
   };
 
   const handleDayOfWeekSelect = (value: string) => {
     setDayOfWeek(value);
-    setTimeout(() => updateCronExpression(), 0);
+    requestAnimationFrame(() => {
+      updateCronExpression();
+    });
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
