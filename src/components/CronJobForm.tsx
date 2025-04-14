@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -213,40 +212,30 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     }
   };
 
-  // Dropdown select handlers with direct update to cron expression
+  // Dropdown select handlers with immediate update to cron expression
   const handleMinuteSelect = (value: string) => {
     setMinute(value);
-    setTimeout(() => {
-      updateCronExpression();
-    }, 0);
+    updateCronExpression();
   };
 
   const handleHourSelect = (value: string) => {
     setHour(value);
-    setTimeout(() => {
-      updateCronExpression();
-    }, 0);
+    updateCronExpression();
   };
 
   const handleDayOfMonthSelect = (value: string) => {
     setDayOfMonth(value);
-    setTimeout(() => {
-      updateCronExpression();
-    }, 0);
+    updateCronExpression();
   };
 
   const handleMonthSelect = (value: string) => {
     setMonth(value);
-    setTimeout(() => {
-      updateCronExpression();
-    }, 0);
+    updateCronExpression();
   };
 
   const handleDayOfWeekSelect = (value: string) => {
     setDayOfWeek(value);
-    setTimeout(() => {
-      updateCronExpression();
-    }, 0);
+    updateCronExpression();
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
