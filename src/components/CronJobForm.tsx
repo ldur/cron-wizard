@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -10,9 +11,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { fetchScheduleGroups } from "@/services/scheduleGroupService";
 import type { CronJob } from "@/types/CronJob";
 import { useQuery } from "@tanstack/react-query";
@@ -150,21 +153,19 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
           control={form.control}
           name="isApi"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
-              <div className="space-y-0.5">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
                 <FormLabel>Is API?</FormLabel>
                 <FormDescription>
                   Enable if this cron job triggers an API endpoint.
                 </FormDescription>
               </div>
-              <FormControl>
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="h-4 w-4 border border-primary ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </FormControl>
             </FormItem>
           )}
         />
