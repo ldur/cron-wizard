@@ -1,5 +1,4 @@
 
-
 export type Json =
   | string
   | number
@@ -20,6 +19,10 @@ export interface Database {
           status: 'active' | 'paused'
           created_at: string
           updated_at: string
+          is_api: boolean
+          endpoint_name: string | null
+          iac_code: string | null
+          group_id: string | null
         }
         Insert: {
           id?: string
@@ -29,6 +32,10 @@ export interface Database {
           status?: 'active' | 'paused'
           created_at?: string
           updated_at?: string
+          is_api?: boolean
+          endpoint_name?: string | null
+          iac_code?: string | null
+          group_id?: string | null
         }
         Update: {
           id?: string
@@ -38,6 +45,10 @@ export interface Database {
           status?: 'active' | 'paused'
           created_at?: string
           updated_at?: string
+          is_api?: boolean
+          endpoint_name?: string | null
+          iac_code?: string | null
+          group_id?: string | null
         }
       }
       schedule_groups: {
@@ -63,4 +74,3 @@ export interface Database {
     }
   }
 }
-

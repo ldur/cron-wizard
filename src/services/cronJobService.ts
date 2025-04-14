@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -24,6 +23,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     isApi: job.is_api,
     endpointName: job.endpoint_name,
     iacCode: job.iac_code,
+    groupId: job.group_id,
   }));
 };
 
@@ -38,6 +38,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
+      group_id: job.groupId,
     })
     .select()
     .single();
@@ -57,6 +58,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
+    groupId: data.group_id,
   };
 };
 
@@ -70,6 +72,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.isApi !== undefined) updateData.is_api = job.isApi;
   if (job.endpointName !== undefined) updateData.endpoint_name = job.endpointName;
   if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
+  if (job.groupId !== undefined) updateData.group_id = job.groupId;
   
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -93,6 +96,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
+    groupId: data.group_id,
   };
 };
 
@@ -133,5 +137,33 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
+    groupId: data.group_id,
   };
+};
+
+// New function to fetch jobs by group
+export const fetchCronJobsByGroup = async (groupId: string): Promise<CronJob[]> => {
+  const { data, error } = await supabase
+    .from('cron_jobs')
+    .select('*')
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching cron jobs by group:', error);
+    throw error;
+  }
+
+  return data.map((job) => ({
+    id: job.id,
+    name: job.name,
+    command: job.command,
+    cronExpression: job.cron_expression,
+    status: job.status,
+    nextRun: calculateNextRun(job.cron_expression),
+    isApi: job.is_api,
+    endpointName: job.endpoint_name,
+    iacCode: job.iac_code,
+    groupId: job.group_id,
+  }));
 };
