@@ -17,6 +17,67 @@ export const fetchGroups = async () => {
   return data;
 };
 
+// Create a new group
+export const createGroup = async (name: string) => {
+  const { data, error } = await supabase
+    .from('schedule_groups')
+    .insert({ name })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating group:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Update a group
+export const updateGroup = async (id: string, name: string) => {
+  const { data, error } = await supabase
+    .from('schedule_groups')
+    .update({ name })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating group:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Delete a group
+export const deleteGroup = async (id: string) => {
+  // First, reassign all jobs in this group to the default group
+  const { data: defaultGroup } = await supabase
+    .from('schedule_groups')
+    .select('id')
+    .eq('name', 'Default')
+    .single();
+  
+  if (defaultGroup) {
+    await supabase
+      .from('cron_jobs')
+      .update({ group_id: defaultGroup.id })
+      .eq('group_id', id);
+  }
+
+  // Then delete the group
+  const { error } = await supabase
+    .from('schedule_groups')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting group:', error);
+    throw error;
+  }
+};
+
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
   const { data, error } = await supabase
     .from('cron_jobs')
