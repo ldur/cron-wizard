@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { fetchScheduleGroups } from "@/services/scheduleGroupService";
 import type { CronJob } from "@/types/CronJob";
 import { useQuery } from "@tanstack/react-query";
+import { Folder, Calendar, Clock } from "lucide-react";
 
 // Define form validation schema
 const formSchema = z.object({
@@ -42,7 +43,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
   const [mode, setMode] = useState<"simple" | "advanced">("simple");
 
   // Fetch schedule groups
-  const { data: scheduleGroups = [] } = useQuery({
+  const { data: scheduleGroups = [], isLoading: isLoadingGroups } = useQuery({
     queryKey: ['scheduleGroups'],
     queryFn: fetchScheduleGroups,
   });
@@ -66,7 +67,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Mode selection */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 mb-4">
           <Button 
             type="button" 
             variant={mode === "simple" ? "default" : "outline"}
@@ -83,71 +84,120 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
           </Button>
         </div>
 
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="My Cron Job" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Cron Job" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="command"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Command</FormLabel>
-              <FormControl>
-                <Input placeholder="echo 'Hello, world!'" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="command"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Command</FormLabel>
+                  <FormControl>
+                    <Input placeholder="echo 'Hello, world!'" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {mode === "advanced" && (
-          <FormField
-            control={form.control}
-            name="cronExpression"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cron Expression</FormLabel>
-                <FormControl>
-                  <Input placeholder="* * * * *" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+            {mode === "advanced" && (
+              <FormField
+                control={form.control}
+                name="cronExpression"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cron Expression</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center">
+                        <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="* * * * *" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
-        )}
+          </div>
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="paused">Paused</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Add group selection */}
+            <FormField
+              control={form.control}
+              name="groupId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Schedule Group</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <div className="flex items-center">
+                          <Folder className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select a schedule group" />
+                        </div>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {isLoadingGroups ? (
+                        <SelectItem value="" disabled>Loading groups...</SelectItem>
+                      ) : (
+                        scheduleGroups.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Organize your cron jobs by assigning them to groups
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         <FormField
           control={form.control}
@@ -199,36 +249,8 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
             </FormItem>
           )}
         />
-        {/* Add group selection */}
-        <FormField
-          control={form.control}
-          name="groupId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Schedule Group</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a schedule group" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {scheduleGroups.map((group) => (
-                    <SelectItem key={group.id} value={group.id}>
-                      {group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-6">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
