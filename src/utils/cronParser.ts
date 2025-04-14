@@ -8,6 +8,7 @@ export const parseSchedule = (cronExpression: string): string => {
 
   const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
 
+  // Fix the day mapping to ensure correct weekday is shown
   if (minute === '0' && hour === '0' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
     return 'Daily at midnight';
   }

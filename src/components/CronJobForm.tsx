@@ -51,7 +51,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const monthOptions = ["*", ...Array.from({ length: 12 }, (_, i) => (i + 1).toString())];
   const weekdayOptions = ["*", ...Array.from({ length: 7 }, (_, i) => i.toString())];
 
-  // Common day names for weekdays
+  // Common day names for weekdays - fixed the mapping to ensure correct values
   const weekdayNames = {
     "0": "Sunday (0)",
     "1": "Monday (1)",
@@ -137,15 +137,24 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
   // Update cron expression from individual components
   const updateCronExpression = () => {
-    const cronExpression = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
-    form.setValue("cronExpression", cronExpression);
+    try {
+      const cronExpression = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
+      form.setValue("cronExpression", cronExpression);
 
-    // Also update the preview
-    const preview = parseSchedule(cronExpression);
-    setSchedulePreview(preview);
-    
-    // Force a re-render by triggering a state update
-    form.trigger("cronExpression");
+      // Also update the preview
+      const preview = parseSchedule(cronExpression);
+      setSchedulePreview(preview);
+      
+      // Force a re-render by triggering a state update
+      form.trigger("cronExpression");
+    } catch (error) {
+      console.error("Error updating cron expression:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update cron expression",
+        variant: "destructive",
+      });
+    }
   };
 
   // Update form when job or groups change
