@@ -9,6 +9,4 @@ export interface CronJob {
   isApi: boolean;
   endpointName: string | null;
   iacCode: string | null;
-  groupId: string | null;
-  groupName?: string | null;
 }

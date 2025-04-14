@@ -1,373 +1,365 @@
 
-import React, { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { useState, useEffect } from "react";
+import { CalendarCheck, ArrowRight, Check, X, Code, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { fetchScheduleGroups } from "@/services/scheduleGroupService";
-import type { CronJob } from "@/types/CronJob";
-import { useQuery } from "@tanstack/react-query";
-import { Folder, Calendar, Clock, Globe, Terminal } from "lucide-react";
-
-// Define form validation schema
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  command: z.string().min(1, "Command is required"),
-  cronExpression: z.string().min(1, "Cron expression is required"),
-  status: z.enum(["active", "paused"]),
-  isApi: z.boolean(),
-  endpointName: z.string().optional(),
-  iacCode: z.string().optional(),
-  groupId: z.string().nullable(), // Changed to nullable to properly handle the 'None' value
-});
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { CronJob } from "@/types/CronJob";
+import { convertToCron, parseSchedule } from "@/utils/cronParser";
 
 interface CronJobFormProps {
   job?: CronJob;
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onSubmit: (job: Omit<CronJob, 'id' | 'nextRun'>) => void;
   onCancel: () => void;
 }
 
 const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
-  const [mode, setMode] = useState<"simple" | "advanced">("simple");
-  const [scheduleType, setScheduleType] = useState<"minute" | "hour" | "day" | "week" | "month" | "custom">(
-    job?.cronExpression ? "custom" : "hour"
-  );
+  const [name, setName] = useState(job?.name || '');
+  const [command, setCommand] = useState(job?.command || '');
+  const [naturalLanguage, setNaturalLanguage] = useState('');
+  const [cronExpression, setCronExpression] = useState(job?.cronExpression || '0 * * * *');
+  const [minutes, setMinutes] = useState<string>('0');
+  const [hours, setHours] = useState<string>('*');
+  const [dayOfMonth, setDayOfMonth] = useState<string>('*');
+  const [month, setMonth] = useState<string>('*');
+  const [dayOfWeek, setDayOfWeek] = useState<string>('*');
+  const [activeTab, setActiveTab] = useState<string>("natural");
+  const [humanReadable, setHumanReadable] = useState<string>('Every hour');
+  const [schedulePreview, setSchedulePreview] = useState<string[]>([]);
+  const [isApi, setIsApi] = useState<boolean>(job?.isApi || false);
+  const [endpointName, setEndpointName] = useState<string>(job?.endpointName || '');
+  const [iacCode, setIacCode] = useState<string>(job?.iacCode || '');
+  const [targetTab, setTargetTab] = useState<string>("basic");
 
-  // Fetch schedule groups
-  const { data: scheduleGroups = [], isLoading: isLoadingGroups } = useQuery({
-    queryKey: ['scheduleGroups'],
-    queryFn: fetchScheduleGroups,
-  });
-
-  // Initialize form with default values or existing job data
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: job?.name || "",
-      command: job?.command || "",
-      cronExpression: job?.cronExpression || "0 * * * *", // Default hourly
-      status: job?.status || "active",
-      isApi: job?.isApi || false,
-      endpointName: job?.endpointName || "",
-      iacCode: job?.iacCode || "",
-      groupId: job?.groupId || null, // Changed to null for 'None' value
-    },
-  });
-
-  // Update cron expression based on schedule type
-  const updateCronExpression = (type: string) => {
-    setScheduleType(type as any);
-    
-    let expression = "";
-    switch (type) {
-      case "minute":
-        expression = "* * * * *";
-        break;
-      case "hour":
-        expression = "0 * * * *";
-        break;
-      case "day":
-        expression = "0 0 * * *";
-        break;
-      case "week":
-        expression = "0 0 * * 0";
-        break;
-      case "month":
-        expression = "0 0 1 * *";
-        break;
-      case "custom":
-        // Keep the current expression
-        return;
+  // This effect only runs once when the component mounts or when the job prop changes
+  useEffect(() => {
+    if (job?.cronExpression) {
+      const parts = job.cronExpression.split(' ');
+      if (parts.length === 5) {
+        setMinutes(parts[0]);
+        setHours(parts[1]);
+        setDayOfMonth(parts[2]);
+        setMonth(parts[3]);
+        setDayOfWeek(parts[4]);
+      }
     }
+  }, [job]);
+
+  // Update cron expression when individual parts change
+  useEffect(() => {
+    const newCronExpression = `${minutes} ${hours} ${dayOfMonth} ${month} ${dayOfWeek}`;
+    setCronExpression(newCronExpression);
     
-    form.setValue("cronExpression", expression);
+    // Update human readable description
+    const readable = parseSchedule(newCronExpression);
+    setHumanReadable(readable);
+    
+    // Generate next run times
+    generateNextRunTimes(newCronExpression);
+  }, [minutes, hours, dayOfMonth, month, dayOfWeek]);
+
+  const handleNaturalLanguageChange = (input: string) => {
+    setNaturalLanguage(input);
   };
 
-  // Handle form submission
-  const handleFormSubmit = (data: z.infer<typeof formSchema>) => {
-    // Convert null groupId to undefined for API compatibility
-    const formattedData = {
-      ...data,
-      groupId: data.groupId === 'none' ? null : data.groupId,
-    };
-    onSubmit(formattedData);
+  const handleNaturalLanguageProcess = () => {
+    if (!naturalLanguage.trim()) return;
+    
+    try {
+      const cron = convertToCron(naturalLanguage);
+      if (cron) {
+        const parts = cron.split(' ');
+        if (parts.length === 5) {
+          setMinutes(parts[0]);
+          setHours(parts[1]);
+          setDayOfMonth(parts[2]);
+          setMonth(parts[3]);
+          setDayOfWeek(parts[4]);
+          setCronExpression(cron);
+          
+          // Update human readable description
+          const readable = parseSchedule(cron);
+          setHumanReadable(readable);
+          
+          // Generate next run times
+          generateNextRunTimes(cron);
+        }
+      }
+    } catch (error) {
+      console.log("Could not parse natural language:", error);
+    }
   };
 
-  // Helper function to get human-readable schedule description
-  const getScheduleDescription = (cronExp: string) => {
-    switch (cronExp) {
-      case "* * * * *":
-        return "Every minute";
-      case "0 * * * *":
-        return "Every hour";
-      case "0 0 * * *":
-        return "Every day at midnight";
-      case "0 0 * * 0":
-        return "Every Sunday at midnight";
-      case "0 0 1 * *":
-        return "On the 1st of every month at midnight";
-      default:
-        return "Custom schedule";
+  // Add a keydown handler for the Enter key to process natural language input
+  const handleNaturalLanguageKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleNaturalLanguageProcess();
     }
+  };
+
+  const generateNextRunTimes = (cronExp: string) => {
+    // This is a simplified preview generator
+    // In a real application, you'd use a library like cron-parser
+    const now = new Date();
+    const nextRuns: string[] = [];
+    
+    // Just add placeholder dates for the UI preview
+    for (let i = 1; i <= 3; i++) {
+      const nextDate = new Date(now.getTime() + (i * 60 * 60 * 1000)); // add hours
+      nextRuns.push(nextDate.toLocaleString());
+    }
+    
+    setSchedulePreview(nextRuns);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // If we're in natural language tab and there's input, process it before submitting
+    if (activeTab === "natural" && naturalLanguage.trim()) {
+      handleNaturalLanguageProcess();
+    }
+    
+    onSubmit({
+      name,
+      command,
+      cronExpression,
+      status: job?.status || 'active',
+      isApi,
+      endpointName,
+      iacCode
+    });
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-        {/* Mode selection */}
-        <div className="flex items-center space-x-4 mb-4">
-          <Button 
-            type="button" 
-            variant={mode === "simple" ? "default" : "outline"}
-            onClick={() => setMode("simple")}
-          >
-            Simple
-          </Button>
-          <Button 
-            type="button" 
-            variant={mode === "advanced" ? "default" : "outline"}
-            onClick={() => setMode("advanced")}
-          >
-            Advanced
-          </Button>
-        </div>
+    <form onSubmit={handleSubmit}>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>{job ? 'Edit Cron Job' : 'Create New Cron Job'}</CardTitle>
+          <CardDescription>
+            Schedule your job using natural language or cron expression
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Tabs value={targetTab} onValueChange={setTargetTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">Basic Settings</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced Settings</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="basic" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Job Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Daily Database Backup"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="My Cron Job" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="command">Command / URL</Label>
+                <Input
+                  id="command"
+                  placeholder="https://api.example.com/backup"
+                  value={command}
+                  onChange={(e) => setCommand(e.target.value)}
+                  required
+                />
+              </div>
 
-            <FormField
-              control={form.control}
-              name="command"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Command</FormLabel>
-                  <FormControl>
-                    <Input placeholder="echo 'Hello, world!'" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {mode === "simple" ? (
-              <div className="space-y-4">
-                <FormLabel>Schedule</FormLabel>
-                <Tabs 
-                  value={scheduleType} 
-                  onValueChange={updateCronExpression}
-                  className="w-full"
-                >
-                  <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
-                    <TabsTrigger value="minute">Minute</TabsTrigger>
-                    <TabsTrigger value="hour">Hour</TabsTrigger>
-                    <TabsTrigger value="day">Day</TabsTrigger>
-                    <TabsTrigger value="week">Week</TabsTrigger>
-                    <TabsTrigger value="month">Month</TabsTrigger>
-                    <TabsTrigger value="custom">Custom</TabsTrigger>
+              <div className="space-y-2">
+                <Label>Schedule</Label>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="natural">Natural Language</TabsTrigger>
+                    <TabsTrigger value="builder">Expression Builder</TabsTrigger>
                   </TabsList>
-                  <TabsContent value={scheduleType} className="pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      {getScheduleDescription(form.getValues("cronExpression"))}
-                    </p>
+                  
+                  <TabsContent value="natural" className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <Input
+                          className="natural-language-input flex-grow"
+                          placeholder="Every day at 3am"
+                          value={naturalLanguage}
+                          onChange={(e) => handleNaturalLanguageChange(e.target.value)}
+                          onKeyDown={handleNaturalLanguageKeyDown}
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={handleNaturalLanguageProcess}
+                          variant="secondary"
+                        >
+                          Parse
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Examples: "every hour", "every day at 2pm", "every Monday at 9am"
+                      </p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="builder" className="space-y-4 pt-4">
+                    <div className="grid grid-cols-5 gap-2">
+                      <div>
+                        <Label htmlFor="minutes" className="text-xs">Minute</Label>
+                        <Input
+                          id="minutes"
+                          value={minutes}
+                          onChange={(e) => setMinutes(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="hours" className="text-xs">Hour</Label>
+                        <Input
+                          id="hours"
+                          value={hours}
+                          onChange={(e) => setHours(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dayOfMonth" className="text-xs">Day (Month)</Label>
+                        <Input
+                          id="dayOfMonth"
+                          value={dayOfMonth}
+                          onChange={(e) => setDayOfMonth(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="month" className="text-xs">Month</Label>
+                        <Input
+                          id="month"
+                          value={month}
+                          onChange={(e) => setMonth(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dayOfWeek" className="text-xs">Day (Week)</Label>
+                        <Input
+                          id="dayOfWeek"
+                          value={dayOfWeek}
+                          onChange={(e) => setDayOfWeek(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <p>Common values: * (any), */5 (every 5), 1-5 (range), 1,3,5 (list)</p>
+                    </div>
+                    <div className="pt-2">
+                      <Label className="text-xs">Cron Expression</Label>
+                      <div className="bg-muted p-2 rounded text-sm font-mono mt-1">
+                        {cronExpression}
+                      </div>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
-            ) : (
-              <FormField
-                control={form.control}
-                name="cronExpression"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cron Expression</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="* * * * *" {...field} />
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Format: minute hour day month weekday
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
 
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="paused">Paused</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Job Type Selection */}
-            <FormField
-              control={form.control}
-              name="isApi"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Job Type</FormLabel>
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      variant={field.value ? "default" : "outline"}
-                      className={field.value ? "bg-blue-500 hover:bg-blue-600" : ""}
-                      onClick={() => form.setValue("isApi", true)}
-                    >
-                      <Globe className="mr-2 h-4 w-4" />
-                      API Endpoint
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={!field.value ? "default" : "outline"}
-                      className={!field.value ? "bg-amber-500 hover:bg-amber-600" : ""}
-                      onClick={() => form.setValue("isApi", false)}
-                    >
-                      <Terminal className="mr-2 h-4 w-4" />
-                      Lambda Function
-                    </Button>
-                  </div>
-                  <FormDescription>
-                    Select the type of job to run
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-
-            {/* Add group selection */}
-            <FormField
-              control={form.control}
-              name="groupId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Schedule Group</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value || "none"}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <div className="flex items-center">
-                          <Folder className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <SelectValue placeholder="Select a schedule group" />
-                        </div>
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {isLoadingGroups ? (
-                        <SelectItem value="loading" disabled>Loading groups...</SelectItem>
-                      ) : (
-                        scheduleGroups.map((group) => (
-                          <SelectItem key={group.id} value={group.id}>
-                            {group.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Organize your cron jobs by assigning them to groups
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {form.watch("isApi") && (
-          <FormField
-            control={form.control}
-            name="endpointName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Endpoint Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="my-api-endpoint" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        <FormField
-          control={form.control}
-          name="iacCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>IAC Code</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Infrastructure-as-code template" 
-                  className="font-mono text-sm h-24"
-                  {...field} 
+              <div className="bg-accent/10 rounded-md p-4 space-y-2">
+                <div className="flex items-center text-sm font-medium">
+                  <CalendarCheck className="h-4 w-4 mr-2 text-accent" />
+                  Schedule Summary
+                </div>
+                <p className="text-sm">{humanReadable}</p>
+                
+                <div className="space-y-1 pt-1">
+                  <p className="text-xs font-medium">Next executions:</p>
+                  <ul className="space-y-1">
+                    {schedulePreview.map((time, index) => (
+                      <li key={index} className="text-xs flex items-center">
+                        <ArrowRight className="h-3 w-3 mr-1 text-muted-foreground" />
+                        {time}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="advanced" className="space-y-4">
+              <div className="flex items-center justify-between space-x-2">
+                <div>
+                  <Label htmlFor="target-type" className="text-base font-medium">Target Type</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Choose between API endpoint or Lambda function
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="is-api" className={isApi ? "text-blue-500" : "text-muted-foreground"}>
+                    {isApi ? "API" : "Lambda"}
+                  </Label>
+                  <Switch
+                    id="is-api"
+                    checked={isApi}
+                    onCheckedChange={setIsApi}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="endpoint-name">
+                  {isApi ? "API Endpoint URL" : "Lambda Function Name"}
+                </Label>
+                <div className="flex items-center space-x-2">
+                  {isApi ? (
+                    <Globe className="h-4 w-4 text-blue-500" />
+                  ) : (
+                    <Code className="h-4 w-4 text-amber-500" />
+                  )}
+                  <Input
+                    id="endpoint-name"
+                    placeholder={isApi ? "https://api.example.com/endpoint" : "my-lambda-function"}
+                    value={endpointName}
+                    onChange={(e) => setEndpointName(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isApi ? "The full URL to the API endpoint" : "The name of the AWS Lambda function to invoke"}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="iac-code">Infrastructure as Code</Label>
+                <Textarea
+                  id="iac-code"
+                  placeholder="// TypeScript code for AWS infrastructure"
+                  value={iacCode}
+                  onChange={(e) => setIacCode(e.target.value)}
+                  className="font-mono h-40"
                 />
-              </FormControl>
-              <FormDescription>
-                Infrastructure as Code template for this job
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-4 pt-6">
-          <Button type="button" variant="outline" onClick={onCancel}>
+                <p className="text-xs text-muted-foreground">
+                  TypeScript code for implementing the API or Lambda in AWS
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" type="button" onClick={onCancel}>
+            <X className="h-4 w-4 mr-2" />
             Cancel
           </Button>
           <Button type="submit">
-            {job ? "Update" : "Create"}
+            <Check className="h-4 w-4 mr-2" />
+            {job ? 'Update Job' : 'Create Job'}
           </Button>
-        </div>
-      </form>
-    </Form>
+        </CardFooter>
+      </Card>
+    </form>
   );
 };
 

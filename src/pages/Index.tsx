@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { Plus, X, Filter } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/Header";
 import CronJobList from "@/components/CronJobList";
 import CronJobForm from "@/components/CronJobForm";
@@ -17,41 +16,20 @@ import {
   createCronJob, 
   updateCronJob, 
   deleteCronJob,
-  toggleCronJobStatus,
-  fetchCronJobsByGroup
+  toggleCronJobStatus 
 } from "@/services/cronJobService";
-import { fetchScheduleGroups } from "@/services/scheduleGroupService";
 
 const Index = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | undefined>(undefined);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | "all">("all");
-  const [activeTab, setActiveTab] = useState<"all" | "active" | "paused">("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Query to fetch all groups
-  const { data: groups = [] } = useQuery({
-    queryKey: ['scheduleGroups'],
-    queryFn: fetchScheduleGroups,
+  // Query to fetch jobs
+  const { data: jobs = [], isLoading, error } = useQuery({
+    queryKey: ['cronJobs'],
+    queryFn: fetchCronJobs,
   });
-
-  // Query to fetch jobs based on selected group
-  const { 
-    data: jobs = [], 
-    isLoading, 
-    error 
-  } = useQuery({
-    queryKey: ['cronJobs', selectedGroupId],
-    queryFn: () => selectedGroupId === "all" 
-      ? fetchCronJobs() 
-      : fetchCronJobsByGroup(selectedGroupId),
-  });
-
-  // Filtered jobs based on both group and status filters
-  const filteredJobs = activeTab === "all" 
-    ? jobs 
-    : jobs.filter(job => job.status === activeTab);
 
   // Mutations for CRUD operations
   const createJobMutation = useMutation({
@@ -74,7 +52,7 @@ const Index = () => {
   });
 
   const updateJobMutation = useMutation({
-    mutationFn: ({ id, job }: { id: string; job: Partial<Omit<CronJob, 'id' | 'nextRun' | 'groupName'>> }) => 
+    mutationFn: ({ id, job }: { id: string; job: Partial<Omit<CronJob, 'id' | 'nextRun'>> }) => 
       updateCronJob(id, job),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
@@ -131,11 +109,11 @@ const Index = () => {
     },
   });
 
-  const handleAddJob = (newJob: Omit<CronJob, "id" | "nextRun" | "groupName">) => {
+  const handleAddJob = (newJob: Omit<CronJob, "id" | "nextRun">) => {
     createJobMutation.mutate(newJob);
   };
 
-  const handleUpdateJob = (updatedJob: Omit<CronJob, "id" | "nextRun" | "groupName">) => {
+  const handleUpdateJob = (updatedJob: Omit<CronJob, "id" | "nextRun">) => {
     if (!editingJob) return;
     updateJobMutation.mutate({ id: editingJob.id, job: updatedJob });
   };
@@ -161,14 +139,6 @@ const Index = () => {
   const handleFormCancel = () => {
     setIsFormVisible(false);
     setEditingJob(undefined);
-  };
-
-  const handleGroupChange = (value: string) => {
-    setSelectedGroupId(value);
-  };
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as "all" | "active" | "paused");
   };
 
   // Error handling for the main query
@@ -232,39 +202,37 @@ const Index = () => {
                 <div className="mb-6">
                   <DashboardStats jobs={jobs} />
                 </div>
-                <div className="flex items-center gap-4 mb-4">
-                  <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange}>
-                    <TabsList>
-                      <TabsTrigger value="all">All Jobs</TabsTrigger>
-                      <TabsTrigger value="active">Active</TabsTrigger>
-                      <TabsTrigger value="paused">Paused</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <Select value={selectedGroupId} onValueChange={handleGroupChange}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by group" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Groups</SelectItem>
-                        {groups.map((group) => (
-                          <SelectItem key={group.id} value={group.id}>
-                            {group.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <CronJobList
-                  jobs={filteredJobs}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onToggleStatus={handleToggleStatus}
-                />
+                <Tabs defaultValue="all">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all">All Jobs</TabsTrigger>
+                    <TabsTrigger value="active">Active</TabsTrigger>
+                    <TabsTrigger value="paused">Paused</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="all">
+                    <CronJobList
+                      jobs={jobs}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onToggleStatus={handleToggleStatus}
+                    />
+                  </TabsContent>
+                  <TabsContent value="active">
+                    <CronJobList
+                      jobs={jobs.filter((job) => job.status === "active")}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onToggleStatus={handleToggleStatus}
+                    />
+                  </TabsContent>
+                  <TabsContent value="paused">
+                    <CronJobList
+                      jobs={jobs.filter((job) => job.status === "paused")}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onToggleStatus={handleToggleStatus}
+                    />
+                  </TabsContent>
+                </Tabs>
               </>
             ) : (
               <EmptyState onCreateNew={() => setIsFormVisible(true)} />

@@ -6,12 +6,7 @@ import { calculateNextRun } from '@/utils/cronCalculator';
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
   const { data, error } = await supabase
     .from('cron_jobs')
-    .select(`
-      *,
-      schedule_groups:group_id (
-        name
-      )
-    `)
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -29,12 +24,10 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     isApi: job.is_api,
     endpointName: job.endpoint_name,
     iacCode: job.iac_code,
-    groupId: job.group_id,
-    groupName: job.schedule_groups ? job.schedule_groups.name : null,
   }));
 };
 
-export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun' | 'groupName'>): Promise<CronJob> => {
+export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   const { data, error } = await supabase
     .from('cron_jobs')
     .insert({
@@ -45,14 +38,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun' | 'group
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
-      group_id: job.groupId,
     })
-    .select(`
-      *,
-      schedule_groups:group_id (
-        name
-      )
-    `)
+    .select()
     .single();
 
   if (error) {
@@ -70,12 +57,10 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun' | 'group
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
-    groupId: data.group_id,
-    groupName: data.schedule_groups ? data.schedule_groups.name : null,
   };
 };
 
-export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun' | 'groupName'>>): Promise<CronJob> => {
+export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
   const updateData: any = {};
   
   if (job.name !== undefined) updateData.name = job.name;
@@ -85,18 +70,12 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.isApi !== undefined) updateData.is_api = job.isApi;
   if (job.endpointName !== undefined) updateData.endpoint_name = job.endpointName;
   if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
-  if (job.groupId !== undefined) updateData.group_id = job.groupId;
   
   const { data, error } = await supabase
     .from('cron_jobs')
     .update(updateData)
     .eq('id', id)
-    .select(`
-      *,
-      schedule_groups:group_id (
-        name
-      )
-    `)
+    .select()
     .single();
 
   if (error) {
@@ -114,8 +93,6 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
-    groupId: data.group_id,
-    groupName: data.schedule_groups ? data.schedule_groups.name : null,
   };
 };
 
@@ -138,12 +115,7 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     .from('cron_jobs')
     .update({ status: newStatus })
     .eq('id', id)
-    .select(`
-      *,
-      schedule_groups:group_id (
-        name
-      )
-    `)
+    .select()
     .single();
 
   if (error) {
@@ -161,40 +133,5 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
-    groupId: data.group_id,
-    groupName: data.schedule_groups ? data.schedule_groups.name : null,
   };
-};
-
-// Function to fetch jobs by group
-export const fetchCronJobsByGroup = async (groupId: string): Promise<CronJob[]> => {
-  const { data, error } = await supabase
-    .from('cron_jobs')
-    .select(`
-      *,
-      schedule_groups:group_id (
-        name
-      )
-    `)
-    .eq('group_id', groupId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching cron jobs by group:', error);
-    throw error;
-  }
-
-  return data.map((job) => ({
-    id: job.id,
-    name: job.name,
-    command: job.command,
-    cronExpression: job.cron_expression,
-    status: job.status,
-    nextRun: calculateNextRun(job.cron_expression),
-    isApi: job.is_api,
-    endpointName: job.endpoint_name,
-    iacCode: job.iac_code,
-    groupId: job.group_id,
-    groupName: job.schedule_groups ? job.schedule_groups.name : null,
-  }));
 };

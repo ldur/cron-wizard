@@ -15,7 +15,6 @@ export type Database = {
           created_at: string | null
           cron_expression: string
           endpoint_name: string | null
-          group_id: string | null
           iac_code: string | null
           id: string
           is_api: boolean
@@ -28,7 +27,6 @@ export type Database = {
           created_at?: string | null
           cron_expression: string
           endpoint_name?: string | null
-          group_id?: string | null
           iac_code?: string | null
           id?: string
           is_api?: boolean
@@ -41,42 +39,12 @@ export type Database = {
           created_at?: string | null
           cron_expression?: string
           endpoint_name?: string | null
-          group_id?: string | null
           iac_code?: string | null
           id?: string
           is_api?: boolean
           name?: string
           status?: string
           updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cron_jobs_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "schedule_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      schedule_groups: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          updated_at?: string
         }
         Relationships: []
       }

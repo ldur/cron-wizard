@@ -1,42 +1,45 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon, CalendarDays, Settings, Layers } from "lucide-react";
-import { useTheme } from "next-themes";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Calendar, Clock, Settings as SettingsIcon } from "lucide-react";
 
 const Header = () => {
-  const { theme, setTheme } = useTheme();
+  const location = useLocation();
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="border-b border-border sticky top-0 z-50 bg-background">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">CronWizard</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-sm font-medium hover:text-primary">Dashboard</Link>
-            <Link to="/schedule-groups" className="text-sm font-medium hover:text-primary">Groups</Link>
-            <Link to="/settings" className="text-sm font-medium hover:text-primary">Settings</Link>
-          </nav>
+    <header className="sticky top-0 z-10 w-full border-b bg-background/95 backdrop-blur">
+      <div className="container flex h-16 items-center">
+        <div className="flex items-center gap-2 font-bold">
+          <Clock className="h-5 w-5" />
+          <span>CronWizard</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label="Toggle theme"
+        
+        <nav className="flex items-center space-x-4 ml-6 text-sm font-medium">
+          <Link
+            to="/"
+            className={`flex items-center gap-1 px-3 py-2 rounded-md ${
+              isActive("/") 
+                ? "bg-primary/10 text-primary" 
+                : "hover:bg-muted transition-colors"
+            }`}
           >
-            {theme === "dark" ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          </Button>
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <span className="sr-only">Open menu</span>
-              <Layers className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
+            <Calendar className="h-4 w-4" />
+            <span>Jobs</span>
+          </Link>
+          
+          <Link
+            to="/settings"
+            className={`flex items-center gap-1 px-3 py-2 rounded-md ${
+              isActive("/settings") 
+                ? "bg-primary/10 text-primary" 
+                : "hover:bg-muted transition-colors"
+            }`}
+          >
+            <SettingsIcon className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </nav>
       </div>
     </header>
   );
