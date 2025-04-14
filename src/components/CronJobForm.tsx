@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,10 +15,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchScheduleGroups } from "@/services/scheduleGroupService";
 import type { CronJob } from "@/types/CronJob";
 import { useQuery } from "@tanstack/react-query";
-import { Folder, Calendar, Clock } from "lucide-react";
+import { Folder, Calendar, Clock, Globe, Terminal } from "lucide-react";
 
 // Define form validation schema
 const formSchema = z.object({
@@ -41,6 +42,9 @@ interface CronJobFormProps {
 
 const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
   const [mode, setMode] = useState<"simple" | "advanced">("simple");
+  const [scheduleType, setScheduleType] = useState<"minute" | "hour" | "day" | "week" | "month" | "custom">(
+    job?.cronExpression ? "custom" : "hour"
+  );
 
   // Fetch schedule groups
   const { data: scheduleGroups = [], isLoading: isLoadingGroups } = useQuery({
@@ -54,7 +58,7 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
     defaultValues: {
       name: job?.name || "",
       command: job?.command || "",
-      cronExpression: job?.cronExpression || "",
+      cronExpression: job?.cronExpression || "0 * * * *", // Default hourly
       status: job?.status || "active",
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || "",
@@ -62,6 +66,35 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
       groupId: job?.groupId || null, // Changed to null for 'None' value
     },
   });
+
+  // Update cron expression based on schedule type
+  const updateCronExpression = (type: string) => {
+    setScheduleType(type as any);
+    
+    let expression = "";
+    switch (type) {
+      case "minute":
+        expression = "* * * * *";
+        break;
+      case "hour":
+        expression = "0 * * * *";
+        break;
+      case "day":
+        expression = "0 0 * * *";
+        break;
+      case "week":
+        expression = "0 0 * * 0";
+        break;
+      case "month":
+        expression = "0 0 1 * *";
+        break;
+      case "custom":
+        // Keep the current expression
+        return;
+    }
+    
+    form.setValue("cronExpression", expression);
+  };
 
   // Handle form submission
   const handleFormSubmit = (data: z.infer<typeof formSchema>) => {
@@ -71,6 +104,24 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
       groupId: data.groupId || undefined,
     };
     onSubmit(formattedData);
+  };
+
+  // Helper function to get human-readable schedule description
+  const getScheduleDescription = (cronExp: string) => {
+    switch (cronExp) {
+      case "* * * * *":
+        return "Every minute";
+      case "0 * * * *":
+        return "Every hour";
+      case "0 0 * * *":
+        return "Every day at midnight";
+      case "0 0 * * 0":
+        return "Every Sunday at midnight";
+      case "0 0 1 * *":
+        return "On the 1st of every month at midnight";
+      default:
+        return "Custom schedule";
+    }
   };
 
   return (
@@ -124,7 +175,30 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
               )}
             />
 
-            {mode === "advanced" && (
+            {mode === "simple" ? (
+              <div className="space-y-4">
+                <FormLabel>Schedule</FormLabel>
+                <Tabs 
+                  value={scheduleType} 
+                  onValueChange={updateCronExpression}
+                  className="w-full"
+                >
+                  <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+                    <TabsTrigger value="minute">Minute</TabsTrigger>
+                    <TabsTrigger value="hour">Hour</TabsTrigger>
+                    <TabsTrigger value="day">Day</TabsTrigger>
+                    <TabsTrigger value="week">Week</TabsTrigger>
+                    <TabsTrigger value="month">Month</TabsTrigger>
+                    <TabsTrigger value="custom">Custom</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value={scheduleType} className="pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {getScheduleDescription(form.getValues("cronExpression"))}
+                    </p>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            ) : (
               <FormField
                 control={form.control}
                 name="cronExpression"
@@ -137,6 +211,9 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                         <Input placeholder="* * * * *" {...field} />
                       </div>
                     </FormControl>
+                    <FormDescription>
+                      Format: minute hour day month weekday
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -163,6 +240,40 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Job Type Selection */}
+            <FormField
+              control={form.control}
+              name="isApi"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Type</FormLabel>
+                  <div className="flex space-x-2">
+                    <Button
+                      type="button"
+                      variant={field.value ? "default" : "outline"}
+                      className={field.value ? "bg-blue-500 hover:bg-blue-600" : ""}
+                      onClick={() => form.setValue("isApi", true)}
+                    >
+                      <Globe className="mr-2 h-4 w-4" />
+                      API Endpoint
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={!field.value ? "default" : "outline"}
+                      className={!field.value ? "bg-amber-500 hover:bg-amber-600" : ""}
+                      onClick={() => form.setValue("isApi", false)}
+                    >
+                      <Terminal className="mr-2 h-4 w-4" />
+                      Lambda Function
+                    </Button>
+                  </div>
+                  <FormDescription>
+                    Select the type of job to run
+                  </FormDescription>
                 </FormItem>
               )}
             />
@@ -210,27 +321,6 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
           </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="isApi"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Is API?</FormLabel>
-                <FormDescription>
-                  Enable if this cron job triggers an API endpoint.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
-
         {form.getValues("isApi") && (
           <FormField
             control={form.control}
@@ -254,8 +344,15 @@ const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
             <FormItem>
               <FormLabel>IAC Code</FormLabel>
               <FormControl>
-                <Input placeholder="infrastructure-as-code-template" {...field} />
+                <Textarea 
+                  placeholder="Infrastructure-as-code template" 
+                  className="font-mono text-sm h-24"
+                  {...field} 
+                />
               </FormControl>
+              <FormDescription>
+                Infrastructure as Code template for this job
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
