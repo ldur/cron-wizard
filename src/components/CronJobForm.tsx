@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,6 +14,8 @@ import { fetchGroups } from "@/services/cronJobService";
 import { CronJob } from "@/types/CronJob";
 import { useToast } from "@/hooks/use-toast";
 import CronJobIacDialog from "./CronJobIacDialog";
+import { parseSchedule, convertToCron } from "@/utils/cronParser";
+import { calculateNextRun } from "@/utils/cronCalculator";
 
 interface CronJobFormProps {
   job?: CronJob;
@@ -27,6 +30,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 }) => {
   const [isIacDialogOpen, setIsIacDialogOpen] = useState(false);
   const [cronMode, setCronMode] = useState<"simple" | "advanced">("simple");
+  const [naturalLanguage, setNaturalLanguage] = useState("");
+  const [schedulePreview, setSchedulePreview] = useState("");
   const [isApiMode, setIsApiMode] = useState(job?.isApi ?? false);
   const [groups, setGroups] = useState<any[]>([]);
   const { toast } = useToast();
@@ -90,6 +95,32 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       setIsApiMode(job.isApi);
     }
   }, [job, form, groups]);
+
+  // Update schedule preview when cron expression changes
+  useEffect(() => {
+    const cronExpression = form.getValues("cronExpression");
+    const preview = parseSchedule(cronExpression);
+    setSchedulePreview(preview);
+    
+    // Also update the natural language field if switching to natural language mode
+    if (cronMode === "simple") {
+      setNaturalLanguage(preview);
+    }
+  }, [form.getValues("cronExpression"), cronMode]);
+
+  // Handler for natural language input
+  const handleNaturalLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setNaturalLanguage(newValue);
+    
+    // Convert to cron and update the form
+    const cronExpression = convertToCron(newValue);
+    form.setValue("cronExpression", cronExpression);
+    
+    // Update the schedule preview
+    const preview = parseSchedule(cronExpression);
+    setSchedulePreview(preview);
+  };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
     const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode } = values;
@@ -195,25 +226,34 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
           </TabsContent>
         </Tabs>
 
-        <Tabs defaultValue="simple" className="space-y-4">
+        <Tabs 
+          defaultValue="simple" 
+          className="space-y-4"
+          onValueChange={(value) => setCronMode(value as "simple" | "advanced")}
+        >
           <TabsList>
             <TabsTrigger value="simple">Simple</TabsTrigger>
             <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
           <TabsContent value="simple">
-            <FormField
-              control={form.control}
-              name="cronExpression"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cron Expression</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0 0 * * *" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4">
+              <div className="grid gap-3">
+                <label className="text-sm font-medium">Schedule in Plain English</label>
+                <Input
+                  placeholder="Every day at 9am"
+                  value={naturalLanguage}
+                  onChange={handleNaturalLanguageChange}
+                />
+              </div>
+              
+              <div className="p-3 bg-muted rounded-md">
+                <p className="text-sm font-medium">Schedule Preview:</p>
+                <p className="text-sm mt-1">{schedulePreview}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
+                </p>
+              </div>
+            </div>
           </TabsContent>
           <TabsContent value="advanced">
             <FormField
@@ -229,6 +269,13 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 </FormItem>
               )}
             />
+            <div className="p-3 bg-muted rounded-md mt-3">
+              <p className="text-sm font-medium">Schedule Preview:</p>
+              <p className="text-sm mt-1">{schedulePreview}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
 
