@@ -10,4 +10,5 @@ export interface CronJob {
   endpointName: string | null;
   iacCode: string | null;
   groupId: string | null;
+  groupName?: string | null;
 }

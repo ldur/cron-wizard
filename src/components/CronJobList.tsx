@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal } from "lucide-react";
+import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,39 +93,40 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
       <div className="flex justify-between items-center py-2 px-4 bg-muted/30 rounded-md text-sm font-medium">
         <button 
           onClick={() => handleSort('name')}
-          className="flex items-center gap-1 w-1/4"
+          className="flex items-center gap-1 w-1/5"
         >
           Name {getSortIcon('name')}
         </button>
         <button 
           onClick={() => handleSort('nextRun')}
-          className="flex items-center gap-1 w-1/4"
+          className="flex items-center gap-1 w-1/5"
         >
           Next Run {getSortIcon('nextRun')}
         </button>
-        <div className="w-1/4">Target</div>
+        <div className="w-1/5">Target</div>
+        <div className="w-1/5">Group</div>
         <button 
           onClick={() => handleSort('status')}
-          className="flex items-center gap-1 w-1/6"
+          className="flex items-center gap-1 w-1/5"
         >
           Status {getSortIcon('status')}
         </button>
-        <div className="w-1/6 text-right">Actions</div>
+        <div className="w-1/5 text-right">Actions</div>
       </div>
 
       {sortedJobs.map((job) => (
         <Card key={job.id} className="overflow-hidden">
           <CardContent className="p-0">
             <div className="flex items-center justify-between p-4">
-              <div className="w-1/4">
+              <div className="w-1/5">
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{job.cronExpression}</p>
               </div>
-              <div className="w-1/4 flex items-center">
+              <div className="w-1/5 flex items-center">
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
                 <span className="text-sm">{new Date(job.nextRun).toLocaleString()}</span>
               </div>
-              <div className="w-1/4">
+              <div className="w-1/5">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -153,7 +154,17 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <div className="w-1/6">
+              <div className="w-1/5">
+                {job.groupName ? (
+                  <div className="flex items-center">
+                    <Folder className="h-4 w-4 text-muted-foreground mr-2" />
+                    <span className="text-sm truncate max-w-[150px]">{job.groupName}</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">None</span>
+                )}
+              </div>
+              <div className="w-1/5">
                 <Badge 
                   variant={job.status === 'active' ? 'default' : 'outline'}
                   className={job.status === 'active' ? 'bg-green-500 hover:bg-green-500/90' : ''}
@@ -161,7 +172,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   {job.status === 'active' ? 'Active' : 'Paused'}
                 </Badge>
               </div>
-              <div className="w-1/6 text-right space-x-1">
+              <div className="w-1/5 text-right space-x-1">
                 <Button 
                   size="icon" 
                   variant="ghost" 
