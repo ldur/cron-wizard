@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Code } from "lucide-react";
+import { Code, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +35,13 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const [isApiMode, setIsApiMode] = useState(job?.isApi ?? false);
   const [groups, setGroups] = useState<any[]>([]);
   const { toast } = useToast();
+  
+  // State for individual cron components
+  const [minute, setMinute] = useState("0");
+  const [hour, setHour] = useState("0");
+  const [dayOfMonth, setDayOfMonth] = useState("*");
+  const [month, setMonth] = useState("*");
+  const [dayOfWeek, setDayOfWeek] = useState("*");
 
   // Fetch groups
   useEffect(() => {
@@ -79,6 +86,24 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     },
   });
 
+  // Parse cron expression into individual components
+  const parseCronExpression = (expression: string) => {
+    const parts = expression.split(' ');
+    if (parts.length === 5) {
+      setMinute(parts[0]);
+      setHour(parts[1]);
+      setDayOfMonth(parts[2]);
+      setMonth(parts[3]);
+      setDayOfWeek(parts[4]);
+    }
+  };
+
+  // Update cron expression from individual components
+  const updateCronExpression = () => {
+    const cronExpression = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
+    form.setValue("cronExpression", cronExpression);
+  };
+
   // Update form when job or groups change
   useEffect(() => {
     if (job) {
@@ -93,6 +118,10 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         iacCode: job.iacCode,
       });
       setIsApiMode(job.isApi);
+      parseCronExpression(job.cronExpression);
+    } else {
+      // Set default cron values
+      parseCronExpression("0 0 * * *");
     }
   }, [job, form, groups]);
 
@@ -106,6 +135,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     if (cronMode === "simple") {
       setNaturalLanguage(preview);
     }
+    
+    // Parse the expression to update individual fields
+    parseCronExpression(cronExpression);
   }, [form.getValues("cronExpression"), cronMode]);
 
   // Handler for natural language input
@@ -120,6 +152,47 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     // Update the schedule preview
     const preview = parseSchedule(cronExpression);
     setSchedulePreview(preview);
+  };
+  
+  // Helper function to increment/decrement numeric values with boundaries
+  const adjustValue = (value: string, increment: boolean, min: number, max: number, allowStar: boolean) => {
+    if (value === "*" && !increment) return allowStar ? "*" : min.toString();
+    if (value === "*" && increment) return min.toString();
+    
+    const numValue = parseInt(value);
+    if (isNaN(numValue)) return allowStar ? "*" : min.toString();
+    
+    if (increment) {
+      return numValue >= max ? (allowStar ? "*" : max.toString()) : (numValue + 1).toString();
+    } else {
+      return numValue <= min ? (allowStar ? "*" : min.toString()) : (numValue - 1).toString();
+    }
+  };
+
+  // Handlers for cron component changes
+  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMinute(e.target.value);
+    updateCronExpression();
+  };
+  
+  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setHour(e.target.value);
+    updateCronExpression();
+  };
+  
+  const handleDayOfMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDayOfMonth(e.target.value);
+    updateCronExpression();
+  };
+  
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMonth(e.target.value);
+    updateCronExpression();
+  };
+  
+  const handleDayOfWeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDayOfWeek(e.target.value);
+    updateCronExpression();
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
@@ -256,25 +329,228 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             </div>
           </TabsContent>
           <TabsContent value="advanced">
-            <FormField
-              control={form.control}
-              name="cronExpression"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cron Expression</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0 0 * * *" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="p-3 bg-muted rounded-md mt-3">
-              <p className="text-sm font-medium">Schedule Preview:</p>
-              <p className="text-sm mt-1">{schedulePreview}</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
-              </p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {/* Minute */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Minute (0-59)</label>
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(minute, false, 0, 59, true);
+                        setMinute(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      className="mx-1 text-center"
+                      value={minute}
+                      onChange={handleMinuteChange}
+                      placeholder="0"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(minute, true, 0, 59, true);
+                        setMinute(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Hour */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Hour (0-23)</label>
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(hour, false, 0, 23, true);
+                        setHour(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      className="mx-1 text-center"
+                      value={hour}
+                      onChange={handleHourChange}
+                      placeholder="0"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(hour, true, 0, 23, true);
+                        setHour(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Day of Month */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Day (1-31)</label>
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(dayOfMonth, false, 1, 31, true);
+                        setDayOfMonth(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      className="mx-1 text-center"
+                      value={dayOfMonth}
+                      onChange={handleDayOfMonthChange}
+                      placeholder="*"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(dayOfMonth, true, 1, 31, true);
+                        setDayOfMonth(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Month */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Month (1-12)</label>
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(month, false, 1, 12, true);
+                        setMonth(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      className="mx-1 text-center"
+                      value={month}
+                      onChange={handleMonthChange}
+                      placeholder="*"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(month, true, 1, 12, true);
+                        setMonth(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Day of Week */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Weekday (0-6)</label>
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(dayOfWeek, false, 0, 6, true);
+                        setDayOfWeek(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      className="mx-1 text-center"
+                      value={dayOfWeek}
+                      onChange={handleDayOfWeekChange}
+                      placeholder="*"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newValue = adjustValue(dayOfWeek, true, 0, 6, true);
+                        setDayOfWeek(newValue);
+                        updateCronExpression();
+                      }}
+                      className="px-2"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="cronExpression"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cron Expression</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0 0 * * *" {...field} onChange={(e) => {
+                        field.onChange(e);
+                        parseCronExpression(e.target.value);
+                      }} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="p-3 bg-muted rounded-md mt-3">
+                <p className="text-sm font-medium">Schedule Preview:</p>
+                <p className="text-sm mt-1">{schedulePreview}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
+                </p>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
