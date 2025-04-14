@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -229,6 +228,31 @@ const Index = () => {
                       <TabsTrigger value="active">Active</TabsTrigger>
                       <TabsTrigger value="paused">Paused</TabsTrigger>
                     </TabsList>
+                  
+                    <TabsContent value="all">
+                      <CronJobList
+                        jobs={jobs}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onToggleStatus={handleToggleStatus}
+                      />
+                    </TabsContent>
+                    <TabsContent value="active">
+                      <CronJobList
+                        jobs={jobs.filter((job) => job.status === "active")}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onToggleStatus={handleToggleStatus}
+                      />
+                    </TabsContent>
+                    <TabsContent value="paused">
+                      <CronJobList
+                        jobs={jobs.filter((job) => job.status === "paused")}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onToggleStatus={handleToggleStatus}
+                      />
+                    </TabsContent>
                   </Tabs>
                   
                   <div className="flex items-center gap-2">
@@ -248,31 +272,6 @@ const Index = () => {
                     </Select>
                   </div>
                 </div>
-                
-                <TabsContent value="all">
-                  <CronJobList
-                    jobs={jobs}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onToggleStatus={handleToggleStatus}
-                  />
-                </TabsContent>
-                <TabsContent value="active">
-                  <CronJobList
-                    jobs={jobs.filter((job) => job.status === "active")}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onToggleStatus={handleToggleStatus}
-                  />
-                </TabsContent>
-                <TabsContent value="paused">
-                  <CronJobList
-                    jobs={jobs.filter((job) => job.status === "paused")}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onToggleStatus={handleToggleStatus}
-                  />
-                </TabsContent>
               </>
             ) : (
               <EmptyState onCreateNew={() => setIsFormVisible(true)} />
