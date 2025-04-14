@@ -1,235 +1,242 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { CronJob } from "@/types/CronJob";
-import { convertToCron, parseSchedule } from "@/utils/cronParser";
-import { ScheduleGroup } from "@/services/scheduleGroupService";
-import { useQuery } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchScheduleGroups } from "@/services/scheduleGroupService";
+import type { CronJob } from "@/types/CronJob";
+import { useQuery } from "@tanstack/react-query";
+
+// Define form validation schema
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters."),
+  command: z.string().min(1, "Command is required"),
+  cronExpression: z.string().min(1, "Cron expression is required"),
+  status: z.enum(["active", "paused"]),
+  isApi: z.boolean(),
+  endpointName: z.string().optional(),
+  iacCode: z.string().optional(),
+  groupId: z.string().optional(),
+});
 
 interface CronJobFormProps {
-  onSubmit: (job: Omit<CronJob, 'id' | 'nextRun'>) => void;
-  onCancel: () => void;
   job?: CronJob;
+  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onCancel: () => void;
 }
 
-const CronJobForm = ({ onSubmit, onCancel, job }: CronJobFormProps) => {
-  const [name, setName] = useState(job?.name || '');
-  const [command, setCommand] = useState(job?.command || '');
-  const [schedule, setSchedule] = useState(job?.cronExpression || '0 0 * * *');
-  const [isApi, setIsApi] = useState(job?.isApi || false);
-  const [endpointName, setEndpointName] = useState(job?.endpointName || '');
-  const [activeTab, setActiveTab] = useState<"simple" | "advanced">("simple");
-	const [groupId, setGroupId] = useState<string | null>(job?.groupId || null);
+const CronJobForm = ({ job, onSubmit, onCancel }: CronJobFormProps) => {
+  const [mode, setMode] = useState<"simple" | "advanced">("simple");
 
-  const { data: scheduleGroups = [], isLoading, error } = useQuery({
+  // Fetch schedule groups
+  const { data: scheduleGroups = [] } = useQuery({
     queryKey: ['scheduleGroups'],
     queryFn: fetchScheduleGroups,
   });
 
-  useEffect(() => {
-    if (job) {
-      setName(job.name);
-      setCommand(job.command);
-      setSchedule(job.cronExpression);
-      setIsApi(job.isApi);
-      setEndpointName(job.endpointName || '');
-			setGroupId(job.groupId || null);
-    }
-  }, [job]);
-
-  const handleSubmit = () => {
-    const newJob: Omit<CronJob, 'id' | 'nextRun'> = {
-      name,
-      command,
-      cronExpression: schedule,
-      status: 'active',
-      isApi,
-      endpointName: isApi ? endpointName : null,
-      iacCode: null,
-			groupId: groupId,
-    };
-    onSubmit(newJob);
-  };
-
-  const handleSimpleScheduleChange = (value: string) => {
-    let cronExpression = '';
-    switch (value) {
-      case 'every_minute':
-        cronExpression = '* * * * *';
-        break;
-      case 'every_5_minutes':
-        cronExpression = '*/5 * * * *';
-        break;
-      case 'every_30_minutes':
-        cronExpression = '*/30 * * * *';
-        break;
-      case 'hourly':
-        cronExpression = '0 * * * *';
-        break;
-      case 'daily':
-        cronExpression = '0 0 * * *';
-        break;
-      case 'weekly':
-        cronExpression = '0 0 * * 0';
-        break;
-      case 'monthly':
-        cronExpression = '0 0 1 * *';
-        break;
-      default:
-        cronExpression = '0 0 * * *';
-        break;
-    }
-    setSchedule(cronExpression);
-  };
+  // Initialize form with default values or existing job data
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: job?.name || "",
+      command: job?.command || "",
+      cronExpression: job?.cronExpression || "",
+      status: job?.status || "active",
+      isApi: job?.isApi || false,
+      endpointName: job?.endpointName || "",
+      iacCode: job?.iacCode || "",
+      groupId: job?.groupId || undefined,
+    },
+  });
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="grid gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            placeholder="My Cron Job"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Mode selection */}
+        <div className="flex items-center space-x-4">
+          <Button 
+            type="button" 
+            variant={mode === "simple" ? "default" : "outline"}
+            onClick={() => setMode("simple")}
+          >
+            Simple
+          </Button>
+          <Button 
+            type="button" 
+            variant={mode === "advanced" ? "default" : "outline"}
+            onClick={() => setMode("advanced")}
+          >
+            Advanced
+          </Button>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="command">Command</Label>
-          <Input
-            id="command"
-            placeholder="echo 'Hello, world!'"
-            value={command}
-            onChange={(e) => setCommand(e.target.value)}
-          />
-        </div>
-				<div className="space-y-2">
-					<Label htmlFor="group">Group (Optional)</Label>
-					<Select onValueChange={setGroupId} defaultValue={groupId || ""}>
-						<SelectTrigger id="group">
-							<SelectValue placeholder="Select a group" />
-						</SelectTrigger>
-						<SelectContent>
-							{scheduleGroups.map((group) => (
-								<SelectItem key={group.id} value={group.id}>
-									{group.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
-      </div>
 
-      <Tabs defaultValue="simple" className="w-full" onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="simple">Simple</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
-        </TabsList>
-        <TabsContent value="simple" className="space-y-2">
-          <Label>Schedule</Label>
-          <RadioGroup className="grid grid-cols-1 gap-2" onValueChange={handleSimpleScheduleChange}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="every_minute" id="every_minute" />
-              <Label htmlFor="every_minute">Every minute</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="every_5_minutes" id="every_5_minutes" />
-              <Label htmlFor="every_5_minutes">Every 5 minutes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="every_30_minutes" id="every_30_minutes" />
-              <Label htmlFor="every_30_minutes">Every 30 minutes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="hourly" id="hourly" />
-              <Label htmlFor="hourly">Hourly</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="daily" id="daily" />
-              <Label htmlFor="daily">Daily</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="weekly" id="weekly" />
-              <Label htmlFor="weekly">Weekly</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="monthly" id="monthly" />
-              <Label htmlFor="monthly">Monthly</Label>
-            </div>
-          </RadioGroup>
-        </TabsContent>
-        <TabsContent value="advanced">
-          <div className="space-y-2">
-            <Label htmlFor="schedule">Cron Expression</Label>
-            <Textarea
-              id="schedule"
-              placeholder="0 0 * * *"
-              value={schedule}
-              onChange={(e) => setSchedule(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground">
-              Enter a cron expression to define the schedule.{" "}
-              <a
-                href="https://crontab.guru/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Learn more
-              </a>
-              .
-            </p>
-            {schedule && (
-              <div className="rounded-md border p-4">
-                <p className="text-sm font-bold">Schedule Breakdown:</p>
-                {parseSchedule(schedule).map((item, index) => (
-                  <p key={index} className="text-sm">
-                    <span className="font-bold">{item.label}:</span> {item.value}
-                  </p>
-                ))}
-              </div>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="My Cron Job" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="command"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Command</FormLabel>
+              <FormControl>
+                <Input placeholder="echo 'Hello, world!'" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {mode === "advanced" && (
+          <FormField
+            control={form.control}
+            name="cronExpression"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cron Expression</FormLabel>
+                <FormControl>
+                  <Input placeholder="* * * * *" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div className="flex items-center space-x-2">
-        <Switch id="isApi" checked={isApi} onCheckedChange={setIsApi} />
-        <Label htmlFor="isApi">Is API Endpoint?</Label>
-      </div>
-
-      {isApi && (
-        <div className="space-y-2">
-          <Label htmlFor="endpointName">Endpoint Name</Label>
-          <Input
-            id="endpointName"
-            placeholder="my_api_endpoint"
-            value={endpointName}
-            onChange={(e) => setEndpointName(e.target.value)}
           />
-        </div>
-      )}
+        )}
 
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit}>Submit</Button>
-      </div>
-    </div>
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="isApi"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
+              <div className="space-y-0.5">
+                <FormLabel>Is API?</FormLabel>
+                <FormDescription>
+                  Enable if this cron job triggers an API endpoint.
+                </FormDescription>
+              </div>
+              <FormControl>
+                <input
+                  type="checkbox"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  className="h-4 w-4 border border-primary ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        {form.getValues("isApi") && (
+          <FormField
+            control={form.control}
+            name="endpointName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Endpoint Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="my-api-endpoint" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="iacCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>IAC Code</FormLabel>
+              <FormControl>
+                <Input placeholder="infrastructure-as-code-template" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {/* Add group selection */}
+        <FormField
+          control={form.control}
+          name="groupId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Schedule Group</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a schedule group" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {scheduleGroups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end space-x-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            {job ? "Update" : "Create"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 
