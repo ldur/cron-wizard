@@ -44,6 +44,11 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const [month, setMonth] = useState("*");
   const [dayOfWeek, setDayOfWeek] = useState("*");
 
+  // Update cron expression whenever any of the cron component states change
+  useEffect(() => {
+    updateCronExpression();
+  }, [minute, hour, dayOfMonth, month, dayOfWeek]);
+
   // Generate options for dropdowns
   const minuteOptions = ["*", ...Array.from({ length: 60 }, (_, i) => i.toString())];
   const hourOptions = ["*", ...Array.from({ length: 24 }, (_, i) => i.toString())];
@@ -221,30 +226,25 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     }
   };
 
-  // Dropdown select handlers with direct update to cron expression
+  // Dropdown select handlers (no need to call updateCronExpression here)
   const handleMinuteSelect = (value: string) => {
     setMinute(value);
-    updateCronExpression(); // Call directly after state update
   };
 
   const handleHourSelect = (value: string) => {
     setHour(value);
-    updateCronExpression();
   };
 
   const handleDayOfMonthSelect = (value: string) => {
     setDayOfMonth(value);
-    updateCronExpression();
   };
 
   const handleMonthSelect = (value: string) => {
     setMonth(value);
-    updateCronExpression();
   };
 
   const handleDayOfWeekSelect = (value: string) => {
     setDayOfWeek(value);
-    updateCronExpression();
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
