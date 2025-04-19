@@ -139,7 +139,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const updateCronExpression = () => {
     try {
       const cronExpression = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
-      form.setValue("cronExpression", cronExpression);
+      form.setValue("cronExpression", cronExpression); // Update form value
 
       // Also update the preview
       const preview = parseSchedule(cronExpression);
