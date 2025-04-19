@@ -144,8 +144,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       // Also update the preview
       const preview = parseSchedule(cronExpression);
       setSchedulePreview(preview);
-      
-      // Force a re-render by triggering a state update
+
+      // Trigger re-render for immediate UI update
       form.trigger("cronExpression");
     } catch (error) {
       console.error("Error updating cron expression:", error);
@@ -224,38 +224,27 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   // Dropdown select handlers with direct update to cron expression
   const handleMinuteSelect = (value: string) => {
     setMinute(value);
-    // Use requestAnimationFrame to ensure this executes after state update
-    requestAnimationFrame(() => {
-      updateCronExpression();
-    });
+    updateCronExpression(); // Call directly after state update
   };
 
   const handleHourSelect = (value: string) => {
     setHour(value);
-    requestAnimationFrame(() => {
-      updateCronExpression();
-    });
+    updateCronExpression();
   };
 
   const handleDayOfMonthSelect = (value: string) => {
     setDayOfMonth(value);
-    requestAnimationFrame(() => {
-      updateCronExpression();
-    });
+    updateCronExpression();
   };
 
   const handleMonthSelect = (value: string) => {
     setMonth(value);
-    requestAnimationFrame(() => {
-      updateCronExpression();
-    });
+    updateCronExpression();
   };
 
   const handleDayOfWeekSelect = (value: string) => {
     setDayOfWeek(value);
-    requestAnimationFrame(() => {
-      updateCronExpression();
-    });
+    updateCronExpression();
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
@@ -512,7 +501,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                   <div>
                     <p className="text-sm font-medium">Cron Expression:</p>
                     <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                      {form.getValues("cronExpression")}
+                      {form.watch("cronExpression")} {/* Dynamically watch the cronExpression */}
                     </code>
                   </div>
                 </div>
@@ -520,7 +509,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                   <p className="text-sm font-medium">Schedule Preview:</p>
                   <p className="text-sm mt-1">{schedulePreview}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
+                    Next run would be around: {new Date(calculateNextRun(form.watch("cronExpression"))).toLocaleString()}
                   </p>
                 </div>
               </div>
