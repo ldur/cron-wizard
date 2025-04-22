@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import CronJobList from "@/components/CronJobList";
@@ -24,6 +25,7 @@ const Index = () => {
   const [editingJob, setEditingJob] = useState<CronJob | undefined>(undefined);
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [nameFilter, setNameFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -160,9 +162,10 @@ const Index = () => {
     setEditingJob(undefined);
   };
 
-  // Filtering logic
+  // Update the filtering logic to include name filter
   const filteredJobs = jobs.filter(job => 
-    (!selectedGroup || job.groupId === selectedGroup)
+    (!selectedGroup || job.groupId === selectedGroup) &&
+    (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase()))
   );
 
   const filterByStatus = (status: 'active' | 'paused') => 
@@ -227,20 +230,35 @@ const Index = () => {
           <>
             {jobs.length > 0 ? (
               <>
-                <div className="mb-4 flex items-center space-x-2">
-                  <span>Group:</span>
-                  <select 
-                    value={selectedGroup || ''} 
-                    onChange={(e) => setSelectedGroup(e.target.value || null)}
-                    className="border rounded px-2 py-1"
-                  >
-                    <option value="">All Groups</option>
-                    {groups.map(group => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
+                <div className="mb-4 flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span>Group:</span>
+                    <select 
+                      value={selectedGroup || ''} 
+                      onChange={(e) => setSelectedGroup(e.target.value || null)}
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value="">All Groups</option>
+                      {groups.map(group => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 flex-1 max-w-sm">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Filter by name..."
+                        value={nameFilter}
+                        onChange={(e) => setNameFilter(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-6">
