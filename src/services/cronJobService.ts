@@ -92,42 +92,19 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     throw error;
   }
 
-  return data.map((job) => {
-    try {
-      // Safely calculate the next run date
-      const nextRunDate = calculateNextRun(job.cron_expression);
-      
-      return {
-        id: job.id,
-        name: job.name,
-        command: job.command,
-        cronExpression: job.cron_expression,
-        status: job.status,
-        nextRun: nextRunDate,
-        isApi: job.is_api,
-        endpointName: job.endpoint_name,
-        iacCode: job.iac_code,
-        groupId: job.group_id,
-        groupName: job.schedule_groups?.name || 'Default',
-      };
-    } catch (err) {
-      console.error(`Error processing job ${job.id}:`, err);
-      // Return the job with current time as fallback for nextRun
-      return {
-        id: job.id,
-        name: job.name,
-        command: job.command,
-        cronExpression: job.cron_expression,
-        status: job.status,
-        nextRun: new Date().toISOString(),
-        isApi: job.is_api,
-        endpointName: job.endpoint_name,
-        iacCode: job.iac_code,
-        groupId: job.group_id,
-        groupName: job.schedule_groups?.name || 'Default',
-      };
-    }
-  });
+  return data.map((job) => ({
+    id: job.id,
+    name: job.name,
+    command: job.command,
+    cronExpression: job.cron_expression,
+    status: job.status,
+    nextRun: calculateNextRun(job.cron_expression),
+    isApi: job.is_api,
+    endpointName: job.endpoint_name,
+    iacCode: job.iac_code,
+    groupId: job.group_id,
+    groupName: job.schedule_groups?.name || 'Default',
+  }));
 };
 
 // Update existing CRUD methods to include group_id
