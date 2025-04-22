@@ -200,10 +200,18 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
   // Handler for natural language input
   const handleNaturalLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Ensure the input is interpreted in Norwegian with a 24-hour clock
+    // Update the natural language state without processing
     setNaturalLanguage(e.target.value.replace(/(AM|PM)/gi, "").trim());
   };
-  
+
+  // Handler for keypress events in the input field
+  const handleNaturalLanguageKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission
+      applyNaturalLanguage(); // Process the input
+    }
+  };
+
   // Apply natural language update
   const applyNaturalLanguage = () => {
     if (!naturalLanguage.trim()) {
@@ -382,6 +390,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                     placeholder="Every day at 9am"
                     value={naturalLanguage}
                     onChange={handleNaturalLanguageChange}
+                    onKeyPress={handleNaturalLanguageKeyPress}
                     className="flex-1"
                   />
                   <Button type="button" onClick={applyNaturalLanguage} variant="outline" size="icon">
