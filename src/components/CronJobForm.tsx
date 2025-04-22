@@ -1,237 +1,103 @@
-import React, { useState, useEffect } from "react";
-import { z } from "zod";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Code, ChevronDown, RefreshCw } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { convertToCron } from "@/utils/cronParser";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { fetchGroups } from "@/services/cronJobService";
-import { CronJob } from "@/types/CronJob";
-import { useToast } from "@/hooks/use-toast";
-import CronJobIacDialog from "./CronJobIacDialog";
-import { parseSchedule, convertToCron } from "@/utils/cronParser";
-import { calculateNextRun } from "@/utils/cronCalculator";
+
+const cronJobSchema = z.object({
+  name: z.string().min(3, {
+    message: "Job name must be at least 3 characters.",
+  }),
+  command: z.string().min(3, {
+    message: "Command must be at least 3 characters.",
+  }),
+  cronExpression: z.string().min(5, {
+    message: "Cron expression must be at least 5 characters.",
+  }),
+  status: z.enum(['active', 'paused']),
+  isApi: z.boolean().default(false),
+  endpointName: z.string().nullable(),
+  iacCode: z.string().nullable(),
+  groupId: z.string().nullable(),
+});
+
+type CronJobFormValues = z.infer<typeof cronJobSchema>;
 
 interface CronJobFormProps {
-  job?: CronJob;
-  onSubmit: (job: Omit<CronJob, "id" | "nextRun">) => void;
+  job?: {
+    id: string;
+    name: string;
+    command: string;
+    cronExpression: string;
+    status: 'active' | 'paused';
+    nextRun: string;
+    isApi: boolean;
+    endpointName: string | null;
+    iacCode: string | null;
+    groupId?: string;
+  };
+  onSubmit: (data: CronJobFormValues) => void;
   onCancel: () => void;
 }
 
-const CronJobForm: React.FC<CronJobFormProps> = ({
-  job,
-  onSubmit,
-  onCancel,
-}) => {
-  const [isIacDialogOpen, setIsIacDialogOpen] = useState(false);
-  const [cronMode, setCronMode] = useState<"natural" | "advanced">("natural");
-  const [naturalLanguage, setNaturalLanguage] = useState("");
-  const [schedulePreview, setSchedulePreview] = useState("");
-  const [isApiMode, setIsApiMode] = useState(job?.isApi ?? false);
-  const [groups, setGroups] = useState<any[]>([]);
+const CronJobForm: React.FC<CronJobFormProps> = ({ job, onSubmit, onCancel }) => {
+  const [schedulePreview, setSchedulePreview] = useState<string | null>(job?.cronExpression || null);
+  const [isApi, setIsApi] = useState<boolean>(job?.isApi || false);
   const { toast } = useToast();
-  
-  // State for individual cron components
-  const [minute, setMinute] = useState("0");
-  const [hour, setHour] = useState("0");
-  const [dayOfMonth, setDayOfMonth] = useState("*");
-  const [month, setMonth] = useState("*");
-  const [dayOfWeek, setDayOfWeek] = useState("*");
 
-  // Update cron expression whenever any of the cron component states change
-  useEffect(() => {
-    updateCronExpression();
-  }, [minute, hour, dayOfMonth, month, dayOfWeek]);
-
-  // Generate options for dropdowns
-  const minuteOptions = ["*", ...Array.from({ length: 60 }, (_, i) => i.toString())];
-  const hourOptions = ["*", ...Array.from({ length: 24 }, (_, i) => i.toString())];
-  const dayOptions = ["*", ...Array.from({ length: 31 }, (_, i) => (i + 1).toString())];
-  const monthOptions = ["*", ...Array.from({ length: 12 }, (_, i) => (i + 1).toString())];
-  const weekdayOptions = ["*", ...Array.from({ length: 7 }, (_, i) => i.toString())];
-
-  // Common day names for weekdays - fixed the mapping to ensure correct values
-  const weekdayNames = {
-    "0": "Sunday (0)",
-    "1": "Monday (1)",
-    "2": "Tuesday (2)",
-    "3": "Wednesday (3)",
-    "4": "Thursday (4)",
-    "5": "Friday (5)",
-    "6": "Saturday (6)",
-    "*": "Every day (*)"
-  };
-
-  // Month names
-  const monthNames = {
-    "1": "January (1)",
-    "2": "February (2)",
-    "3": "March (3)",
-    "4": "April (4)",
-    "5": "May (5)",
-    "6": "June (6)",
-    "7": "July (7)",
-    "8": "August (8)",
-    "9": "September (9)",
-    "10": "October (10)",
-    "11": "November (11)",
-    "12": "December (12)",
-    "*": "Every month (*)"
-  };
-
-  // Fetch groups
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        const fetchedGroups = await fetchGroups();
-        setGroups(fetchedGroups);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load job groups",
-          variant: "destructive",
-        });
-      }
-    };
-    loadGroups();
-  }, []);
-  
-  // Add the groups field to the form schema
-  const formSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    command: z.string().min(1, "Command is required"),
-    cronExpression: z.string().min(1, "Cron expression is required"),
-    status: z.enum(["active", "paused"]),
-    groupId: z.string().optional(),
-    isApi: z.boolean().optional(),
-    endpointName: z.string().optional().nullable(),
-    iacCode: z.string().optional().nullable(),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<CronJobFormValues>({
+    resolver: zodResolver(cronJobSchema),
     defaultValues: {
       name: job?.name || "",
       command: job?.command || "",
       cronExpression: job?.cronExpression || "0 0 * * *",
-      status: job?.status || "active",
-      groupId: job?.groupId || groups[0]?.id || undefined,
+      status: job?.status || 'active',
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
+      groupId: job?.groupId || null,
     },
+    mode: "onChange",
   });
 
-  // Parse cron expression into individual components
-  const parseCronExpression = (expression: string) => {
-    const parts = expression.split(' ');
-    if (parts.length === 5) {
-      setMinute(parts[0]);
-      setHour(parts[1]);
-      setDayOfMonth(parts[2]);
-      setMonth(parts[3]);
-      setDayOfWeek(parts[4]);
-    }
+  const { setValue, handleSubmit, watch } = form;
+
+  const cronExpressionValue = watch("cronExpression");
+
+  const handlePreview = () => {
+    setSchedulePreview(cronExpressionValue);
   };
 
-  // Update cron expression from individual components
-  const updateCronExpression = () => {
-    try {
-      const cronExpression = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
-      form.setValue("cronExpression", cronExpression); // Update form value
-
-      // Also update the preview
-      const preview = parseSchedule(cronExpression);
-      setSchedulePreview(preview);
-
-      // Trigger re-render for immediate UI update
-      form.trigger("cronExpression");
-    } catch (error) {
-      console.error("Error updating cron expression:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update cron expression",
-        variant: "destructive",
-      });
-    }
+  const handleApiToggle = (value: boolean) => {
+    setIsApi(value);
+    setValue("isApi", value);
   };
 
-  // Update form when job or groups change
-  useEffect(() => {
-    if (job) {
-      form.reset({
-        name: job.name,
-        command: job.command,
-        cronExpression: job.cronExpression,
-        status: job.status,
-        groupId: job.groupId,
-        isApi: job.isApi,
-        endpointName: job.endpointName,
-        iacCode: job.iacCode,
-      });
-      setIsApiMode(job.isApi);
-      parseCronExpression(job.cronExpression);
-    } else {
-      // Set default cron values
-      parseCronExpression("0 0 * * *");
-    }
-  }, [job, form, groups]);
-
-  // Update schedule preview when cron expression changes
-  useEffect(() => {
-    const cronExpression = form.getValues("cronExpression");
-    const preview = parseSchedule(cronExpression);
-    setSchedulePreview(preview);
-    
-    // Also update the natural language field if switching to natural language mode
-    if (cronMode === "natural") {
-      setNaturalLanguage(preview);
-    }
-    
-    // Parse the expression to update individual fields
-    parseCronExpression(cronExpression);
-  }, [form.watch("cronExpression"), cronMode]);
-
-  // Handler for natural language input
-  const handleNaturalLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Update the natural language state without processing
-    setNaturalLanguage(e.target.value.replace(/(AM|PM)/gi, "").trim());
-  };
-
-  // Handler for keypress events in the input field
-  const handleNaturalLanguageKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Prevent form submission
-      applyNaturalLanguage(); // Process the input
-    }
-  };
-
-  // Apply natural language update
-  const applyNaturalLanguage = () => {
-    if (!naturalLanguage.trim()) {
-      toast({
-        title: "Feil",
-        description: "Naturlig språk-input kan ikke være tomt",
-        variant: "destructive",
-      });
-      return;
-    }
-  
+  const handleNaturalLanguageConversion = (
+    naturalLanguage: string, 
+    form: any // Adjust type as needed
+  ) => {
     try {
       // Convert natural language to cron expression
       const cronExpression = convertToCron(naturalLanguage.trim());
       form.setValue("cronExpression", cronExpression);
-  
+
       // Update the schedule preview
-      const preview = parseSchedule(cronExpression);
-      setSchedulePreview(preview);
-  
+      setSchedulePreview(cronExpression);
+
+      // Toast notification
       toast({
         title: "Tidsplan oppdatert",
         description: `Naturlig språk "${naturalLanguage}" ble konvertert til cron-uttrykk`,
@@ -240,56 +106,17 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     } catch (error) {
       console.error("Feil ved konvertering av naturlig språk til cron:", error);
       toast({
-        title: "Feil",
-        description: "Kunne ikke konvertere naturlig språk til cron-uttrykk. Sjekk inputen din.",
+        title: "Konverteringsfeil",
+        description: "Kunne ikke konvertere til cron-uttrykk",
         variant: "destructive",
       });
     }
   };
 
-  // Dropdown select handlers (no need to call updateCronExpression here)
-  const handleMinuteSelect = (value: string) => {
-    setMinute(value);
-  };
-
-  const handleHourSelect = (value: string) => {
-    setHour(value);
-  };
-
-  const handleDayOfMonthSelect = (value: string) => {
-    setDayOfMonth(value);
-  };
-
-  const handleMonthSelect = (value: string) => {
-    setMonth(value);
-  };
-
-  const handleDayOfWeekSelect = (value: string) => {
-    setDayOfWeek(value);
-  };
-
-  const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode } = values;
-    onSubmit({
-      name,
-      command,
-      cronExpression,
-      status,
-      isApi: isApi ?? false,
-      endpointName: endpointName ?? null,
-      iacCode: iacCode ?? null,
-      groupId: groupId ?? undefined,
-    });
-  };
-
-  const handleIacDialogOpen = () => {
-    setIsIacDialogOpen(true);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="name"
@@ -297,7 +124,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               <FormItem>
                 <FormLabel>Job Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Daily Backup" {...field} />
+                  <Input placeholder="My Awesome Job" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -306,26 +133,130 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
           <FormField
             control={form.control}
+            name="command"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Command</FormLabel>
+                <FormControl>
+                  <Input placeholder="node myscript.js" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="cronExpression"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cron Expression</FormLabel>
+                <FormControl>
+                  <Input placeholder="0 0 * * *" {...field} onBlur={handlePreview} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="button" variant="secondary" size="sm" onClick={() => handleNaturalLanguageConversion("every day at 3pm", form)}>
+            Convert "every day at 3pm" to Cron
+          </Button>
+
+          {schedulePreview && (
+            <div className="rounded-md border px-4 py-3 text-sm">
+              <span className="font-medium">Schedule Preview:</span> {schedulePreview}
+            </div>
+          )}
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="isApi"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Is API Endpoint?</FormLabel>
+                </div>
+                <FormControl>
+                  <Button variant="outline" size="sm" onClick={() => handleApiToggle(!isApi)}>
+                    {isApi ? "Yes" : "No"}
+                  </Button>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {isApi && (
+            <FormField
+              control={form.control}
+              name="endpointName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Endpoint Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Awesome Endpoint" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {!isApi && (
+            <FormField
+              control={form.control}
+              name="iacCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>IAC Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Awesome IAC Code" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          <FormField
+            control={form.control}
             name="groupId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Group</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  value={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a group" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {groups.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="null">Default</SelectItem>
+                    <SelectItem value="group1">Group 1</SelectItem>
+                    <SelectItem value="group2">Group 2</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -334,252 +265,17 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
           />
         </div>
 
-        <Tabs defaultValue="command" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="command">Command</TabsTrigger>
-            <TabsTrigger value="iac">
-              IaC
-              <Code className="w-4 h-4 ml-1" />
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="command">
-            <FormField
-              control={form.control}
-              name="command"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Command</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="ls -l" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </TabsContent>
-          <TabsContent value="iac">
-            <div className="grid gap-6">
-              <Textarea
-                className="min-h-[80px]"
-                placeholder="Click Generate to create IaC code"
-                value={form.getValues("iacCode") || ""}
-                readOnly
-              />
-              <Button type="button" onClick={handleIacDialogOpen}>
-                Generate IaC Code
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <Tabs 
-          defaultValue="natural" 
-          className="space-y-4"
-          onValueChange={(value) => setCronMode(value as "natural" | "advanced")}
-        >
-          <TabsList>
-            <TabsTrigger value="natural">Natural Language</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced</TabsTrigger>
-          </TabsList>
-          <TabsContent value="natural">
-            <div className="space-y-4">
-              <div className="grid gap-3">
-                <label className="text-sm font-medium">Schedule in Plain English</label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Every day at 9am"
-                    value={naturalLanguage}
-                    onChange={handleNaturalLanguageChange}
-                    onKeyPress={handleNaturalLanguageKeyPress}
-                    className="flex-1"
-                  />
-                  <Button type="button" onClick={applyNaturalLanguage} variant="outline" size="icon">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium">Schedule Preview:</p>
-                <p className="text-sm mt-1">{schedulePreview}</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
-                </p>
-                <div className="mt-2 pt-2 border-t border-border">
-                  <p className="text-sm font-medium">Cron Expression:</p>
-                  <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                    {form.getValues("cronExpression")}
-                  </code>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="advanced">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {/* Minute */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Minute (0-59)</label>
-                  <Select 
-                    value={minute} 
-                    onValueChange={handleMinuteSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select minute" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {minuteOptions.map((value) => (
-                        <SelectItem key={`minute-${value}`} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Hour */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Hour (0-23)</label>
-                  <Select 
-                    value={hour} 
-                    onValueChange={handleHourSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select hour" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {hourOptions.map((value) => (
-                        <SelectItem key={`hour-${value}`} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Day of Month */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Day (1-31)</label>
-                  <Select 
-                    value={dayOfMonth} 
-                    onValueChange={handleDayOfMonthSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {dayOptions.map((value) => (
-                        <SelectItem key={`day-${value}`} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Month */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Month (1-12)</label>
-                  <Select 
-                    value={month} 
-                    onValueChange={handleMonthSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select month" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {monthOptions.map((value) => (
-                        <SelectItem key={`month-${value}`} value={value}>
-                          {monthNames[value as keyof typeof monthNames] || value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Day of Week */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Weekday (0-6)</label>
-                  <Select 
-                    value={dayOfWeek} 
-                    onValueChange={handleDayOfWeekSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select weekday" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {weekdayOptions.map((value) => (
-                        <SelectItem key={`weekday-${value}`} value={value}>
-                          {weekdayNames[value as keyof typeof weekdayNames] || value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="p-3 bg-muted rounded-md mt-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium">Cron Expression:</p>
-                    <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                      {form.watch("cronExpression")} {/* Dynamically watch the cronExpression */}
-                    </code>
-                  </div>
-                </div>
-                <div className="mt-2 pt-2 border-t border-border">
-                  <p className="text-sm font-medium">Schedule Preview:</p>
-                  <p className="text-sm mt-1">{schedulePreview}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Next run would be around: {new Date(calculateNextRun(form.watch("cronExpression"))).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={onCancel}>
+            <X className="h-4 w-4 mr-2" />
             Cancel
           </Button>
           <Button type="submit">
+            <Plus className="h-4 w-4 mr-2" />
             {job ? "Update Job" : "Create Job"}
           </Button>
         </div>
       </form>
-
-      <CronJobIacDialog
-        open={isIacDialogOpen}
-        onOpenChange={setIsIacDialogOpen}
-        iacCode={form.getValues("iacCode") || ""}
-        onSave={(code) => {
-          form.setValue("iacCode", code);
-          setIsIacDialogOpen(false);
-        }}
-      />
     </Form>
   );
 };
