@@ -216,16 +216,17 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const applyNaturalLanguage = () => {
     if (!naturalLanguage.trim()) {
       toast({
-        title: "Feil",
-        description: "Naturlig språk-input kan ikke være tomt",
-        variant: "destructive",
+        title: "Error",
+        description: "Natural language input cannot be empty",
+        variant: "destructive", // Changed to a valid variant
       });
       return;
     }
   
     try {
-      // Convert natural language to cron expression
-      const cronExpression = convertToCron(naturalLanguage.trim(), { locale: "no", timeFormat: "24-hour" });
+      // Remove the extra locale and timeFormat arguments
+      const cronExpression = convertToCron(naturalLanguage.trim());
+  
       form.setValue("cronExpression", cronExpression);
   
       // Update the schedule preview
@@ -233,15 +234,15 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       setSchedulePreview(preview);
   
       toast({
-        title: "Tidsplan oppdatert",
-        description: `Naturlig språk "${naturalLanguage}" ble konvertert til cron-uttrykk`,
-        variant: "success",
+        title: "Schedule Updated",
+        description: `Natural language "${naturalLanguage}" was converted to cron expression`,
+        variant: "default", // Changed to a valid variant
       });
     } catch (error) {
-      console.error("Feil ved konvertering av naturlig språk til cron:", error);
+      console.error("Error converting natural language to cron:", error);
       toast({
-        title: "Feil",
-        description: "Kunne ikke konvertere naturlig språk til cron-uttrykk. Sjekk inputen din.",
+        title: "Error",
+        description: "Could not convert natural language to cron expression. Check your input.",
         variant: "destructive",
       });
     }
