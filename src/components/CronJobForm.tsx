@@ -200,27 +200,40 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
   // Handler for natural language input
   const handleNaturalLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNaturalLanguage(e.target.value);
+    // Ensure the input is interpreted in Norwegian with a 24-hour clock
+    setNaturalLanguage(e.target.value.replace(/(AM|PM)/gi, "").trim());
   };
   
   // Apply natural language update
   const applyNaturalLanguage = () => {
+    if (!naturalLanguage.trim()) {
+      toast({
+        title: "Feil",
+        description: "Naturlig språk-input kan ikke være tomt",
+        variant: "destructive",
+      });
+      return;
+    }
+  
     try {
-      const cronExpression = convertToCron(naturalLanguage);
+      // Convert natural language to cron expression
+      const cronExpression = convertToCron(naturalLanguage.trim(), { locale: "no", timeFormat: "24-hour" });
       form.setValue("cronExpression", cronExpression);
-      
+  
       // Update the schedule preview
       const preview = parseSchedule(cronExpression);
       setSchedulePreview(preview);
-      
+  
       toast({
-        title: "Schedule Updated",
-        description: "Natural language converted to cron expression",
+        title: "Tidsplan oppdatert",
+        description: `Naturlig språk "${naturalLanguage}" ble konvertert til cron-uttrykk`,
+        variant: "success",
       });
     } catch (error) {
+      console.error("Feil ved konvertering av naturlig språk til cron:", error);
       toast({
-        title: "Error",
-        description: "Failed to convert natural language to cron expression",
+        title: "Feil",
+        description: "Kunne ikke konvertere naturlig språk til cron-uttrykk. Sjekk inputen din.",
         variant: "destructive",
       });
     }
