@@ -225,7 +225,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   
     try {
       // Convert natural language to cron expression
-      const cronExpression = convertToCron(naturalLanguage.trim(), { locale: "no", timeFormat: "24-hour" });
+      const cronExpression = convertToCron(naturalLanguage.trim());
       form.setValue("cronExpression", cronExpression);
   
       // Update the schedule preview
@@ -235,7 +235,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       toast({
         title: "Tidsplan oppdatert",
         description: `Naturlig språk "${naturalLanguage}" ble konvertert til cron-uttrykk`,
-        variant: "success",
+        variant: "default",
       });
     } catch (error) {
       console.error("Feil ved konvertering av naturlig språk til cron:", error);
