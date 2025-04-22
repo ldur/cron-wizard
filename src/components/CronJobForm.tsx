@@ -379,10 +379,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 <label className="text-sm font-medium">Schedule in Plain English</label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Hver dag klokken 09:00"
+                    placeholder="Every day at 9am"
                     value={naturalLanguage}
                     onChange={handleNaturalLanguageChange}
-                    onKeyDown={handleNaturalLanguageKeyPress} // Listen for the return key
                     className="flex-1"
                   />
                   <Button type="button" onClick={applyNaturalLanguage} variant="outline" size="icon">
