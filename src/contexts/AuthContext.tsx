@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { signIn, signOut, getCurrentUser, AuthUser } from 'aws-amplify/auth';
+import { signIn, signOut, getCurrentUser, type AuthUser } from 'aws-amplify/auth';
 
 interface AuthContextType {
   user: AuthUser | null;
