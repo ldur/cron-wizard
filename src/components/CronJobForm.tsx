@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -18,10 +18,10 @@ import TargetTypeField from './cronJob/TargetTypeField';
 import GroupFields from './cronJob/GroupFields';
 import { submitCronJob } from '@/services/cronJobFormService';
 import { getTimeZones } from 'timezone-support';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CronJobFormProps {
   initialValues?: CronJob;
@@ -49,6 +49,11 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Debug logs
+  useEffect(() => {
+    console.log("CronJobForm rendering");
+  }, []);
 
   const form = useForm<z.infer<typeof cronJobSchema>>({
     resolver: zodResolver(cronJobSchema),
@@ -180,32 +185,28 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <div className="container mx-auto px-4">
+          {/* Debug output */}
+          <div className="mb-4 text-muted-foreground">
+            <p>Form is loading. If you don't see tabs below, check console logs.</p>
+          </div>
+          
           <Tabs defaultValue="schedule" className="w-full">
-            <TabsList className="w-full mb-6">
-              <TabsTrigger value="schedule" className="flex-1">Job Schedule</TabsTrigger>
-              <TabsTrigger value="target" className="flex-1">AWS Target Configuration</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="schedule">Job Schedule</TabsTrigger>
+              <TabsTrigger value="target">AWS Target Configuration</TabsTrigger>
             </TabsList>
 
             <TabsContent value="schedule" className="space-y-6">
-              {/* Job Schedule Content */}
               <div className="space-y-6">
-                {/* General Form Fields */}
                 <GeneralFormFields control={form.control} />
-                
-                {/* Scheduling Fields */}
                 <SchedulingFields control={form.control} timezones={timezones} />
               </div>
             </TabsContent>
 
             <TabsContent value="target" className="space-y-6">
-              {/* AWS Target Configuration Content */}
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-foreground mb-4">AWS Configuration</h2>
-                
-                {/* Target Type */}
                 <TargetTypeField control={form.control} />
-
-                {/* Target Form */}
                 <TargetForm 
                   form={form}
                   targetType={form.watch("targetType")}
