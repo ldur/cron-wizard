@@ -57,17 +57,21 @@ export const TargetTemplatesTable = ({
           // Process each key in the target_templates object
           Object.keys(data.target_templates).forEach(key => {
             const targetType = key as TargetType;
-            const templateData = data.target_templates[key] as TemplateData;
+            const templateData = data.target_templates[key];
             
-            if (templateData && typeof templateData === 'object' && 'attributes' in templateData) {
-              const attributes = Array.isArray(templateData.attributes) 
-                ? templateData.attributes.map((attr: any) => ({
-                    name: String(attr.name || ''),
-                    data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
-                    required: Boolean(attr.required),
-                    default_value: attr.value
-                  }))
-                : [];
+            // Safely check if the templateData has the expected structure
+            if (templateData && 
+                typeof templateData === 'object' && 
+                !Array.isArray(templateData) && 
+                'attributes' in templateData && 
+                Array.isArray(templateData.attributes)) {
+              
+              const attributes = templateData.attributes.map((attr: any) => ({
+                name: String(attr.name || ''),
+                data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
+                required: Boolean(attr.required),
+                default_value: attr.value
+              }));
               
               templates[targetType] = attributes as TemplateAttribute[];
             }

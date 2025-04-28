@@ -67,19 +67,23 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
             typeof data.target_templates === 'object' && 
             !Array.isArray(data.target_templates)) {
           
-          const targetTypeData = data.target_templates[targetType] as TemplateData | undefined;
+          // First check if the target type exists in the templates
+          const targetTemplateData = data.target_templates[targetType];
           
-          // Check if this target type has attributes in the expected format
-          if (targetTypeData && typeof targetTypeData === 'object' && 'attributes' in targetTypeData) {
-            if (Array.isArray(targetTypeData.attributes)) {
-              // Map and validate each attribute
-              templateAttributes = targetTypeData.attributes.map((attr: any) => ({
-                name: String(attr.name || ''),
-                data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
-                required: Boolean(attr.required),
-                default_value: attr.value
-              }));
-            }
+          // Then check if it has the correct structure
+          if (targetTemplateData && 
+              typeof targetTemplateData === 'object' && 
+              !Array.isArray(targetTemplateData) && 
+              'attributes' in targetTemplateData && 
+              Array.isArray(targetTemplateData.attributes)) {
+            
+            // Map and validate each attribute safely
+            templateAttributes = targetTemplateData.attributes.map((attr: any) => ({
+              name: String(attr.name || ''),
+              data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
+              required: Boolean(attr.required),
+              default_value: attr.value
+            }));
           }
         }
         
@@ -112,18 +116,29 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       
       if (fetchError) throw fetchError;
       
-      // Initialize templates as an empty object if not found
-      const currentTemplates: Record<string, TemplateData> = {};
+      // Initialize templates as an object that will match our expected structure
+      const currentTemplates: Record<string, { attributes: any[] }> = {};
       
-      // If data exists and is an object, copy its properties
+      // If data exists and is an object, copy its properties safely
       if (data?.target_templates && 
           typeof data.target_templates === 'object' && 
           !Array.isArray(data.target_templates)) {
         
-        // Cast the target_templates to the correct type when copying
-        const templates = data.target_templates as Record<string, TemplateData>;
-        Object.keys(templates).forEach(key => {
-          currentTemplates[key] = templates[key];
+        // Safely copy each target type's data
+        Object.keys(data.target_templates).forEach(key => {
+          const templateData = data.target_templates[key];
+          
+          // Only copy if it has the correct structure
+          if (templateData && 
+              typeof templateData === 'object' && 
+              !Array.isArray(templateData) && 
+              'attributes' in templateData && 
+              Array.isArray(templateData.attributes)) {
+            
+            currentTemplates[key] = {
+              attributes: templateData.attributes
+            };
+          }
         });
       }
       
@@ -144,7 +159,7 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       const { error: updateError } = await supabase
         .from('settings')
         .update({
-          target_templates: currentTemplates as any
+          target_templates: currentTemplates
         })
         .eq('id', data.id);
       
