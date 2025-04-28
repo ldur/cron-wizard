@@ -9,6 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Json } from "@/integrations/supabase/types";
 
 interface SettingsFormData {
   name: string;
@@ -16,7 +17,7 @@ interface SettingsFormData {
   iacCode: string | null;
   timeZone: string;
   timeZoneDescription: string | null;
-  targetTemplates: Record<string, any> | null;
+  targetTemplates: Json | null;
 }
 
 interface TimeZoneOption {
