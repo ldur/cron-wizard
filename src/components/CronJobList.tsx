@@ -33,10 +33,6 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this job?")) {
       onDelete(id);
-      toast({
-        title: "Job Deleted",
-        description: "The cron job has been deleted successfully.",
-      });
     }
   };
 

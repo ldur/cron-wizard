@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, X, Search, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ const Index = () => {
   }, []);
 
   // Query to fetch jobs
-  const { data: jobs = [], isLoading, error } = useQuery({
+  const { data: jobs = [], isLoading, error, refetch } = useQuery({
     queryKey: ['cronJobs'],
     queryFn: fetchCronJobs,
   });
@@ -80,6 +81,7 @@ const Index = () => {
       updateCronJob(id, job),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
+      refetch(); // Explicitly refetch after update
       setEditingJob(undefined);
       setIsFormVisible(false);
       toast({
@@ -119,6 +121,7 @@ const Index = () => {
       toggleCronJobStatus(id, status),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
+      refetch(); // Explicitly refetch after status change
       toast({
         title: data.status === "active" ? "Job Activated" : "Job Paused",
         description: `The job "${data.name}" has been ${data.status === "active" ? "activated" : "paused"}.`,
@@ -143,7 +146,9 @@ const Index = () => {
   };
 
   const handleEdit = (job: CronJob) => {
-    setEditingJob(job);
+    // Fetch the latest job data before editing
+    const currentJob = jobs.find(j => j.id === job.id);
+    setEditingJob(currentJob);
     setIsFormVisible(true);
   };
 
@@ -156,7 +161,7 @@ const Index = () => {
   const handleToggleStatus = (id: string) => {
     const job = jobs.find(j => j.id === id);
     if (job) {
-      toggleStatusMutation.mutate({ id, status: job.status });
+      toggleStatusMutation.mutate({ id, status: job.status === 'active' ? 'paused' : 'active' });
     }
   };
 
