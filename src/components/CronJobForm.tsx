@@ -18,6 +18,7 @@ import CronJobIacDialog from "./CronJobIacDialog";
 import { parseSchedule, convertToCron } from "@/utils/cronParser";
 import { calculateNextRun } from "@/utils/cronCalculator";
 import TimeZoneSelect from "./TimeZoneSelect";
+import { fetchDefaultTimezone } from "@/services/cronJobService";
 
 interface CronJobFormProps {
   job?: CronJob;
@@ -36,6 +37,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const [schedulePreview, setSchedulePreview] = useState("");
   const [isApiMode, setIsApiMode] = useState(job?.isApi ?? false);
   const [groups, setGroups] = useState<any[]>([]);
+  const [defaultTimeZone, setDefaultTimeZone] = useState("Europe/Oslo");
   const { toast } = useToast();
   
   // State for individual cron components
@@ -102,6 +104,23 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     };
     loadGroups();
   }, []);
+
+  // Fetch default timezone on component mount
+  useEffect(() => {
+    const loadDefaultTimezone = async () => {
+      try {
+        const timezone = await fetchDefaultTimezone();
+        setDefaultTimeZone(timezone);
+        if (!job) {
+          // Only set the form value if we're creating a new job
+          form.setValue("timeZone", timezone);
+        }
+      } catch (error) {
+        console.error("Error loading default timezone:", error);
+      }
+    };
+    loadDefaultTimezone();
+  }, []);
   
   // Add the groups field to the form schema
   const formSchema = z.object({
@@ -127,7 +146,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
-      timeZone: job?.timeZone || "Europe/Oslo", // Setting a default timezone
+      timeZone: job?.timeZone || defaultTimeZone, // Use the fetched default timezone
     },
   });
 

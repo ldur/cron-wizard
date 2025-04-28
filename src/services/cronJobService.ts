@@ -131,6 +131,21 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
   });
 };
 
+// Fetch default timezone from settings
+export const fetchDefaultTimezone = async (): Promise<string> => {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('time_zone')
+    .single();
+
+  if (error) {
+    console.error('Error fetching default timezone:', error);
+    return 'Europe/Oslo'; // Fallback default
+  }
+
+  return data.time_zone;
+};
+
 // Create a new cron job - modified to explicitly include the time_zone in the insert
 export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   const { data, error } = await supabase
