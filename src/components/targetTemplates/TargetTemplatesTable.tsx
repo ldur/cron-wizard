@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { TargetType, TargetTemplates } from "@/pages/TargetTemplates";
+import { TargetType, TargetTemplates, TemplateAttribute } from "@/pages/TargetTemplates";
 
 interface TargetTemplatesTableProps {
   selectedTargetType: TargetType | null;
@@ -38,10 +38,29 @@ export const TargetTemplatesTable = ({
         if (error) throw error;
 
         // Get existing target templates or initialize empty object
-        const rawTemplates = data?.target_templates;
-        const templates = (rawTemplates && typeof rawTemplates === 'object' && !Array.isArray(rawTemplates))
-          ? rawTemplates as unknown as TargetTemplates
-          : {} as TargetTemplates;
+        const templates: TargetTemplates = {};
+        
+        if (data?.target_templates && 
+            typeof data.target_templates === 'object' && 
+            !Array.isArray(data.target_templates)) {
+          
+          // Process each key in the target_templates object
+          Object.keys(data.target_templates).forEach(key => {
+            const targetType = key as TargetType;
+            const attributes = data.target_templates[key];
+            
+            // Verify attributes is an array before adding
+            if (Array.isArray(attributes)) {
+              // Cast and validate each attribute
+              templates[targetType] = attributes.map(attr => ({
+                name: String(attr.name || ''),
+                data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
+                required: Boolean(attr.required),
+                default_value: attr.default_value
+              })) as TemplateAttribute[];
+            }
+          });
+        }
           
         setTargetTemplates(templates);
         

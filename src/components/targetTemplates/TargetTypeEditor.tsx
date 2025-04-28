@@ -49,19 +49,29 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
 
         if (error) throw error;
 
-        const templates = data?.target_templates || {};
-        // If this target type has templates, set them, otherwise set empty array
-        if (templates && typeof templates === 'object' && !Array.isArray(templates) && templates[targetType]) {
-          // Ensure we're getting an array of TemplateAttributes
-          const typeTemplates = templates[targetType];
-          if (Array.isArray(typeTemplates)) {
-            setAttributes(typeTemplates as unknown as TemplateAttribute[]);
-          } else {
-            setAttributes([]);
+        // Initialize with empty array
+        let templateAttributes: TemplateAttribute[] = [];
+        
+        // Process the templates if they exist
+        if (data?.target_templates && 
+            typeof data.target_templates === 'object' && 
+            !Array.isArray(data.target_templates)) {
+          
+          const targetTypeData = data.target_templates[targetType];
+          
+          // Check if this target type has attributes and they're in array format
+          if (Array.isArray(targetTypeData)) {
+            // Map and validate each attribute
+            templateAttributes = targetTypeData.map(attr => ({
+              name: String(attr.name || ''),
+              data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
+              required: Boolean(attr.required),
+              default_value: attr.default_value
+            }));
           }
-        } else {
-          setAttributes([]);
         }
+        
+        setAttributes(templateAttributes);
       } catch (error) {
         console.error('Error fetching template:', error);
         toast({
@@ -90,25 +100,24 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       
       if (fetchError) throw fetchError;
       
-      // Initialize templates as an object if it's null or not an object
-      const rawTemplates = data?.target_templates;
-      const currentTemplates = (
-        rawTemplates && 
-        typeof rawTemplates === 'object' && 
-        !Array.isArray(rawTemplates)
-      ) ? rawTemplates : {};
+      // Initialize templates as an empty object if not found
+      const currentTemplates: Record<string, any> = {};
+      
+      // If data exists and is an object, copy its properties
+      if (data?.target_templates && 
+          typeof data.target_templates === 'object' && 
+          !Array.isArray(data.target_templates)) {
+        Object.assign(currentTemplates, data.target_templates);
+      }
       
       // Update templates for this target type
-      const updatedTemplates = {
-        ...currentTemplates,
-        [targetType]: attributes
-      };
+      currentTemplates[targetType] = attributes;
       
       // Save to database
       const { error: updateError } = await supabase
         .from('settings')
         .update({
-          target_templates: updatedTemplates as any
+          target_templates: currentTemplates
         })
         .eq('id', data.id);
       
