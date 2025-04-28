@@ -53,6 +53,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   // Debug logs
   useEffect(() => {
     console.log("CronJobForm rendering");
+    console.log("Tabs component should be ready");
   }, []);
 
   const form = useForm<z.infer<typeof cronJobSchema>>({
@@ -185,11 +186,6 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <div className="container mx-auto px-4">
-          {/* Debug output */}
-          <div className="mb-4 text-muted-foreground">
-            <p>Form is loading. If you don't see tabs below, check console logs.</p>
-          </div>
-          
           <Tabs defaultValue="schedule" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="schedule">Job Schedule</TabsTrigger>
