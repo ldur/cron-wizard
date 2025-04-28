@@ -364,29 +364,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   };
 
   const onFormSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { targetType, ...baseValues } = values;
-    
-    // Extract target-specific fields based on target type
-    const targetData: any = {};
-    switch (targetType) {
-      case 'LAMBDA':
-        if (values.function_arn) targetData.function_arn = values.function_arn;
-        if (values.payload) targetData.payload = values.payload;
-        break;
-      case 'STEP_FUNCTION':
-        if (values.state_machine_arn) targetData.state_machine_arn = values.state_machine_arn;
-        if (values.execution_role_arn) targetData.execution_role_arn = values.execution_role_arn;
-        if (values.input_payload) targetData.input_payload = values.input_payload;
-        break;
-      // ... Add similar cases for other target types
-    }
-
-    // Submit the form with both base and target-specific data
-    onSubmit({
-      ...baseValues,
-      targetType,
-      targetData
-    });
+    // Pass all form values directly to onSubmit
+    // The parent component will handle extracting the relevant data
+    onSubmit(values);
   };
 
   const handleIacDialogOpen = () => {
