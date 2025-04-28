@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -50,7 +51,17 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
 
         const templates = data?.target_templates || {};
         // If this target type has templates, set them, otherwise set empty array
-        setAttributes(templates[targetType] || []);
+        if (templates && typeof templates === 'object' && !Array.isArray(templates) && templates[targetType]) {
+          // Ensure we're getting an array of TemplateAttributes
+          const typeTemplates = templates[targetType];
+          if (Array.isArray(typeTemplates)) {
+            setAttributes(typeTemplates as unknown as TemplateAttribute[]);
+          } else {
+            setAttributes([]);
+          }
+        } else {
+          setAttributes([]);
+        }
       } catch (error) {
         console.error('Error fetching template:', error);
         toast({
@@ -80,10 +91,12 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       if (fetchError) throw fetchError;
       
       // Initialize templates as an object if it's null or not an object
-      const currentTemplates = 
-        (data?.target_templates && typeof data.target_templates === 'object' && !Array.isArray(data.target_templates)) 
-          ? data.target_templates as Record<string, TemplateAttribute[]> 
-          : {};
+      const rawTemplates = data?.target_templates;
+      const currentTemplates = (
+        rawTemplates && 
+        typeof rawTemplates === 'object' && 
+        !Array.isArray(rawTemplates)
+      ) ? (rawTemplates as Record<string, unknown>) : {};
       
       // Update templates for this target type
       const updatedTemplates = {
