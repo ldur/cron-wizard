@@ -57,17 +57,27 @@ const SettingsForm = () => {
   const onSubmit = async (data: SettingsFormData) => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      // First get the existing record's ID
+      const { data: existingSettings, error: fetchError } = await supabase
         .from('settings')
-        .upsert({
+        .select('id')
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the existing record using its ID
+      const { error: updateError } = await supabase
+        .from('settings')
+        .update({
           name: data.name,
           iac_description: data.iacDescription,
           iac_code: data.iacCode,
           time_zone: data.timeZone,
           time_zone_description: data.timeZoneDescription,
-        });
+        })
+        .eq('id', existingSettings.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       toast({
         title: "Success",
