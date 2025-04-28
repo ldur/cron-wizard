@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -20,7 +19,6 @@ import CronJobIacDialog from "./CronJobIacDialog";
 import { parseSchedule, convertToCron } from "@/utils/cronParser";
 import { calculateNextRun } from "@/utils/cronCalculator";
 import TimeZoneSelect from "./TimeZoneSelect";
-import { fetchDefaultTimezone } from "@/services/cronJobService";
 import TagInput from './TagInput';
 import TargetForm from './TargetForm';
 
@@ -479,6 +477,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
+          {/* Left Column - Basic Configuration */}
           <div className="space-y-6">
             <div className="grid gap-6">
               <FormField
@@ -589,6 +588,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               />
             </div>
 
+            {/* Command and IaC Tabs */}
             <Tabs defaultValue="command" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="command">Command</TabsTrigger>
@@ -621,6 +621,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               </TabsContent>
             </Tabs>
 
+            {/* Schedule Configuration */}
             <Tabs 
               defaultValue="natural" 
               className="space-y-4"
@@ -814,94 +815,6 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               />
             </div>
 
-            <div className="border rounded-md p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <h3 className="text-base font-medium">Flexible Time Window</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Allow the schedule to run within a flexible time window
-                  </p>
-                </div>
-                <FormField
-                  control={form.control}
-                  name="flexibleTimeWindowMode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Switch 
-                          checked={isFlexibleTime}
-                          onCheckedChange={handleFlexibleModeChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              {isFlexibleTime && (
-                <FormField
-                  control={form.control}
-                  name="flexibleWindowMinutes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={1440}
-                            placeholder="15"
-                            {...field}
-                            value={field.value === null ? '' : field.value}
-                            onChange={(e) => {
-                              const val = e.target.value !== '' ? parseInt(e.target.value, 10) : null;
-                              field.onChange(val);
-                            }}
-                            className="w-24"
-                          />
-                        </FormControl>
-                        <span>minutes</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        <Clock className="inline h-3 w-3 mr-1" />
-                        The job will run randomly within the specified window
-                      </p>
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="targetType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Target Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a target type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="LAMBDA">AWS Lambda</SelectItem>
-                      <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
-                      <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
-                      <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
-                      <SelectItem value="SQS">SQS</SelectItem>
-                      <SelectItem value="ECS">ECS</SelectItem>
-                      <SelectItem value="KINESIS">Kinesis</SelectItem>
-                      <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <TargetForm targetType={form.watch("targetType")} form={form} />
-
             <FormField
               control={form.control}
               name="tags"
@@ -919,25 +832,39 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               )}
             />
           </div>
-        </div>
-        
-        <div className="flex items-center justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {job ? "Update Job" : "Create Job"}
-          </Button>
-        </div>
-      </form>
 
-      <CronJobIacDialog 
-        open={isIacDialogOpen}
-        onOpenChange={setIsIacDialogOpen}
-        job={job}
-      />
-    </Form>
-  );
-};
+          {/* Right Column - AWS Configuration */}
+          <div className="space-y-6">
+            <div className="border-b pb-4">
+              <h2 className="text-lg font-semibold mb-4">AWS Configuration</h2>
+              
+              <FormField
+                control={form.control}
+                name="targetType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a target type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="LAMBDA">AWS Lambda</SelectItem>
+                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                        <SelectItem value="SQS">SQS</SelectItem>
+                        <SelectItem value="ECS">ECS</SelectItem>
+                        <SelectItem value="KINESIS">Kinesis</SelectItem>
+                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-export default CronJobForm;
+              <div className="mt-4">
+                <TargetForm targetType={form.watch("targetType")} form={form
