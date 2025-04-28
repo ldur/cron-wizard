@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -96,9 +97,8 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         >
           Name {getSortIcon('name')}
         </button>
-        <div className="w-2/6 flex">
-          <span className="w-1/2">Group</span>
-          <span className="w-1/2">Time Zone</span>
+        <div className="w-2/6">
+          Group / Time Zone
         </div>
         <button 
           onClick={() => handleSort('nextRun')}
@@ -124,12 +124,13 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{job.cronExpression}</p>
               </div>
-              <div className="w-2/6 flex">
-                <div className="w-1/2 flex items-center">
+              <div className="w-2/6 flex gap-2 items-center">
+                <div className="flex items-center">
                   <FolderTree className="h-4 w-4 text-blue-500 mr-2" />
                   <span className="text-sm">{job.groupName || "Default"}</span>
                 </div>
-                <div className="w-1/2 flex items-center">
+                <span className="text-muted-foreground">/</span>
+                <div className="flex items-center">
                   <Clock className="h-4 w-4 text-blue-500 mr-2" />
                   <span className="text-sm">{job.timeZone || "UTC"}</span>
                 </div>
