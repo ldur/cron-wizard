@@ -21,6 +21,7 @@ export type Database = {
           is_api: boolean
           name: string
           status: string
+          time_zone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -34,6 +35,7 @@ export type Database = {
           is_api?: boolean
           name: string
           status: string
+          time_zone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -47,6 +49,7 @@ export type Database = {
           is_api?: boolean
           name?: string
           status?: string
+          time_zone?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -87,6 +90,8 @@ export type Database = {
           iac_description: string
           id: string
           name: string
+          time_zone: string
+          time_zone_decription: string | null
           updated_at: string
         }
         Insert: {
@@ -95,6 +100,8 @@ export type Database = {
           iac_description: string
           id?: string
           name: string
+          time_zone?: string
+          time_zone_decription?: string | null
           updated_at?: string
         }
         Update: {
@@ -103,6 +110,8 @@ export type Database = {
           iac_description?: string
           id?: string
           name?: string
+          time_zone?: string
+          time_zone_decription?: string | null
           updated_at?: string
         }
         Relationships: []
