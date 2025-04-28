@@ -2,8 +2,10 @@
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from "react-router-dom";
@@ -15,7 +17,7 @@ import SchedulingFields from './cronJob/SchedulingFields';
 import TargetTypeField from './cronJob/TargetTypeField';
 import GroupFields from './cronJob/GroupFields';
 import { submitCronJob } from '@/services/cronJobFormService';
-import { findTimeZone, getTimeZones } from 'timezone-support';
+import { getTimeZones } from 'timezone-support';
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
