@@ -1,6 +1,6 @@
 
 import { 
-  Function, 
+  Code, 
   ArrowRight, 
   Globe, 
   Calendar, 
@@ -14,7 +14,7 @@ import { CronJob } from "@/types/CronJob";
 export const getTargetTypeIcon = (targetType: CronJob['targetType']) => {
   switch (targetType) {
     case 'LAMBDA':
-      return Function;
+      return Code;
     case 'STEP_FUNCTION':
       return ArrowRight;
     case 'API_GATEWAY':
@@ -30,7 +30,7 @@ export const getTargetTypeIcon = (targetType: CronJob['targetType']) => {
     case 'SAGEMAKER':
       return Wand2;
     default:
-      return Function;
+      return Code;
   }
 };
 
