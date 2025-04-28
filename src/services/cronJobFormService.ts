@@ -119,24 +119,24 @@ export const handleTargetData = async (
   if (isUpdate) {
     // For updates, we need to check if the record exists
     const { data: existingData } = await supabase
-      .from(targetTable as any)
+      .from(targetTable)
       .select('*')
       .eq('id', jobId)
       .maybeSingle();
     
     if (existingData) {
       await supabase
-        .from(targetTable as any)
+        .from(targetTable)
         .update(targetData)
         .eq('id', jobId);
     } else {
       await supabase
-        .from(targetTable as any)
+        .from(targetTable)
         .insert(targetData);
     }
   } else {
     await supabase
-      .from(targetTable as any)
+      .from(targetTable)
       .insert(targetData);
   }
 };
