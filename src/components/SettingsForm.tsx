@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -68,7 +69,8 @@ const SettingsForm = ({ setting, onSubmit, onCancel }: SettingsFormProps) => {
     // Pass both the time zone value and description to the submit handler
     onSubmit({
       ...data,
-      timeZoneDescription
+      timeZoneDescription,
+      iacCode: data.iacCode || null, // Ensure null is passed for empty strings
     });
   };
 

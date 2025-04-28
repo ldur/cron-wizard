@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import type { Settings } from '@/types/Settings';
 
@@ -81,18 +82,21 @@ export const updateSetting = async (
   id: string, 
   setting: Partial<Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>>
 ): Promise<{ data: Settings; updated: boolean }> => {
-  // Create a properly formatted update object that matches the database schema
-  const updateData: Record<string, any> = {};
-  
-  if (setting.name !== undefined) updateData.name = setting.name;
-  if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
-  if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode || null;
-  if (setting.timeZone !== undefined) updateData.time_zone = setting.timeZone;
-  if (setting.timeZoneDescription !== undefined) updateData.time_zone_decription = setting.timeZoneDescription;
-  
-  console.log('Update data being sent to Supabase:', updateData);
+  console.log('Updating setting with ID:', id);
+  console.log('Update data:', setting);
   
   try {
+    // Create a properly formatted update object that matches the database schema
+    const updateData: Record<string, any> = {};
+    
+    if (setting.name !== undefined) updateData.name = setting.name;
+    if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
+    if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode; // Allow null values
+    if (setting.timeZone !== undefined) updateData.time_zone = setting.timeZone;
+    if (setting.timeZoneDescription !== undefined) updateData.time_zone_decription = setting.timeZoneDescription;
+    
+    console.log('Final update data being sent to Supabase:', updateData);
+    
     // Check if the record exists first
     const { data: existingData, error: checkError } = await supabase
       .from('settings')
@@ -101,7 +105,7 @@ export const updateSetting = async (
       .single();
       
     if (checkError) {
-      console.error('Setting not found for update:', id);
+      console.error('Setting not found for update:', id, checkError);
       return await fetchCurrentSettingData(id);
     }
     
@@ -173,7 +177,7 @@ function mapToSettingsModel(data: any): Settings {
     id: data.id,
     name: data.name,
     iacDescription: data.iac_description,
-    iacCode: data.iac_code || null,
+    iacCode: data.iac_code, // This can be null based on DB schema
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     timeZone: data.time_zone || 'UTC',
