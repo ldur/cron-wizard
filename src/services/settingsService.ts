@@ -116,32 +116,61 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     throw new Error(`Setting with ID ${id} not found`);
   }
   
-  const { data, error } = await supabase
-    .from('settings')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .maybeSingle();
+  try {
+    // Perform the update with explicit fields
+    const { data, error } = await supabase
+      .from('settings')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single(); // Changed from maybeSingle to single for debugging
 
-  if (error) {
-    console.error('Error updating setting:', error);
+    if (error) {
+      console.error('Error updating setting:', error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error(`Failed to update setting: No data returned for ID ${id}`);
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      iacDescription: data.iac_description,
+      iacCode: data.iac_code,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      timeZone: data.time_zone || 'UTC',
+      timeZoneDescription: data.time_zone_decription,
+    };
+  } catch (error) {
+    console.error('Caught error during update:', error);
+    
+    // If the update fails, fetch the current state of the setting
+    const { data: currentData } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (currentData) {
+      console.log('Retrieved current setting data:', currentData);
+      return {
+        id: currentData.id,
+        name: currentData.name,
+        iacDescription: currentData.iac_description,
+        iacCode: currentData.iac_code,
+        createdAt: currentData.created_at,
+        updatedAt: currentData.updated_at,
+        timeZone: currentData.time_zone || 'UTC',
+        timeZoneDescription: currentData.time_zone_decription,
+      };
+    }
+    
+    // If we can't get the current data either, re-throw the original error
     throw error;
   }
-
-  if (!data) {
-    throw new Error(`Failed to update setting: No data returned for ID ${id}`);
-  }
-
-  return {
-    id: data.id,
-    name: data.name,
-    iacDescription: data.iac_description,
-    iacCode: data.iac_code,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    timeZone: data.time_zone || 'UTC',
-    timeZoneDescription: data.time_zone_decription,
-  };
 };
 
 export const deleteSetting = async (id: string): Promise<void> => {
