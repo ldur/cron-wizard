@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import type { Settings } from '@/types/Settings';
 
@@ -93,9 +92,14 @@ export const updateSetting = async (
     if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
     if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode; // Allow null values
     if (setting.timeZone !== undefined) updateData.time_zone = setting.timeZone;
-    if (setting.timeZoneDescription !== undefined) updateData.time_zone_decription = setting.timeZoneDescription;
+    if (setting.timeZoneDescription !== undefined) updateData.time_zone_description = setting.timeZoneDescription; // Fixed typo
     
     console.log('Final update data being sent to Supabase:', updateData);
+    
+    // Ensure the updateData object is not empty
+    if (Object.keys(updateData).length === 0) {
+      throw new Error('No valid fields provided for update');
+    }
     
     // Check if the record exists first
     const { data: existingData, error: checkError } = await supabase
