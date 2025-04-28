@@ -66,11 +66,10 @@ const SettingsForm = ({ setting, onSubmit, onCancel }: SettingsFormProps) => {
     const selectedTimeZone = timeZones.find(tz => tz.value === data.timeZone);
     const timeZoneDescription = selectedTimeZone?.label || "";
     
-    // Pass both the time zone value and description to the submit handler
+    // Submit form with timezone description
     onSubmit({
       ...data,
       timeZoneDescription,
-      iacCode: data.iacCode || null, // Ensure null is passed for empty strings
     });
   };
 
@@ -143,7 +142,7 @@ const SettingsForm = ({ setting, onSubmit, onCancel }: SettingsFormProps) => {
               <FormLabel>Infrastructure as Code</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Enter TypeScript IAC code here..." 
+                  placeholder="Enter TypeScript IAC code here (optional)" 
                   className="min-h-[200px] font-mono"
                   {...field} 
                 />

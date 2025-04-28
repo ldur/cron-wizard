@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CronJobIacDialog from "./CronJobIacDialog";
+import { formatDistanceToNow } from "date-fns";
 
 interface SettingsListProps {
   settings: Settings[];
@@ -62,6 +63,14 @@ const SettingsList = ({ settings, onEdit, onDelete }: SettingsListProps) => {
     });
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (error) {
+      return "Unknown";
+    }
+  };
+
   return (
     <div>
       <Table>
@@ -69,6 +78,7 @@ const SettingsList = ({ settings, onEdit, onDelete }: SettingsListProps) => {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
+            <TableHead>Time Zone</TableHead>
             <TableHead>Updated</TableHead>
             <TableHead className="w-[150px] text-right">Actions</TableHead>
           </TableRow>
@@ -76,7 +86,7 @@ const SettingsList = ({ settings, onEdit, onDelete }: SettingsListProps) => {
         <TableBody>
           {settings.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+              <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                 No settings found. Create one to get started.
               </TableCell>
             </TableRow>
@@ -84,23 +94,26 @@ const SettingsList = ({ settings, onEdit, onDelete }: SettingsListProps) => {
             settings.map((setting) => (
               <TableRow key={setting.id}>
                 <TableCell className="font-medium">{setting.name}</TableCell>
-                <TableCell>{setting.iacDescription}</TableCell>
-                <TableCell>
-                  {new Date(setting.updatedAt).toLocaleDateString()}
-                </TableCell>
+                <TableCell className="max-w-xs truncate">{setting.iacDescription}</TableCell>
+                <TableCell>{setting.timeZoneDescription || setting.timeZone}</TableCell>
+                <TableCell>{formatDate(setting.updatedAt)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleViewIac(setting)}
-                    >
-                      <Code className="h-4 w-4" />
-                    </Button>
+                    {setting.iacCode && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleViewIac(setting)}
+                        title="View IAC Code"
+                      >
+                        <Code className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       onClick={() => onEdit(setting)}
+                      title="Edit"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -108,6 +121,7 @@ const SettingsList = ({ settings, onEdit, onDelete }: SettingsListProps) => {
                       variant="ghost" 
                       size="icon" 
                       onClick={() => handleDelete(setting.id)}
+                      title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

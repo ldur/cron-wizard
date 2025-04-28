@@ -91,7 +91,7 @@ export type Database = {
           id: string
           name: string
           time_zone: string
-          time_zone_decription: string | null
+          time_zone_description: string | null
           updated_at: string
         }
         Insert: {
@@ -101,7 +101,7 @@ export type Database = {
           id?: string
           name: string
           time_zone?: string
-          time_zone_decription?: string | null
+          time_zone_description?: string | null
           updated_at?: string
         }
         Update: {
@@ -111,7 +111,7 @@ export type Database = {
           id?: string
           name?: string
           time_zone?: string
-          time_zone_decription?: string | null
+          time_zone_description?: string | null
           updated_at?: string
         }
         Relationships: []

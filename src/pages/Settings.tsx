@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -38,7 +38,7 @@ const Settings = () => {
         description: "The IAC setting has been created successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: `Failed to create setting: ${error.message}`,
@@ -50,23 +50,15 @@ const Settings = () => {
   const updateSettingMutation = useMutation({
     mutationFn: ({ id, setting }: { id: string; setting: Partial<Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>> }) => 
       updateSetting(id, setting),
-    onSuccess: (result) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       setEditingSetting(undefined);
       setIsFormVisible(false);
       
-      if (result.updated) {
-        toast({
-          title: "Setting Updated",
-          description: "The IAC setting has been updated successfully.",
-        });
-      } else {
-        toast({
-          title: "Update Issue",
-          description: "The setting could not be updated. It may have been deleted or you may not have permission to edit it.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Setting Updated",
+        description: "The IAC setting has been updated successfully.",
+      });
     },
     onError: (error: Error) => {
       console.error("Update error:", error);
@@ -97,14 +89,11 @@ const Settings = () => {
   });
 
   const handleAddSetting = (data: Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>) => {
-    console.log('Creating new setting with data:', data);
     createSettingMutation.mutate(data);
   };
 
   const handleUpdateSetting = (data: Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!editingSetting) return;
-    console.log('Updating setting with ID:', editingSetting.id);
-    console.log('Update data:', data);
     
     updateSettingMutation.mutate({ 
       id: editingSetting.id, 
@@ -113,7 +102,6 @@ const Settings = () => {
   };
 
   const handleEdit = (setting: Settings) => {
-    console.log('Editing setting:', setting);
     setEditingSetting(setting);
     setIsFormVisible(true);
   };
@@ -126,18 +114,6 @@ const Settings = () => {
     setIsFormVisible(false);
     setEditingSetting(undefined);
   };
-
-  // Error handling for the main query
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Error Loading Settings",
-        description: "There was a problem loading your IAC settings.",
-        variant: "destructive",
-      });
-      console.error("Error fetching settings:", error);
-    }
-  }, [error, toast]);
 
   if (isLoading) {
     return (
@@ -173,8 +149,17 @@ const Settings = () => {
           )}
         </div>
 
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-4">
+            Error loading settings. Please try again.
+          </div>
+        )}
+
         {isFormVisible ? (
-          <div className="mb-8">
+          <div className="mb-8 border p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold mb-4">
+              {editingSetting ? "Edit Setting" : "Create New Setting"}
+            </h3>
             <SettingsForm
               setting={editingSetting}
               onSubmit={editingSetting ? handleUpdateSetting : handleAddSetting}
@@ -182,11 +167,13 @@ const Settings = () => {
             />
           </div>
         ) : (
-          <SettingsList
-            settings={settings}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          <div className="border rounded-lg shadow-sm overflow-hidden">
+            <SettingsList
+              settings={settings}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </div>
         )}
       </main>
       
