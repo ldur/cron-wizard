@@ -30,6 +30,16 @@ interface TargetTypeEditorProps {
   targetType: TargetType;
 }
 
+// Define the structure that matches our target_templates data
+interface TemplateData {
+  attributes: Array<{
+    name: string;
+    data_type: string;
+    required: boolean;
+    value: any;
+  }>;
+}
+
 export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
   const [attributes, setAttributes] = useState<TemplateAttribute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,10 +67,10 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
             typeof data.target_templates === 'object' && 
             !Array.isArray(data.target_templates)) {
           
-          const targetTypeData = data.target_templates[targetType];
+          const targetTypeData = data.target_templates[targetType] as TemplateData | undefined;
           
-          // Check if this target type has attributes in the new format
-          if (targetTypeData && typeof targetTypeData === 'object' && targetTypeData.attributes) {
+          // Check if this target type has attributes in the expected format
+          if (targetTypeData && typeof targetTypeData === 'object' && 'attributes' in targetTypeData) {
             if (Array.isArray(targetTypeData.attributes)) {
               // Map and validate each attribute
               templateAttributes = targetTypeData.attributes.map((attr: any) => ({
@@ -103,13 +113,18 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       if (fetchError) throw fetchError;
       
       // Initialize templates as an empty object if not found
-      const currentTemplates: Record<string, any> = {};
+      const currentTemplates: Record<string, TemplateData> = {};
       
       // If data exists and is an object, copy its properties
       if (data?.target_templates && 
           typeof data.target_templates === 'object' && 
           !Array.isArray(data.target_templates)) {
-        Object.assign(currentTemplates, data.target_templates);
+        
+        // Cast the target_templates to the correct type when copying
+        const templates = data.target_templates as Record<string, TemplateData>;
+        Object.keys(templates).forEach(key => {
+          currentTemplates[key] = templates[key];
+        });
       }
       
       // Format attributes for saving

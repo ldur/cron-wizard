@@ -12,6 +12,16 @@ interface TargetTemplatesTableProps {
   onSelectTargetType: (targetType: TargetType) => void;
 }
 
+// Define the structure that matches our target_templates data
+interface TemplateData {
+  attributes: Array<{
+    name: string;
+    data_type: string;
+    required: boolean;
+    value: any;
+  }>;
+}
+
 export const TargetTemplatesTable = ({ 
   selectedTargetType,
   onSelectTargetType 
@@ -47,9 +57,9 @@ export const TargetTemplatesTable = ({
           // Process each key in the target_templates object
           Object.keys(data.target_templates).forEach(key => {
             const targetType = key as TargetType;
-            const templateData = data.target_templates[key];
+            const templateData = data.target_templates[key] as TemplateData;
             
-            if (templateData && typeof templateData === 'object' && templateData.attributes) {
+            if (templateData && typeof templateData === 'object' && 'attributes' in templateData) {
               const attributes = Array.isArray(templateData.attributes) 
                 ? templateData.attributes.map((attr: any) => ({
                     name: String(attr.name || ''),
