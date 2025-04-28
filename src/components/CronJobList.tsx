@@ -1,6 +1,55 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree, Briefcase, Folder } from "lucide-react";
+import { 
+  Play, 
+  Pause, 
+  Edit, 
+  Trash, 
+  Clock, 
+  Calendar, 
+  ArrowDown, 
+  ArrowUp, 
+  Globe, 
+  Code, 
+  Terminal,
+  // Import all the icons we're using for groups
+  Calendar as CalendarIcon,
+  Clock as ClockIcon,
+  AlarmClock,
+  Timer,
+  CalendarClock,
+  CalendarDays,
+  CalendarCheck,
+  Truck,
+  Package,
+  Box,
+  Clipboard,
+  ClipboardCheck,
+  ClipboardList,
+  List,
+  ListTodo,
+  CheckSquare,
+  ListChecks,
+  FileSpreadsheet,
+  FileText,
+  Database,
+  HardDrive,
+  Megaphone,
+  Bell,
+  Mail,
+  MessageSquare,
+  Users,
+  FolderTree,
+  Network,
+  LayoutGrid,
+  Activity,
+  LineChart,
+  BarChart,
+  Gauge,
+  TimerReset,
+  Briefcase, 
+  Folder
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,13 +106,47 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
 
   // Helper function to get the appropriate icon for a group
   const getGroupIcon = (iconName: string | undefined) => {
-    switch (iconName) {
-      case 'briefcase':
-        return <Briefcase className="h-4 w-4 text-blue-500 mr-2" />;
-      case 'folder':
-      default:
-        return <Folder className="h-4 w-4 text-blue-500 mr-2" />;
-    }
+    const iconMap: Record<string, React.ElementType> = {
+      'briefcase': Briefcase,
+      'folder': Folder,
+      'calendar': CalendarIcon,
+      'clock': ClockIcon,
+      'alarm-clock': AlarmClock,
+      'timer': Timer,
+      'calendar-clock': CalendarClock,
+      'calendar-days': CalendarDays,
+      'calendar-check': CalendarCheck,
+      'truck': Truck,
+      'package': Package,
+      'box': Box,
+      'clipboard': Clipboard,
+      'clipboard-check': ClipboardCheck,
+      'clipboard-list': ClipboardList,
+      'list': List,
+      'list-todo': ListTodo,
+      'check-square': CheckSquare,
+      'list-checks': ListChecks,
+      'file-spreadsheet': FileSpreadsheet,
+      'file-text': FileText,
+      'database': Database,
+      'hard-drive': HardDrive,
+      'megaphone': Megaphone,
+      'bell': Bell,
+      'mail': Mail,
+      'message-square': MessageSquare,
+      'users': Users,
+      'folder-tree': FolderTree,
+      'network': Network,
+      'layout-grid': LayoutGrid,
+      'activity': Activity,
+      'line-chart': LineChart,
+      'bar-chart': BarChart,
+      'gauge': Gauge,
+      'timer-reset': TimerReset
+    };
+    
+    const IconComponent = iconName && iconMap[iconName] ? iconMap[iconName] : Folder;
+    return <IconComponent className="h-4 w-4 text-blue-500 mr-2" />;
   };
 
   const sortedJobs = [...jobs].sort((a, b) => {

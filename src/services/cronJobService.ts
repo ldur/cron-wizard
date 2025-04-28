@@ -36,7 +36,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         scheduleExpression: job.schedule_expression,
         startTime: job.start_time,
         endTime: job.end_time,
-        status: job.status,
+        status: job.status as 'active' | 'paused',
         isApi: job.is_api,
         endpointName: job.endpoint_name,
         iacCode: job.iac_code,
@@ -89,26 +89,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     if (error) throw error;
     
     // Convert database response back to CronJob type
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      scheduleExpression: data.schedule_expression,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      status: data.status,
-      isApi: data.is_api,
-      endpointName: data.endpoint_name,
-      iacCode: data.iac_code,
-      groupId: data.group_id,
-      groupName: job.groupName,
-      groupIcon: job.groupIcon,
-      timezone: data.timezone,
-      tags: data.tags || [],
-      flexibleTimeWindowMode: data.flexible_time_window_mode,
-      flexibleWindowMinutes: data.flexible_window_minutes,
-      targetType: data.target_type,
-    };
+    return dbToTsCronJob(data, job.groupName, job.groupIcon);
   } catch (error) {
     console.error('Error creating cron job:', error);
     throw error;
@@ -150,27 +131,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     if (error) throw error;
     
     // Convert database response back to CronJob type
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      scheduleExpression: data.schedule_expression,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      status: data.status,
-      isApi: data.is_api,
-      endpointName: data.endpoint_name,
-      iacCode: data.iac_code,
-      groupId: data.group_id,
-      // Use groupName from job if available, otherwise leave undefined
-      groupName: job.groupName,
-      groupIcon: job.groupIcon,
-      timezone: data.timezone,
-      tags: data.tags || [],
-      flexibleTimeWindowMode: data.flexible_time_window_mode,
-      flexibleWindowMinutes: data.flexible_window_minutes,
-      targetType: data.target_type,
-    };
+    return dbToTsCronJob(data, job.groupName, job.groupIcon);
   } catch (error) {
     console.error('Error updating cron job:', error);
     throw error;
@@ -201,7 +162,9 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
       .single();
 
     if (error) throw error;
-    return data as CronJob;
+    
+    // Convert database response to CronJob type
+    return dbToTsCronJob(data);
   } catch (error) {
     console.error('Error toggling cron job status:', error);
     throw error;
@@ -297,4 +260,32 @@ export const deleteGroup = async (id: string): Promise<void> => {
     console.error('Error deleting group:', error);
     throw error;
   }
+};
+
+// Helper function to convert database format to TypeScript CronJob type
+const dbToTsCronJob = (
+  dbJob: any, 
+  groupName?: string | undefined, 
+  groupIcon?: string | undefined
+): CronJob => {
+  return {
+    id: dbJob.id,
+    name: dbJob.name,
+    description: dbJob.description,
+    scheduleExpression: dbJob.schedule_expression,
+    startTime: dbJob.start_time,
+    endTime: dbJob.end_time,
+    status: dbJob.status as 'active' | 'paused',
+    isApi: dbJob.is_api,
+    endpointName: dbJob.endpoint_name,
+    iacCode: dbJob.iac_code,
+    groupId: dbJob.group_id,
+    groupName: groupName || undefined,
+    groupIcon: groupIcon || undefined,
+    timezone: dbJob.timezone,
+    tags: dbJob.tags || [],
+    flexibleTimeWindowMode: dbJob.flexible_time_window_mode,
+    flexibleWindowMinutes: dbJob.flexible_window_minutes,
+    targetType: dbJob.target_type,
+  };
 };
