@@ -6,4 +6,6 @@ export interface Settings {
   iacCode: string;
   createdAt: string;
   updatedAt: string;
+  timeZone: string;
+  timeZoneDescription?: string;
 }
