@@ -123,7 +123,7 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
       .update(updateData)
       .eq('id', id)
       .select()
-      .single(); // Changed from maybeSingle to single for debugging
+      .maybeSingle(); // Change back to maybeSingle to handle case where row might not exist
 
     if (error) {
       console.error('Error updating setting:', error);
@@ -131,7 +131,35 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     }
 
     if (!data) {
-      throw new Error(`Failed to update setting: No data returned for ID ${id}`);
+      console.error(`No data returned when updating setting ${id}. Fetching current data.`);
+      
+      // If no data was returned from the update, fetch the current state
+      const { data: currentData, error: fetchError } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+        
+      if (fetchError) {
+        console.error('Error fetching current setting data:', fetchError);
+        throw fetchError;
+      }
+      
+      if (!currentData) {
+        throw new Error(`Setting with ID ${id} not found after update attempt`);
+      }
+      
+      console.log('Retrieved current setting data after update:', currentData);
+      return {
+        id: currentData.id,
+        name: currentData.name,
+        iacDescription: currentData.iac_description,
+        iacCode: currentData.iac_code,
+        createdAt: currentData.created_at,
+        updatedAt: currentData.updated_at,
+        timeZone: currentData.time_zone || 'UTC',
+        timeZoneDescription: currentData.time_zone_decription,
+      };
     }
 
     return {
@@ -148,12 +176,17 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     console.error('Caught error during update:', error);
     
     // If the update fails, fetch the current state of the setting
-    const { data: currentData } = await supabase
+    const { data: currentData, error: fetchError } = await supabase
       .from('settings')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
       
+    if (fetchError) {
+      console.error('Error fetching current setting after error:', fetchError);
+      throw fetchError;
+    }
+    
     if (currentData) {
       console.log('Retrieved current setting data:', currentData);
       return {
