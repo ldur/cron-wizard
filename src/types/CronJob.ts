@@ -15,4 +15,5 @@ export interface CronJob {
   tags: string[];
   flexibleTimeWindowMode: 'OFF' | 'FLEXIBLE';
   flexibleWindowMinutes: number | null;
+  targetType: 'LAMBDA' | 'STEP_FUNCTION' | 'API_GATEWAY' | 'EVENTBRIDGE' | 'SQS' | 'ECS' | 'KINESIS' | 'SAGEMAKER';
 }

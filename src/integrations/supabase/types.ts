@@ -24,6 +24,7 @@ export type Database = {
           name: string
           status: string
           tags: string[]
+          target_type: Database["public"]["Enums"]["target_type"]
           time_zone: string | null
           updated_at: string | null
         }
@@ -41,6 +42,7 @@ export type Database = {
           name: string
           status: string
           tags?: string[]
+          target_type: Database["public"]["Enums"]["target_type"]
           time_zone?: string | null
           updated_at?: string | null
         }
@@ -58,6 +60,7 @@ export type Database = {
           name?: string
           status?: string
           tags?: string[]
+          target_type?: Database["public"]["Enums"]["target_type"]
           time_zone?: string | null
           updated_at?: string | null
         }
@@ -137,6 +140,15 @@ export type Database = {
     }
     Enums: {
       flexible_mode: "OFF" | "FLEXIBLE"
+      target_type:
+        | "LAMBDA"
+        | "STEP_FUNCTION"
+        | "API_GATEWAY"
+        | "EVENTBRIDGE"
+        | "SQS"
+        | "ECS"
+        | "KINESIS"
+        | "SAGEMAKER"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -253,6 +265,16 @@ export const Constants = {
   public: {
     Enums: {
       flexible_mode: ["OFF", "FLEXIBLE"],
+      target_type: [
+        "LAMBDA",
+        "STEP_FUNCTION",
+        "API_GATEWAY",
+        "EVENTBRIDGE",
+        "SQS",
+        "ECS",
+        "KINESIS",
+        "SAGEMAKER",
+      ],
     },
   },
 } as const

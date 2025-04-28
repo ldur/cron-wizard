@@ -112,6 +112,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         tags: job.tags || [],
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
+        targetType: job.target_type,
       };
     } catch (error) {
       console.error(`Error processing job ${job.id}:`, error);
@@ -132,6 +133,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         tags: job.tags || [],
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
+        targetType: job.target_type,
       };
     }
   });
@@ -169,6 +171,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       tags: job.tags || [],
       flexible_time_window_mode: job.flexibleTimeWindowMode,
       flexible_window_minutes: job.flexibleWindowMinutes,
+      target_type: job.targetType,
     })
     .select(`
       *,
@@ -197,6 +200,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     tags: data.tags || [],
     flexibleTimeWindowMode: data.flexible_time_window_mode,
     flexibleWindowMinutes: data.flexible_window_minutes,
+    targetType: data.target_type,
   };
 };
 
@@ -216,6 +220,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.tags !== undefined) updateData.tags = job.tags;
   if (job.flexibleTimeWindowMode !== undefined) updateData.flexible_time_window_mode = job.flexibleTimeWindowMode;
   if (job.flexibleWindowMinutes !== undefined) updateData.flexible_window_minutes = job.flexibleWindowMinutes;
+  if (job.targetType !== undefined) updateData.target_type = job.targetType;
   
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -248,6 +253,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     tags: data.tags || [],
     flexibleTimeWindowMode: data.flexible_time_window_mode,
     flexibleWindowMinutes: data.flexible_window_minutes,
+    targetType: data.target_type,
   };
 };
 
@@ -297,5 +303,6 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     tags: data.tags || [],
     flexibleTimeWindowMode: data.flexible_time_window_mode,
     flexibleWindowMinutes: data.flexible_window_minutes,
+    targetType: data.target_type,
   };
 };

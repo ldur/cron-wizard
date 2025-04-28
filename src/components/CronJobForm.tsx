@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Code, ChevronDown, RefreshCw, Clock } from "lucide-react";
+import { Code, ChevronDown, RefreshCw, Clock, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,6 +144,16 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       (val) => val === null || (val >= 1 && val <= 1440),
       { message: "Minutes must be between 1 and 1440 when in flexible mode" }
     ),
+    targetType: z.enum([
+      "LAMBDA",
+      "STEP_FUNCTION",
+      "API_GATEWAY",
+      "EVENTBRIDGE",
+      "SQS",
+      "ECS",
+      "KINESIS",
+      "SAGEMAKER"
+    ]).default("LAMBDA"),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -161,6 +171,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       tags: job?.tags || [],
       flexibleTimeWindowMode: job?.flexibleTimeWindowMode || "OFF",
       flexibleWindowMinutes: job?.flexibleWindowMinutes || null,
+      targetType: job?.targetType || "LAMBDA",
     },
   });
 
@@ -229,6 +240,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         tags: job.tags,
         flexibleTimeWindowMode: job.flexibleTimeWindowMode,
         flexibleWindowMinutes: job.flexibleWindowMinutes,
+        targetType: job.targetType,
       });
       setIsApiMode(job.isApi);
       setIsFlexibleTime(job.flexibleTimeWindowMode === 'FLEXIBLE');
@@ -326,7 +338,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone, tags, flexibleTimeWindowMode, flexibleWindowMinutes } = values;
+    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone, tags, flexibleTimeWindowMode, flexibleWindowMinutes, targetType } = values;
     onSubmit({
       name,
       command,
@@ -340,6 +352,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       tags: tags,
       flexibleTimeWindowMode,
       flexibleWindowMinutes,
+      targetType,
     });
   };
 
@@ -365,6 +378,34 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="targetType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Target Type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="LAMBDA">Lambda</SelectItem>
+                    <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                    <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                    <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                    <SelectItem value="SQS">SQS</SelectItem>
+                    <SelectItem value="ECS">ECS</SelectItem>
+                    <SelectItem value="KINESIS">Kinesis</SelectItem>
+                    <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
           <FormField
             control={form.control}
             name="groupId"
