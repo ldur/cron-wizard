@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ const Settings = () => {
         description: "The IAC setting has been updated successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Update error:", error);
       toast({
         title: "Error",
@@ -77,7 +78,7 @@ const Settings = () => {
         description: "The IAC setting has been deleted successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: `Failed to delete setting: ${error.message}`,
@@ -87,12 +88,15 @@ const Settings = () => {
   });
 
   const handleAddSetting = (data: Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log('Creating new setting with data:', data);
     createSettingMutation.mutate(data);
   };
 
   const handleUpdateSetting = (data: Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!editingSetting) return;
-    // No need for special handling of iacCode, pass the data directly
+    console.log('Updating setting with ID:', editingSetting.id);
+    console.log('Update data:', data);
+    
     updateSettingMutation.mutate({ 
       id: editingSetting.id, 
       setting: data
@@ -100,6 +104,7 @@ const Settings = () => {
   };
 
   const handleEdit = (setting: Settings) => {
+    console.log('Editing setting:', setting);
     setEditingSetting(setting);
     setIsFormVisible(true);
   };

@@ -88,6 +88,7 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
 };
 
 export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Settings> => {
+  // Create a properly formatted update object that matches the database schema
   const updateData: Record<string, any> = {};
   
   if (setting.name !== undefined) updateData.name = setting.name;
@@ -95,6 +96,8 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
   if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode;
   if (setting.timeZone !== undefined) updateData.time_zone = setting.timeZone;
   if (setting.timeZoneDescription !== undefined) updateData.time_zone_decription = setting.timeZoneDescription;
+  
+  console.log('Update data being sent to Supabase:', updateData);
   
   // First check if the setting exists
   const { data: existingData, error: checkError } = await supabase
