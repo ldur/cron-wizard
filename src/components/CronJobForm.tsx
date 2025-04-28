@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -617,7 +618,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({ initialValues, groupId, group
                     <FormMessage />
                   </FormItem>
                 )}
-              )}
+              />
+            )}
           </div>
         </div>
 
