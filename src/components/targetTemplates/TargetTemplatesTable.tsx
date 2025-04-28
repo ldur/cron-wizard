@@ -12,16 +12,6 @@ interface TargetTemplatesTableProps {
   onSelectTargetType: (targetType: TargetType) => void;
 }
 
-// Define the structure that matches our target_templates data
-interface TemplateData {
-  attributes: Array<{
-    name: string;
-    data_type: string;
-    required: boolean;
-    value: any;
-  }>;
-}
-
 export const TargetTemplatesTable = ({ 
   selectedTargetType,
   onSelectTargetType 

@@ -24,6 +24,12 @@ export interface TargetTemplates {
 
 const TargetTemplatesPage = () => {
   const [selectedTargetType, setSelectedTargetType] = useState<TargetType | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Function to trigger refresh when template is updated
+  const handleTemplateUpdate = () => {
+    setRefreshKey(prevKey => prevKey + 1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,6 +45,7 @@ const TargetTemplatesPage = () => {
                 <TargetTemplatesTable 
                   selectedTargetType={selectedTargetType}
                   onSelectTargetType={setSelectedTargetType}
+                  key={`table-${refreshKey}`}
                 />
               </CardContent>
             </Card>
@@ -50,7 +57,10 @@ const TargetTemplatesPage = () => {
                   <CardTitle>Edit {selectedTargetType} Template</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TargetTypeEditor targetType={selectedTargetType} />
+                  <TargetTypeEditor 
+                    targetType={selectedTargetType} 
+                    onUpdate={handleTemplateUpdate}
+                  />
                 </CardContent>
               </Card>
             ) : (

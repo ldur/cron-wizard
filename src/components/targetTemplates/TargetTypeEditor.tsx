@@ -28,6 +28,7 @@ import { AttributeForm } from "./AttributeForm";
 
 interface TargetTypeEditorProps {
   targetType: TargetType;
+  onUpdate?: () => void;
 }
 
 // Define the structure that matches our target_templates data
@@ -40,7 +41,7 @@ interface TemplateData {
   }>;
 }
 
-export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
+export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps) => {
   const [attributes, setAttributes] = useState<TemplateAttribute[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -169,6 +170,11 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
         title: "Success",
         description: `${targetType} template updated successfully`,
       });
+      
+      // Call onUpdate callback to refresh the attributes count in the table
+      if (onUpdate) {
+        onUpdate();
+      }
     } catch (error) {
       console.error('Error saving template:', error);
       toast({
