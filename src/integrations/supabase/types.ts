@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_gateway_targets: {
+        Row: {
+          authorization_type: string | null
+          body: Json | null
+          endpoint_url: string
+          headers: Json | null
+          http_method: string
+          id: string
+        }
+        Insert: {
+          authorization_type?: string | null
+          body?: Json | null
+          endpoint_url: string
+          headers?: Json | null
+          http_method: string
+          id: string
+        }
+        Update: {
+          authorization_type?: string | null
+          body?: Json | null
+          endpoint_url?: string
+          headers?: Json | null
+          http_method?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_gateway_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cron_jobs: {
         Row: {
           command: string
@@ -74,6 +109,151 @@ export type Database = {
           },
         ]
       }
+      ecs_targets: {
+        Row: {
+          cluster_arn: string
+          id: string
+          launch_type: string | null
+          network_configuration: Json | null
+          overrides: Json | null
+          task_definition_arn: string
+        }
+        Insert: {
+          cluster_arn: string
+          id: string
+          launch_type?: string | null
+          network_configuration?: Json | null
+          overrides?: Json | null
+          task_definition_arn: string
+        }
+        Update: {
+          cluster_arn?: string
+          id?: string
+          launch_type?: string | null
+          network_configuration?: Json | null
+          overrides?: Json | null
+          task_definition_arn?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecs_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventbridge_targets: {
+        Row: {
+          event_bus_arn: string
+          event_payload: Json | null
+          id: string
+        }
+        Insert: {
+          event_bus_arn: string
+          event_payload?: Json | null
+          id: string
+        }
+        Update: {
+          event_bus_arn?: string
+          event_payload?: Json | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventbridge_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kinesis_targets: {
+        Row: {
+          id: string
+          partition_key: string
+          payload: Json | null
+          stream_arn: string
+        }
+        Insert: {
+          id: string
+          partition_key: string
+          payload?: Json | null
+          stream_arn: string
+        }
+        Update: {
+          id?: string
+          partition_key?: string
+          payload?: Json | null
+          stream_arn?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kinesis_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lambda_targets: {
+        Row: {
+          function_arn: string
+          id: string
+          payload: Json | null
+        }
+        Insert: {
+          function_arn: string
+          id: string
+          payload?: Json | null
+        }
+        Update: {
+          function_arn?: string
+          id?: string
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lambda_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sagemaker_targets: {
+        Row: {
+          hyper_parameters: Json | null
+          id: string
+          input_data_config: Json | null
+          training_job_definition_arn: string
+        }
+        Insert: {
+          hyper_parameters?: Json | null
+          id: string
+          input_data_config?: Json | null
+          training_job_definition_arn: string
+        }
+        Update: {
+          hyper_parameters?: Json | null
+          id?: string
+          input_data_config?: Json | null
+          training_job_definition_arn?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sagemaker_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedule_groups: {
         Row: {
           created_at: string
@@ -127,6 +307,64 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sqs_targets: {
+        Row: {
+          id: string
+          message_body: string
+          message_group_id: string | null
+          queue_url: string
+        }
+        Insert: {
+          id: string
+          message_body: string
+          message_group_id?: string | null
+          queue_url: string
+        }
+        Update: {
+          id?: string
+          message_body?: string
+          message_group_id?: string | null
+          queue_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sqs_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stepfunction_targets: {
+        Row: {
+          execution_role_arn: string
+          id: string
+          input_payload: Json | null
+          state_machine_arn: string
+        }
+        Insert: {
+          execution_role_arn: string
+          id: string
+          input_payload?: Json | null
+          state_machine_arn: string
+        }
+        Update: {
+          execution_role_arn?: string
+          id?: string
+          input_payload?: Json | null
+          state_machine_arn?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stepfunction_targets_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "cron_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

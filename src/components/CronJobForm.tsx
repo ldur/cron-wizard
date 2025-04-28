@@ -21,6 +21,7 @@ import { calculateNextRun } from "@/utils/cronCalculator";
 import TimeZoneSelect from "./TimeZoneSelect";
 import { fetchDefaultTimezone } from "@/services/cronJobService";
 import TagInput from './TagInput';
+import TargetForm from './TargetForm';
 
 interface CronJobFormProps {
   job?: CronJob;
@@ -154,6 +155,31 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       "KINESIS",
       "SAGEMAKER"
     ]).default("LAMBDA"),
+    function_arn: z.string().optional(),
+    payload: z.any().optional(),
+    state_machine_arn: z.string().optional(),
+    execution_role_arn: z.string().optional(),
+    input_payload: z.any().optional(),
+    endpoint_url: z.string().optional(),
+    http_method: z.string().optional(),
+    headers: z.any().optional(),
+    body: z.any().optional(),
+    authorization_type: z.string().optional(),
+    event_bus_arn: z.string().optional(),
+    event_payload: z.any().optional(),
+    queue_url: z.string().optional(),
+    message_body: z.string().optional(),
+    message_group_id: z.string().optional(),
+    cluster_arn: z.string().optional(),
+    task_definition_arn: z.string().optional(),
+    launch_type: z.string().optional(),
+    network_configuration: z.any().optional(),
+    overrides: z.any().optional(),
+    stream_arn: z.string().optional(),
+    partition_key: z.string().optional(),
+    training_job_definition_arn: z.string().optional(),
+    hyper_parameters: z.any().optional(),
+    input_data_config: z.any().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -337,22 +363,29 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     setDayOfWeek(value);
   };
 
-  const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone, tags, flexibleTimeWindowMode, flexibleWindowMinutes, targetType } = values;
+  const onFormSubmit = async (values: z.infer<typeof formSchema>) => {
+    const { targetType, ...baseValues } = values;
+    
+    // Extract target-specific fields based on target type
+    const targetData: any = {};
+    switch (targetType) {
+      case 'LAMBDA':
+        if (values.function_arn) targetData.function_arn = values.function_arn;
+        if (values.payload) targetData.payload = values.payload;
+        break;
+      case 'STEP_FUNCTION':
+        if (values.state_machine_arn) targetData.state_machine_arn = values.state_machine_arn;
+        if (values.execution_role_arn) targetData.execution_role_arn = values.execution_role_arn;
+        if (values.input_payload) targetData.input_payload = values.input_payload;
+        break;
+      // ... Add similar cases for other target types
+    }
+
+    // Submit the form with both base and target-specific data
     onSubmit({
-      name,
-      command,
-      cronExpression,
-      status,
-      isApi: isApi ?? false,
-      endpointName: endpointName ?? null,
-      iacCode: iacCode ?? null,
-      groupId: groupId ?? undefined,
-      timeZone: timeZone ?? undefined,
-      tags: tags,
-      flexibleTimeWindowMode,
-      flexibleWindowMinutes,
+      ...baseValues,
       targetType,
+      targetData
     });
   };
 
@@ -384,27 +417,42 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Target Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select target type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="LAMBDA">Lambda</SelectItem>
-                    <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
-                    <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
-                    <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
-                    <SelectItem value="SQS">SQS</SelectItem>
-                    <SelectItem value="ECS">ECS</SelectItem>
-                    <SelectItem value="KINESIS">Kinesis</SelectItem>
-                    <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <Select 
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  // Reset target-specific fields when target type changes
+                  form.reset({
+                    ...form.getValues(),
+                    targetType: value as any,
+                    function_arn: undefined,
+                    payload: undefined,
+                    state_machine_arn: undefined,
+                    execution_role_arn: undefined,
+                    // ... Reset other target-specific fields
+                  });
+                }} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select target type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="LAMBDA">Lambda Function</SelectItem>
+                  <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                  <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                  <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                  <SelectItem value="SQS">Simple Queue Service</SelectItem>
+                  <SelectItem value="ECS">Elastic Container Service</SelectItem>
+                  <SelectItem value="KINESIS">Kinesis</SelectItem>
+                  <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
           
           <FormField
             control={form.control}
@@ -743,6 +791,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             </FormItem>
           )}
         />
+
+        <TargetForm targetType={form.watch("targetType")} form={form} />
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
