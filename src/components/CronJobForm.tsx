@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import CronJobIacDialog from "./CronJobIacDialog";
 import { parseSchedule, convertToCron } from "@/utils/cronParser";
 import { calculateNextRun } from "@/utils/cronCalculator";
+import TimeZoneSelect from "./TimeZoneSelect";
 
 interface CronJobFormProps {
   job?: CronJob;
@@ -112,6 +113,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     isApi: z.boolean().optional(),
     endpointName: z.string().optional().nullable(),
     iacCode: z.string().optional().nullable(),
+    timeZone: z.string().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -125,6 +127,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
+      timeZone: job?.timeZone || undefined,
     },
   });
 
@@ -174,6 +177,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         isApi: job.isApi,
         endpointName: job.endpointName,
         iacCode: job.iacCode,
+        timeZone: job.timeZone,
       });
       setIsApiMode(job.isApi);
       parseCronExpression(job.cronExpression);
@@ -270,7 +274,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode } = values;
+    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone } = values;
     onSubmit({
       name,
       command,
@@ -280,6 +284,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       endpointName: endpointName ?? null,
       iacCode: iacCode ?? null,
       groupId: groupId ?? undefined,
+      timeZone: timeZone ?? undefined,
     });
   };
 
@@ -540,27 +545,31 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
           </TabsContent>
         </Tabs>
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-6 md:grid-cols-2">
+          <TimeZoneSelect control={form.control} name="timeZone" />
+          
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
