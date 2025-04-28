@@ -59,15 +59,17 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
           
           const targetTypeData = data.target_templates[targetType];
           
-          // Check if this target type has attributes and they're in array format
-          if (Array.isArray(targetTypeData)) {
-            // Map and validate each attribute
-            templateAttributes = targetTypeData.map(attr => ({
-              name: String(attr.name || ''),
-              data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
-              required: Boolean(attr.required),
-              default_value: attr.default_value
-            }));
+          // Check if this target type has attributes in the new format
+          if (targetTypeData && typeof targetTypeData === 'object' && targetTypeData.attributes) {
+            if (Array.isArray(targetTypeData.attributes)) {
+              // Map and validate each attribute
+              templateAttributes = targetTypeData.attributes.map((attr: any) => ({
+                name: String(attr.name || ''),
+                data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
+                required: Boolean(attr.required),
+                default_value: attr.value
+              }));
+            }
           }
         }
         
@@ -110,14 +112,24 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
         Object.assign(currentTemplates, data.target_templates);
       }
       
-      // Update templates for this target type
-      currentTemplates[targetType] = attributes;
+      // Format attributes for saving
+      const attributesForSaving = attributes.map(attr => ({
+        name: attr.name,
+        data_type: attr.data_type,
+        required: attr.required,
+        value: attr.default_value
+      }));
+
+      // Update templates for this target type in the expected format
+      currentTemplates[targetType] = {
+        attributes: attributesForSaving
+      };
       
       // Save to database
       const { error: updateError } = await supabase
         .from('settings')
         .update({
-          target_templates: currentTemplates
+          target_templates: currentTemplates as any
         })
         .eq('id', data.id);
       
