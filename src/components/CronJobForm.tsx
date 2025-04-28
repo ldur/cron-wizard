@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -167,7 +168,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     http_method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']).optional(),
     headers: z.any().optional(),
     body: z.any().optional(),
-    authorization_type: z.enum(['NONE', 'IAM' | 'COGNITO_USER_POOLS']).optional(),
+    authorization_type: z.enum(['NONE', 'IAM', 'COGNITO_USER_POOLS']).optional(),
     event_bus_arn: z.string().optional(),
     event_payload: z.any().optional(),
     queue_url: z.string().optional(),
@@ -478,6 +479,16 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     // Since this function is missing implementation, we'll just return Europe/Oslo
     // In a real app, you'd likely fetch this from your backend
     return "Europe/Oslo";
+  };
+
+  // Add a function to handle IAC code generation
+  const handleIacCodeGenerate = (code: string) => {
+    form.setValue("iacCode", code);
+    toast({
+      title: "IAC Code Generated",
+      description: "Infrastructure as Code has been generated based on your configuration.",
+      variant: "default",
+    });
   };
 
   return (
@@ -864,4 +875,94 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
                         <SelectItem value="SQS">SQS</SelectItem>
                         <SelectItem value="ECS">ECS</SelectItem>
-                        <SelectItem value="KINESIS">Kinesis
+                        <SelectItem value="KINESIS">Kinesis</SelectItem>
+                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="mt-4">
+              <TargetForm targetType={form.watch("targetType")} form={form} />
+            </div>
+
+            {/* Flexible Time Window Configuration */}
+            <div className="mt-6 border-t pt-4">
+              <h2 className="text-lg font-semibold mb-4">Flexible Time Window</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Enable Flexible Time Window</p>
+                    <p className="text-sm text-muted-foreground">
+                      Allow EventBridge Scheduler to trigger this target within a flexible time window
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={isFlexibleTime}
+                    onCheckedChange={handleFlexibleModeChange}
+                  />
+                </div>
+                
+                {isFlexibleTime && (
+                  <FormField
+                    control={form.control}
+                    name="flexibleWindowMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Window Size (minutes)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            max="1440" 
+                            placeholder="15"
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || null)}
+                          />
+                        </FormControl>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          The schedule can be invoked any time within this window (1-1440 minutes)
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4 flex justify-between">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={form.formState.isSubmitting}
+          >
+            {job ? "Update Job" : "Create Job"}
+          </Button>
+        </div>
+      </form>
+
+      {/* IAC Dialog */}
+      <CronJobIacDialog
+        open={isIacDialogOpen}
+        onOpenChange={setIsIacDialogOpen}
+        job={job}
+        formData={form.getValues()}
+        onGenerate={handleIacCodeGenerate}
+      />
+    </Form>
+  );
+};
+
+export default CronJobForm;
