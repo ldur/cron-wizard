@@ -87,7 +87,10 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
   };
 };
 
-export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Settings> => {
+export const updateSetting = async (
+  id: string, 
+  setting: Partial<Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<{ data: Settings; updated: boolean }> => {
   // Create a properly formatted update object that matches the database schema
   const updateData: Record<string, any> = {};
   
@@ -123,7 +126,7 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
       .update(updateData)
       .eq('id', id)
       .select()
-      .maybeSingle(); // Change back to maybeSingle to handle case where row might not exist
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating setting:', error);
@@ -151,26 +154,32 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
       
       console.log('Retrieved current setting data after update:', currentData);
       return {
-        id: currentData.id,
-        name: currentData.name,
-        iacDescription: currentData.iac_description,
-        iacCode: currentData.iac_code,
-        createdAt: currentData.created_at,
-        updatedAt: currentData.updated_at,
-        timeZone: currentData.time_zone || 'UTC',
-        timeZoneDescription: currentData.time_zone_decription,
+        data: {
+          id: currentData.id,
+          name: currentData.name,
+          iacDescription: currentData.iac_description,
+          iacCode: currentData.iac_code,
+          createdAt: currentData.created_at,
+          updatedAt: currentData.updated_at,
+          timeZone: currentData.time_zone || 'UTC',
+          timeZoneDescription: currentData.time_zone_decription,
+        },
+        updated: false // Indicate that the actual update failed
       };
     }
 
     return {
-      id: data.id,
-      name: data.name,
-      iacDescription: data.iac_description,
-      iacCode: data.iac_code,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      timeZone: data.time_zone || 'UTC',
-      timeZoneDescription: data.time_zone_decription,
+      data: {
+        id: data.id,
+        name: data.name,
+        iacDescription: data.iac_description,
+        iacCode: data.iac_code,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        timeZone: data.time_zone || 'UTC',
+        timeZoneDescription: data.time_zone_decription,
+      },
+      updated: true // Indicate successful update
     };
   } catch (error) {
     console.error('Caught error during update:', error);
@@ -190,14 +199,17 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     if (currentData) {
       console.log('Retrieved current setting data:', currentData);
       return {
-        id: currentData.id,
-        name: currentData.name,
-        iacDescription: currentData.iac_description,
-        iacCode: currentData.iac_code,
-        createdAt: currentData.created_at,
-        updatedAt: currentData.updated_at,
-        timeZone: currentData.time_zone || 'UTC',
-        timeZoneDescription: currentData.time_zone_decription,
+        data: {
+          id: currentData.id,
+          name: currentData.name,
+          iacDescription: currentData.iac_description,
+          iacCode: currentData.iac_code,
+          createdAt: currentData.created_at,
+          updatedAt: currentData.updated_at,
+          timeZone: currentData.time_zone || 'UTC',
+          timeZoneDescription: currentData.time_zone_decription,
+        },
+        updated: false // Indicate that the update failed
       };
     }
     

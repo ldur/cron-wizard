@@ -50,14 +50,23 @@ const Settings = () => {
   const updateSettingMutation = useMutation({
     mutationFn: ({ id, setting }: { id: string; setting: Partial<Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>> }) => 
       updateSetting(id, setting),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       setEditingSetting(undefined);
       setIsFormVisible(false);
-      toast({
-        title: "Setting Updated",
-        description: "The IAC setting has been updated successfully.",
-      });
+      
+      if (result.updated) {
+        toast({
+          title: "Setting Updated",
+          description: "The IAC setting has been updated successfully.",
+        });
+      } else {
+        toast({
+          title: "Update Issue",
+          description: "The setting was not updated, but your data has been preserved.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       console.error("Update error:", error);
