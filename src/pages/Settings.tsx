@@ -67,15 +67,12 @@ const Settings = () => {
             </Button>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <div className="font-medium">Target Templates</div>
-              <div className="flex flex-wrap gap-2">
-                {targetTypes.length > 0 ? (
-                  renderTargetTypeBadges()
-                ) : (
-                  <p className="text-sm text-muted-foreground">No target templates configured.</p>
-                )}
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {targetTypes.length > 0 ? (
+                renderTargetTypeBadges()
+              ) : (
+                <p className="text-sm text-muted-foreground">No target templates configured.</p>
+              )}
             </div>
 
             <SettingsForm />
