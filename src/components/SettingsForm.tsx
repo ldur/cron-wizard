@@ -5,6 +5,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -16,6 +17,24 @@ interface SettingsFormData {
   timeZone: string;
   timeZoneDescription: string | null;
 }
+
+interface TimeZoneOption {
+  value: string;
+  label: string;
+}
+
+const timeZones: TimeZoneOption[] = [
+  { value: "Europe/London", label: "British Time (London)" },
+  { value: "Europe/Paris", label: "Central European Time (Paris)" },
+  { value: "Europe/Oslo", label: "Central European Time (Oslo)" },
+  { value: "America/New_York", label: "Eastern Time (New York)" },
+  { value: "America/Chicago", label: "Central Time (Chicago)" },
+  { value: "America/Denver", label: "Mountain Time (Denver)" },
+  { value: "America/Los_Angeles", label: "Pacific Time (Los Angeles)" },
+  { value: "Asia/Tokyo", label: "Japan Time (Tokyo)" },
+  { value: "Asia/Shanghai", label: "China Time (Shanghai)" },
+  { value: "Australia/Sydney", label: "Australian Eastern Time (Sydney)" },
+];
 
 const SettingsForm = () => {
   const [loading, setLoading] = useState(false);
@@ -65,6 +84,10 @@ const SettingsForm = () => {
 
       if (fetchError) throw fetchError;
 
+      // Find the selected timezone description
+      const selectedTimeZone = timeZones.find(tz => tz.value === data.timeZone);
+      const timeZoneDescription = selectedTimeZone ? selectedTimeZone.label : null;
+
       // Update the existing record using its ID
       const { error: updateError } = await supabase
         .from('settings')
@@ -73,7 +96,7 @@ const SettingsForm = () => {
           iac_description: data.iacDescription,
           iac_code: data.iacCode,
           time_zone: data.timeZone,
-          time_zone_description: data.timeZoneDescription,
+          time_zone_description: timeZoneDescription,
         })
         .eq('id', existingSettings.id);
 
@@ -146,23 +169,20 @@ const SettingsForm = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Time Zone</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="timeZoneDescription"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Time Zone Description</FormLabel>
-              <FormControl>
-                <Input {...field} value={field.value || ''} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a timezone" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeZones.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
