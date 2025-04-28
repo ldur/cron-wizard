@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -40,7 +39,7 @@ const timeZones = [
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   iacDescription: z.string().min(10, "Description must be at least 10 characters."),
-  iacCode: z.string().min(10, "Code must be at least 10 characters."),
+  iacCode: z.string().optional(),
   timeZone: z.string().min(1, "Please select a time zone"),
 });
 
