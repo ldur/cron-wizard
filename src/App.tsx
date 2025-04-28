@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 import { initializeDatabase } from "./lib/supabase";
 import Index from "./pages/Index";
 import Groups from "./pages/Groups";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { toast } from "@/hooks/use-toast";
 
@@ -52,6 +54,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/groups" element={<Groups />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

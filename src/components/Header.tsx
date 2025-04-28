@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, FolderTree, Home, Settings } from "lucide-react";
@@ -14,6 +15,7 @@ const Header = () => {
   const navigation = [
     { name: "Dashboard", href: "/", icon: Home },
     { name: "Job Groups", href: "/groups", icon: FolderTree },
+    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   const isActive = (path: string) => {
