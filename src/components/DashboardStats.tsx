@@ -7,13 +7,15 @@ interface DashboardStatsProps {
   jobs: CronJob[];
   nameFilter: string;
   selectedGroup: string | null;
+  selectedTags: string[];
 }
 
-const DashboardStats = ({ jobs, nameFilter, selectedGroup }: DashboardStatsProps) => {
-  // Filter jobs based on the current filters
+const DashboardStats = ({ jobs, nameFilter, selectedGroup, selectedTags }: DashboardStatsProps) => {
+  // Filter jobs based on all current filters
   const filteredJobs = jobs.filter(job => 
     (!selectedGroup || job.groupId === selectedGroup) &&
-    (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase()))
+    (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase())) &&
+    (selectedTags.length === 0 || selectedTags.some(tag => job.tags.includes(tag)))
   );
   
   const totalJobs = filteredJobs.length;

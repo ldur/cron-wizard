@@ -299,7 +299,8 @@ const Index = () => {
                   <DashboardStats 
                     jobs={jobs} 
                     nameFilter={nameFilter} 
-                    selectedGroup={selectedGroup} 
+                    selectedGroup={selectedGroup}
+                    selectedTags={selectedTags}
                   />
                 </div>
                 
