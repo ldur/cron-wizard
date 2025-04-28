@@ -92,12 +92,12 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
       <div className="flex justify-between items-center py-2 px-4 bg-muted/30 rounded-md text-sm font-medium">
         <button 
           onClick={() => handleSort('name')}
-          className="flex items-center gap-1 w-1/6"
+          className="flex items-center gap-1 w-2/6"
         >
           Name {getSortIcon('name')}
         </button>
-        <div className="w-2/6">
-          Group / Time Zone
+        <div className="w-1/6">
+          Group
         </div>
         <button 
           onClick={() => handleSort('nextRun')}
@@ -119,7 +119,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         <Card key={job.id} className="overflow-hidden">
           <CardContent className="p-0">
             <div className="flex items-center justify-between p-4">
-              <div className="w-1/6">
+              <div className="w-2/6">
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">
                   {job.cronExpression}
@@ -129,7 +129,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   </span>
                 </p>
               </div>
-              <div className="w-2/6">
+              <div className="w-1/6">
                 <div className="flex items-center">
                   <FolderTree className="h-4 w-4 text-blue-500 mr-2" />
                   <span className="text-sm">{job.groupName || "Default"}</span>
