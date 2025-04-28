@@ -20,6 +20,8 @@ export const fetchSettings = async (): Promise<Settings[]> => {
     iacCode: setting.iac_code,
     createdAt: setting.created_at,
     updatedAt: setting.updated_at,
+    timeZone: setting.time_zone || 'UTC',
+    timeZoneDescription: setting.time_zone_decription,
   }));
 };
 
@@ -42,6 +44,8 @@ export const fetchSetting = async (id: string): Promise<Settings> => {
     iacCode: data.iac_code,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+    timeZone: data.time_zone || 'UTC',
+    timeZoneDescription: data.time_zone_decription,
   };
 };
 
@@ -52,6 +56,8 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
       name: setting.name,
       iac_description: setting.iacDescription,
       iac_code: setting.iacCode,
+      time_zone: setting.timeZone,
+      time_zone_decription: setting.timeZoneDescription,
     })
     .select()
     .single();
@@ -68,6 +74,8 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
     iacCode: data.iac_code,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+    timeZone: data.time_zone || 'UTC',
+    timeZoneDescription: data.time_zone_decription,
   };
 };
 
@@ -77,6 +85,8 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
   if (setting.name !== undefined) updateData.name = setting.name;
   if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
   if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode;
+  if (setting.timeZone !== undefined) updateData.time_zone = setting.timeZone;
+  if (setting.timeZoneDescription !== undefined) updateData.time_zone_decription = setting.timeZoneDescription;
   
   // First check if the setting exists
   const { data: existingData, error: checkError } = await supabase
@@ -115,6 +125,8 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     iacCode: data.iac_code,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+    timeZone: data.time_zone || 'UTC',
+    timeZoneDescription: data.time_zone_decription,
   };
 };
 
