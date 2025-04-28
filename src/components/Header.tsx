@@ -1,6 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { LayoutDashboard, UsersRound, Settings } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -23,28 +24,30 @@ const Header = () => {
             asChild
             variant={isActive("/") ? "default" : "ghost"}
           >
-            <Link to="/">Dashboard</Link>
+            <Link to="/" className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </Link>
           </Button>
 
           <Button
             asChild
             variant={isActive("/groups") ? "default" : "ghost"}
           >
-            <Link to="/groups">Groups</Link>
-          </Button>
-
-          <Button
-            asChild
-            variant={isActive("/target-templates") ? "default" : "ghost"}
-          >
-            <Link to="/target-templates">Target Templates</Link>
+            <Link to="/groups" className="flex items-center gap-2">
+              <UsersRound className="h-4 w-4" />
+              Groups
+            </Link>
           </Button>
 
           <Button
             asChild
             variant={isActive("/settings") ? "default" : "ghost"}
           >
-            <Link to="/settings">Settings</Link>
+            <Link to="/settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
+            </Link>
           </Button>
         </nav>
       </div>
