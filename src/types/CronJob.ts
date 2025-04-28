@@ -12,6 +12,7 @@ export interface CronJob {
   iacCode: string | null;
   groupId?: string;
   groupName?: string;
+  groupIcon?: string;
   timezone?: string | null;
   tags: string[];
   flexibleTimeWindowMode: 'OFF' | 'FLEXIBLE';

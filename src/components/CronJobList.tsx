@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree } from "lucide-react";
+import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree, Briefcase, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,17 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
   const getSortIcon = (field: 'name' | 'nextRun' | 'status') => {
     if (sortBy !== field) return null;
     return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
+  };
+
+  // Helper function to get the appropriate icon for a group
+  const getGroupIcon = (iconName: string | undefined) => {
+    switch (iconName) {
+      case 'briefcase':
+        return <Briefcase className="h-4 w-4 text-blue-500 mr-2" />;
+      case 'folder':
+      default:
+        return <Folder className="h-4 w-4 text-blue-500 mr-2" />;
+    }
   };
 
   const sortedJobs = [...jobs].sort((a, b) => {
@@ -130,7 +141,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
               </div>
               <div className="w-1/6">
                 <div className="flex items-center">
-                  <FolderTree className="h-4 w-4 text-blue-500 mr-2" />
+                  {getGroupIcon(job.groupIcon)}
                   <span className="text-sm">{job.groupName || "Default"}</span>
                 </div>
               </div>

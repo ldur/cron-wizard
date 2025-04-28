@@ -1,200 +1,204 @@
-
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { CronJob } from "@/types/CronJob";
-import { formatCronJobData } from "./cronJobFormService";
 
-// Fetch all cron jobs
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
-  const { data, error } = await supabase
-    .from('cron_jobs')
-    .select(`
-      *,
-      schedule_groups (
-        name
-      )
-    `)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  
-  return data.map(formatCronJobData);
+  try {
+    const { data: jobsData, error: jobsError } = await supabase
+      .from('cron_jobs')
+      .select('*');
+
+    if (jobsError) throw jobsError;
+
+    // Get all groups to map IDs to names and icons
+    const { data: groupsData, error: groupsError } = await supabase
+      .from('schedule_groups')
+      .select('*');
+
+    if (groupsError) throw groupsError;
+
+    // Create a map of group IDs to names and icons
+    const groupMap = new Map();
+    groupsData.forEach((group: any) => {
+      groupMap.set(group.id, { 
+        name: group.name,
+        icon_name: group.icon_name 
+      });
+    });
+
+    // Map the data to CronJob type and add group names and icons
+    const jobs = jobsData.map((job: any) => {
+      const groupInfo = job.group_id ? groupMap.get(job.group_id) : { name: 'Default', icon_name: 'briefcase' };
+      return {
+        ...job,
+        groupName: groupInfo ? groupInfo.name : 'Default',
+        groupIcon: groupInfo ? groupInfo.icon_name : 'briefcase',
+        tags: job.tags || [],
+      };
+    });
+
+    return jobs;
+  } catch (error) {
+    console.error('Error fetching cron jobs:', error);
+    throw error;
+  }
 };
 
-// Fetch a single cron job by ID
-export const fetchCronJobById = async (id: string): Promise<CronJob> => {
-  const { data, error } = await supabase
-    .from('cron_jobs')
-    .select(`
-      *,
-      schedule_groups (
-        name
-      )
-    `)
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  
-  return formatCronJobData(data);
+export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
+  try {
+    const { data, error } = await supabase
+      .from('cron_jobs')
+      .insert([
+        { 
+          ...job,
+          tags: job.tags || [],
+        }
+      ])
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data as CronJob;
+  } catch (error) {
+    console.error('Error creating cron job:', error);
+    throw error;
+  }
 };
 
-// Create a new cron job
-export const createCronJob = async (job: Omit<CronJob, "id" | "nextRun">): Promise<CronJob> => {
-  const newJob = {
-    name: job.name,
-    description: job.description,
-    schedule_expression: job.scheduleExpression,
-    start_time: job.startTime,
-    end_time: job.endTime,
-    status: job.status,
-    is_api: job.isApi,
-    endpoint_name: job.endpointName,
-    iac_code: job.iacCode,
-    group_id: job.groupId,
-    timezone: job.timezone,
-    tags: job.tags || [],
-    flexible_time_window_mode: job.flexibleTimeWindowMode,
-    flexible_window_minutes: job.flexibleWindowMinutes,
-    command: job.scheduleExpression,
-    target_type: job.targetType,
-  };
+export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
+  try {
+    const { data, error } = await supabase
+      .from('cron_jobs')
+      .update(job)
+      .eq('id', id)
+      .select('*')
+      .single();
 
-  const { data, error } = await supabase
-    .from('cron_jobs')
-    .insert([newJob])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  return fetchCronJobById(data.id);
+    if (error) throw error;
+    return data as CronJob;
+  } catch (error) {
+    console.error('Error updating cron job:', error);
+    throw error;
+  }
 };
 
-// Update an existing cron job
-export const updateCronJob = async (
-  id: string, 
-  job: Partial<Omit<CronJob, "id" | "nextRun">>
-): Promise<CronJob> => {
-  const updateData = {
-    ...(job.name && { name: job.name }),
-    ...(job.description !== undefined && { description: job.description }),
-    ...(job.scheduleExpression && { schedule_expression: job.scheduleExpression }),
-    ...(job.scheduleExpression && { command: job.scheduleExpression }),
-    ...(job.startTime !== undefined && { start_time: job.startTime }),
-    ...(job.endTime !== undefined && { end_time: job.endTime }),
-    ...(job.status && { status: job.status }),
-    ...(job.isApi !== undefined && { is_api: job.isApi }),
-    ...(job.endpointName !== undefined && { endpoint_name: job.endpointName }),
-    ...(job.iacCode !== undefined && { iac_code: job.iacCode }),
-    ...(job.groupId && { group_id: job.groupId }),
-    ...(job.timezone && { timezone: job.timezone }),
-    ...(job.tags && { tags: job.tags }),
-    ...(job.flexibleTimeWindowMode && { flexible_time_window_mode: job.flexibleTimeWindowMode }),
-    ...(job.flexibleWindowMinutes !== undefined && { flexible_window_minutes: job.flexibleWindowMinutes }),
-    ...(job.targetType && { target_type: job.targetType }),
-  };
-
-  const { error } = await supabase
-    .from('cron_jobs')
-    .update(updateData)
-    .eq('id', id);
-  
-  if (error) throw error;
-  
-  // Return the updated cron job with fresh data
-  return fetchCronJobById(id);
-};
-
-// Delete a cron job
 export const deleteCronJob = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('cron_jobs')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
+  try {
+    const { error } = await supabase
+      .from('cron_jobs')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting cron job:', error);
+    throw error;
+  }
 };
 
-// Toggle the status of a cron job (active/paused)
-export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 'paused'): Promise<CronJob> => {
-  const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-  
-  const { error } = await supabase
-    .from('cron_jobs')
-    .update({ status: newStatus })
-    .eq('id', id);
-  
-  if (error) throw error;
-  
-  // Return the updated cron job
-  return fetchCronJobById(id);
+export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused'): Promise<CronJob> => {
+  try {
+    const { data, error } = await supabase
+      .from('cron_jobs')
+      .update({ status })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data as CronJob;
+  } catch (error) {
+    console.error('Error toggling cron job status:', error);
+    throw error;
+  }
 };
 
-// Fetch all job groups
-export const fetchGroups = async () => {
-  const { data, error } = await supabase
-    .from('schedule_groups')
-    .select('*')
-    .order('name');
-  
-  if (error) throw error;
-  
-  return data;
+export const fetchGroups = async (): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('schedule_groups')
+      .select('*');
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching groups:', error);
+    throw error;
+  }
 };
 
-// Create a new group
-export const createGroup = async (name: string) => {
-  const { data, error } = await supabase
-    .from('schedule_groups')
-    .insert([{ name }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  return data;
+export const createGroup = async (name: string, iconName: string = 'folder'): Promise<any> => {
+  try {
+    const { data, error } = await supabase
+      .from('schedule_groups')
+      .insert([{ name, icon_name: iconName }])
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error creating group:', error);
+    throw error;
+  }
 };
 
-// Update an existing group
-export const updateGroup = async (id: string, name: string) => {
-  const { data, error } = await supabase
-    .from('schedule_groups')
-    .update({ name })
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  return data;
+export const updateGroup = async (id: string, name: string, iconName: string): Promise<any> => {
+  try {
+    const { data, error } = await supabase
+      .from('schedule_groups')
+      .update({ name, icon_name: iconName })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating group:', error);
+    throw error;
+  }
 };
 
-// Delete a group and move all jobs to Default group
-export const deleteGroup = async (id: string) => {
-  // Find Default group id
-  const { data: defaultGroup, error: findError } = await supabase
-    .from('schedule_groups')
-    .select('id')
-    .eq('name', 'Default')
-    .single();
-  
-  if (findError) throw findError;
-  
-  // Update all jobs in the deleted group to use the Default group
-  const { error: updateError } = await supabase
-    .from('cron_jobs')
-    .update({ group_id: defaultGroup.id })
-    .eq('group_id', id);
-  
-  if (updateError) throw updateError;
-  
-  // Now delete the group
-  const { error: deleteError } = await supabase
-    .from('schedule_groups')
-    .delete()
-    .eq('id', id);
-  
-  if (deleteError) throw deleteError;
-  
-  return { success: true };
+export const deleteGroup = async (id: string): Promise<void> => {
+  try {
+    // First, move all jobs from the deleting group to the Default group
+    const { data: defaultGroup, error: defaultGroupError } = await supabase
+      .from('schedule_groups')
+      .select('id')
+      .eq('name', 'Default')
+      .single();
+
+    if (defaultGroupError) {
+      console.error('Error fetching Default group:', defaultGroupError);
+      throw defaultGroupError;
+    }
+
+    if (!defaultGroup) {
+      throw new Error('Default group not found');
+    }
+
+    const { error: updateError } = await supabase
+      .from('cron_jobs')
+      .update({ group_id: defaultGroup.id })
+      .eq('group_id', id);
+
+    if (updateError) {
+      console.error('Error moving jobs to Default group:', updateError);
+      throw updateError;
+    }
+
+    // Then, delete the group
+    const { error: deleteError } = await supabase
+      .from('schedule_groups')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error('Error deleting group:', deleteError);
+      throw deleteError;
+    }
+  } catch (error) {
+    console.error('Error deleting group:', error);
+    throw error;
+  }
 };
