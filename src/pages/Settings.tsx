@@ -67,9 +67,8 @@ const Settings = () => {
             </Button>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <div className="font-medium">Target Templates</div>
-              <div className="flex flex-wrap gap-2">
+            <div>
+              <div className="flex flex-wrap gap-2 mb-4">
                 {targetTypes.length > 0 ? (
                   renderTargetTypeBadges()
                 ) : (
