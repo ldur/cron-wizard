@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, X, Search } from "lucide-react";
+import { Plus, X, Search, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -28,6 +28,8 @@ const Index = () => {
   const [nameFilter, setNameFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   // Fetch groups
   useEffect(() => {
@@ -162,11 +164,28 @@ const Index = () => {
     setEditingJob(undefined);
   };
 
-  // Update the filtering logic to include name filter
+  // Extract unique tags from all jobs
+  useEffect(() => {
+    if (jobs.length > 0) {
+      const tags = Array.from(new Set(jobs.flatMap(job => job.tags)));
+      setAvailableTags(tags);
+    }
+  }, [jobs]);
+
+  // Update the filtering logic to include name filter and tag filter
   const filteredJobs = jobs.filter(job => 
     (!selectedGroup || job.groupId === selectedGroup) &&
-    (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase()))
+    (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase())) &&
+    (selectedTags.length === 0 || selectedTags.some(tag => job.tags.includes(tag)))
   );
+
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
 
   const filterByStatus = (status: 'active' | 'paused') => 
     filteredJobs.filter(job => job.status === status);
@@ -258,6 +277,21 @@ const Index = () => {
                         className="pl-8"
                       />
                     </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Tags className="h-4 w-4 text-muted-foreground" />
+                    {availableTags.map(tag => (
+                      <Button
+                        key={tag}
+                        variant={selectedTags.includes(tag) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleTagToggle(tag)}
+                        className="h-8"
+                      >
+                        {tag}
+                      </Button>
+                    ))}
                   </div>
                 </div>
                 
