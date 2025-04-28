@@ -440,405 +440,415 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Job Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Daily Backup" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="targetType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Target Type</FormLabel>
-                <Select 
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  // Reset target-specific fields when target type changes
-                  form.reset({
-                    ...form.getValues(),
-                    targetType: value as any,
-                    function_arn: undefined,
-                    payload: undefined,
-                    state_machine_arn: undefined,
-                    execution_role_arn: undefined,
-                    // ... Reset other target-specific fields
-                  });
-                }} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="LAMBDA">Lambda Function</SelectItem>
-                  <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
-                  <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
-                  <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
-                  <SelectItem value="SQS">Simple Queue Service</SelectItem>
-                  <SelectItem value="ECS">Elastic Container Service</SelectItem>
-                  <SelectItem value="KINESIS">Kinesis</SelectItem>
-                  <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-          
-          <FormField
-            control={form.control}
-            name="groupId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Group</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a group" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {groups.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <Tabs defaultValue="command" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="command">Command</TabsTrigger>
-            <TabsTrigger value="iac">
-              IaC
-              <Code className="w-4 h-4 ml-1" />
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="command">
-            <FormField
-              control={form.control}
-              name="command"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Command</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="ls -l" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </TabsContent>
-          <TabsContent value="iac">
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Panel */}
+          <div className="space-y-6">
             <div className="grid gap-6">
-              <Textarea
-                className="min-h-[80px]"
-                placeholder="Click Generate to create IaC code"
-                value={form.getValues("iacCode") || ""}
-                readOnly
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Job Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Daily Backup" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <Button type="button" onClick={handleIacDialogOpen}>
-                Generate IaC Code
-              </Button>
+              
+              <FormField
+                control={form.control}
+                name="groupId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Group</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {groups.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          </TabsContent>
-        </Tabs>
 
-        <Tabs 
-          defaultValue="natural" 
-          className="space-y-4"
-          onValueChange={(value) => setCronMode(value as "natural" | "advanced")}
-        >
-          <TabsList>
-            <TabsTrigger value="natural">Natural Language</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced</TabsTrigger>
-          </TabsList>
-          <TabsContent value="natural">
-            <div className="space-y-4">
-              <div className="grid gap-3">
-                <label className="text-sm font-medium">Schedule in Plain English</label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Every day at 9am"
-                    value={naturalLanguage}
-                    onChange={handleNaturalLanguageChange}
-                    onKeyPress={handleNaturalLanguageKeyPress}
-                    className="flex-1"
+            <Tabs defaultValue="command" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="command">Command</TabsTrigger>
+                <TabsTrigger value="iac">
+                  IaC
+                  <Code className="w-4 h-4 ml-1" />
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="command">
+                <FormField
+                  control={form.control}
+                  name="command"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Command</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="ls -l" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="iac">
+                <div className="grid gap-6">
+                  <Textarea
+                    className="min-h-[80px]"
+                    placeholder="Click Generate to create IaC code"
+                    value={form.getValues("iacCode") || ""}
+                    readOnly
                   />
-                  <Button type="button" onClick={applyNaturalLanguage} variant="outline" size="icon">
-                    <RefreshCw className="h-4 w-4" />
+                  <Button type="button" onClick={handleIacDialogOpen}>
+                    Generate IaC Code
                   </Button>
                 </div>
-              </div>
-              
-              <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium">Schedule Preview:</p>
-                <p className="text-sm mt-1">{schedulePreview}</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
-                </p>
-                <div className="mt-2 pt-2 border-t border-border">
-                  <p className="text-sm font-medium">Cron Expression:</p>
-                  <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                    {form.getValues("cronExpression")}
-                  </code>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="advanced">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {/* Minute */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Minute (0-59)</label>
-                  <Select 
-                    value={minute} 
-                    onValueChange={handleMinuteSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select minute" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {minuteOptions.map((value) => (
-                        <SelectItem key={`minute-${value}`} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              </TabsContent>
+            </Tabs>
 
-                {/* Hour */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Hour (0-23)</label>
-                  <Select 
-                    value={hour} 
-                    onValueChange={handleHourSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select hour" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {hourOptions.map((value) => (
-                        <SelectItem key={`hour-${value}`} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Day of Month */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Day (1-31)</label>
-                  <Select 
-                    value={dayOfMonth} 
-                    onValueChange={handleDayOfMonthSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {dayOptions.map((value) => (
-                        <SelectItem key={`day-${value}`} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Month */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Month (1-12)</label>
-                  <Select 
-                    value={month} 
-                    onValueChange={handleMonthSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select month" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {monthOptions.map((value) => (
-                        <SelectItem key={`month-${value}`} value={value}>
-                          {monthNames[value as keyof typeof monthNames] || value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Day of Week */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Weekday (0-6)</label>
-                  <Select 
-                    value={dayOfWeek} 
-                    onValueChange={handleDayOfWeekSelect}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select weekday" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-80 overflow-y-auto">
-                      {weekdayOptions.map((value) => (
-                        <SelectItem key={`weekday-${value}`} value={value}>
-                          {weekdayNames[value as keyof typeof weekdayNames] || value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="p-3 bg-muted rounded-md mt-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium">Cron Expression:</p>
-                    <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                      {form.watch("cronExpression")} {/* Dynamically watch the cronExpression */}
-                    </code>
+            <Tabs 
+              defaultValue="natural" 
+              className="space-y-4"
+              onValueChange={(value) => setCronMode(value as "natural" | "advanced")}
+            >
+              <TabsList>
+                <TabsTrigger value="natural">Natural Language</TabsTrigger>
+                <TabsTrigger value="advanced">Advanced</TabsTrigger>
+              </TabsList>
+              <TabsContent value="natural">
+                <div className="space-y-4">
+                  <div className="grid gap-3">
+                    <label className="text-sm font-medium">Schedule in Plain English</label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Every day at 9am"
+                        value={naturalLanguage}
+                        onChange={handleNaturalLanguageChange}
+                        onKeyPress={handleNaturalLanguageKeyPress}
+                        className="flex-1"
+                      />
+                      <Button type="button" onClick={applyNaturalLanguage} variant="outline" size="icon">
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium">Schedule Preview:</p>
+                    <p className="text-sm mt-1">{schedulePreview}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
+                    </p>
+                    <div className="mt-2 pt-2 border-t border-border">
+                      <p className="text-sm font-medium">Cron Expression:</p>
+                      <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
+                        {form.getValues("cronExpression")}
+                      </code>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-2 pt-2 border-t border-border">
-                  <p className="text-sm font-medium">Schedule Preview:</p>
-                  <p className="text-sm mt-1">{schedulePreview}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Next run would be around: {new Date(calculateNextRun(form.watch("cronExpression"))).toLocaleString()}
+              </TabsContent>
+              <TabsContent value="advanced">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    {/* Minute */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Minute (0-59)</label>
+                      <Select 
+                        value={minute} 
+                        onValueChange={handleMinuteSelect}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select minute" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-80 overflow-y-auto">
+                          {minuteOptions.map((value) => (
+                            <SelectItem key={`minute-${value}`} value={value}>
+                              {value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Hour */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Hour (0-23)</label>
+                      <Select 
+                        value={hour} 
+                        onValueChange={handleHourSelect}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select hour" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-80 overflow-y-auto">
+                          {hourOptions.map((value) => (
+                            <SelectItem key={`hour-${value}`} value={value}>
+                              {value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Day of Month */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Day (1-31)</label>
+                      <Select 
+                        value={dayOfMonth} 
+                        onValueChange={handleDayOfMonthSelect}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select day" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-80 overflow-y-auto">
+                          {dayOptions.map((value) => (
+                            <SelectItem key={`day-${value}`} value={value}>
+                              {value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Month */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Month (1-12)</label>
+                      <Select 
+                        value={month} 
+                        onValueChange={handleMonthSelect}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-80 overflow-y-auto">
+                          {monthOptions.map((value) => (
+                            <SelectItem key={`month-${value}`} value={value}>
+                              {monthNames[value as keyof typeof monthNames] || value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Day of Week */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Weekday (0-6)</label>
+                      <Select 
+                        value={dayOfWeek} 
+                        onValueChange={handleDayOfWeekSelect}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select weekday" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-80 overflow-y-auto">
+                          {weekdayOptions.map((value) => (
+                            <SelectItem key={`weekday-${value}`} value={value}>
+                              {weekdayNames[value as keyof typeof weekdayNames] || value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-muted rounded-md mt-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium">Cron Expression:</p>
+                        <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
+                          {form.watch("cronExpression")} {/* Dynamically watch the cronExpression */}
+                        </code>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-border">
+                      <p className="text-sm font-medium">Schedule Preview:</p>
+                      <p className="text-sm mt-1">{schedulePreview}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Next run would be around: {new Date(calculateNextRun(form.watch("cronExpression"))).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <TimeZoneSelect control={form.control} name="timeZone" />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="border rounded-md p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h3 className="text-base font-medium">Flexible Time Window</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Allow the schedule to run within a flexible time window
                   </p>
                 </div>
+                <FormField
+                  control={form.control}
+                  name="flexibleTimeWindowMode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Switch 
+                          checked={isFlexibleTime}
+                          onCheckedChange={handleFlexibleModeChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
+              
+              {isFlexibleTime && (
+                <FormField
+                  control={form.control}
+                  name="flexibleWindowMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={1440}
+                            placeholder="15"
+                            {...field}
+                            value={field.value === null ? '' : field.value}
+                            onChange={(e) => {
+                              const val = e.target.value !== '' ? parseInt(e.target.value, 10) : null;
+                              field.onChange(val);
+                            }}
+                            className="w-24"
+                          />
+                        </FormControl>
+                        <span>minutes</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <Clock className="inline h-3 w-3 mr-1" />
+                        Job can start anytime within this window after the scheduled time
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
-          </TabsContent>
-        </Tabs>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <TimeZoneSelect control={form.control} name="timeZone" />
-          
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* New Flexible Time Window section */}
-        <div className="border rounded-md p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="text-base font-medium">Flexible Time Window</h3>
-              <p className="text-sm text-muted-foreground">
-                Allow the schedule to run within a flexible time window
-              </p>
-            </div>
             <FormField
               control={form.control}
-              name="flexibleTimeWindowMode"
+              name="tags"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Tags</FormLabel>
                   <FormControl>
-                    <Switch 
-                      checked={isFlexibleTime}
-                      onCheckedChange={handleFlexibleModeChange}
+                    <TagInput 
+                      tags={field.value} 
+                      onChange={field.onChange}
                     />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          
-          {isFlexibleTime && (
-            <FormField
-              control={form.control}
-              name="flexibleWindowMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-2">
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={1440}
-                        placeholder="15"
-                        {...field}
-                        value={field.value === null ? '' : field.value}
-                        onChange={(e) => {
-                          const val = e.target.value !== '' ? parseInt(e.target.value, 10) : null;
-                          field.onChange(val);
-                        }}
-                        className="w-24"
-                      />
-                    </FormControl>
-                    <span>minutes</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <Clock className="inline h-3 w-3 mr-1" />
-                    Job can start anytime within this window after the scheduled time
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+
+          {/* Right Panel */}
+          <div className="space-y-6 border-l pl-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">Target Configuration</h2>
+              <FormField
+                control={form.control}
+                name="targetType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target Type</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.reset({
+                          ...form.getValues(),
+                          targetType: value as any,
+                          function_arn: undefined,
+                          payload: undefined,
+                          state_machine_arn: undefined,
+                          execution_role_arn: undefined,
+                        });
+                      }} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select target type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="LAMBDA">Lambda Function</SelectItem>
+                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                        <SelectItem value="SQS">Simple Queue Service</SelectItem>
+                        <SelectItem value="ECS">Elastic Container Service</SelectItem>
+                        <SelectItem value="KINESIS">Kinesis</SelectItem>
+                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="mt-6">
+                <TargetForm targetType={form.watch("targetType")} form={form} />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="tags"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tags</FormLabel>
-              <FormControl>
-                <TagInput 
-                  tags={field.value} 
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <TargetForm targetType={form.watch("targetType")} form={form} />
-
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end space-x-2 mt-6">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
