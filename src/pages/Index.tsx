@@ -241,8 +241,8 @@ const Index = () => {
         {isFormVisible ? (
           <div className="mb-8">
             <CronJobForm
-              job={editingJob}
-              onSubmit={editingJob ? handleUpdateJob : handleAddJob}
+              initialValues={editingJob}
+              onSuccess={handleFormCancel}
               onCancel={handleFormCancel}
             />
           </div>

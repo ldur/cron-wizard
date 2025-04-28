@@ -19,7 +19,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Control } from "react-hook-form";
+import { Control, useFormContext } from "react-hook-form";
 import { Slider } from "@/components/ui/slider";
 
 interface SchedulingFieldsProps {
@@ -28,6 +28,8 @@ interface SchedulingFieldsProps {
 }
 
 const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones }) => {
+  const form = useFormContext();
+  
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -147,9 +149,8 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date, view) => {
-                      const control = control as any;
-                      const startTime = control._formValues?.startTime;
+                    disabled={(date) => {
+                      const startTime = form.getValues("startTime");
                       return date < new Date() || (startTime && date < startTime);
                     }}
                     initialFocus
@@ -187,7 +188,7 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
               </FormItem>
             )}
           />
-          {control._formValues?.flexibleTimeWindowMode === "FLEXIBLE" && (
+          {form.watch("flexibleTimeWindowMode") === "FLEXIBLE" && (
             <FormField
               control={control}
               name="flexibleWindowMinutes"

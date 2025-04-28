@@ -4,37 +4,65 @@ import { CronJob } from "@/types/CronJob";
 import { v4 as uuidv4 } from 'uuid';
 import { calculateNextRun } from "@/utils/cronCalculator";
 
+// Get the corresponding target table for a target type
+const getTargetTable = (targetType: string): string => {
+  switch (targetType) {
+    case 'LAMBDA':
+      return 'lambda_targets';
+    case 'STEP_FUNCTION':
+      return 'stepfunction_targets';
+    case 'API_GATEWAY':
+      return 'api_gateway_targets';
+    case 'EVENTBRIDGE':
+      return 'eventbridge_targets';
+    case 'SQS':
+      return 'sqs_targets';
+    case 'ECS':
+      return 'ecs_targets';
+    case 'KINESIS':
+      return 'kinesis_targets';
+    case 'SAGEMAKER':
+      return 'sagemaker_targets';
+    default:
+      throw new Error(`Unknown target type: ${targetType}`);
+  }
+};
+
 // Insert or update target-specific data
 export const handleTargetData = async (
   jobId: string, 
   job: Partial<CronJob>, 
   isUpdate: boolean
 ): Promise<void> => {
-  let targetTable: string | null = null;
-  let targetData: any = {};
+  if (!job.targetType) {
+    console.warn('No target type provided');
+    return;
+  }
+
+  let targetTable = getTargetTable(job.targetType);
+  if (!targetTable) return;
+
+  let targetData: any = { id: jobId };
 
   switch (job.targetType) {
     case 'LAMBDA':
-      targetTable = 'lambda_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         function_arn: job.function_arn,
         payload: job.payload,
       };
       break;
     case 'STEP_FUNCTION':
-      targetTable = 'stepfunction_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         state_machine_arn: job.state_machine_arn,
         execution_role_arn: job.execution_role_arn,
         input_payload: job.input_payload,
       };
       break;
     case 'API_GATEWAY':
-      targetTable = 'api_gateway_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         endpoint_url: job.endpoint_url,
         http_method: job.http_method,
         headers: job.headers,
@@ -43,26 +71,23 @@ export const handleTargetData = async (
       };
       break;
     case 'EVENTBRIDGE':
-      targetTable = 'eventbridge_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         event_bus_arn: job.event_bus_arn,
         event_payload: job.event_payload,
       };
       break;
     case 'SQS':
-      targetTable = 'sqs_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         queue_url: job.queue_url,
         message_body: job.message_body,
         message_group_id: job.message_group_id,
       };
       break;
     case 'ECS':
-      targetTable = 'ecs_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         cluster_arn: job.cluster_arn,
         task_definition_arn: job.task_definition_arn,
         launch_type: job.launch_type,
@@ -71,18 +96,16 @@ export const handleTargetData = async (
       };
       break;
     case 'KINESIS':
-      targetTable = 'kinesis_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         stream_arn: job.stream_arn,
         partition_key: job.partition_key,
         payload: job.payload,
       };
       break;
     case 'SAGEMAKER':
-      targetTable = 'sagemaker_targets';
       targetData = {
-        id: jobId,
+        ...targetData,
         training_job_definition_arn: job.training_job_definition_arn,
         hyper_parameters: job.hyper_parameters,
         input_data_config: job.input_data_config,
@@ -93,28 +116,27 @@ export const handleTargetData = async (
       return;
   }
 
-  if (!targetTable) return;
-
   if (isUpdate) {
+    // For updates, we need to check if the record exists
     const { data: existingData } = await supabase
-      .from(targetTable)
+      .from(targetTable as any)
       .select('*')
       .eq('id', jobId)
       .maybeSingle();
     
     if (existingData) {
       await supabase
-        .from(targetTable)
+        .from(targetTable as any)
         .update(targetData)
         .eq('id', jobId);
     } else {
       await supabase
-        .from(targetTable)
+        .from(targetTable as any)
         .insert(targetData);
     }
   } else {
     await supabase
-      .from(targetTable)
+      .from(targetTable as any)
       .insert(targetData);
   }
 };
