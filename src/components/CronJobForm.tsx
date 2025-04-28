@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -25,20 +26,20 @@ interface CronJobFormProps {
   groupId?: string;
   groupName?: string;
   onSuccess?: () => void;
-  onSubmit?: (values: Omit<CronJob, "id" | "nextRun">) => void; // Added to match usage in Index.tsx
-  onCancel?: () => void; // Added to match usage in Index.tsx
+  onSubmit?: (values: CronJob) => void; // Updated type to match what's expected
+  onCancel?: () => void;
 }
 
 const timezones = getAllTimezones();
 
 const CronJobForm: React.FC<CronJobFormProps> = ({ 
   initialValues, 
-  job, // Added to use the prop from Index.tsx
+  job, 
   groupId, 
   groupName, 
   onSuccess, 
-  onSubmit: externalSubmit, // Use the prop from Index.tsx
-  onCancel // Use the prop from Index.tsx
+  onSubmit: externalSubmit, 
+  onCancel 
 }) => {
   // Use job prop if provided, otherwise use initialValues
   const jobData = job || initialValues;
@@ -97,8 +98,57 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
   const onSubmitForm = async (values: z.infer<typeof cronJobSchema>) => {
     if (externalSubmit) {
+      // Cast the form values to match the required CronJob type
+      // This ensures all required properties are present and properly typed
+      const cronJobValues: CronJob = {
+        id: values.id || uuidv4(),
+        name: values.name,
+        description: values.description || "",
+        scheduleExpression: values.scheduleExpression,
+        startTime: values.startTime?.toISOString(),
+        endTime: values.endTime?.toISOString(),
+        status: values.status,
+        isApi: values.isApi,
+        endpointName: values.endpointName,
+        iacCode: values.iacCode,
+        groupId: values.groupId,
+        groupName: groupName,
+        timezone: values.timezone,
+        tags: values.tags,
+        flexibleTimeWindowMode: values.flexibleTimeWindowMode,
+        flexibleWindowMinutes: values.flexibleWindowMinutes,
+        targetType: values.targetType,
+        
+        // Target-specific fields
+        function_arn: values.function_arn,
+        payload: values.payload,
+        state_machine_arn: values.state_machine_arn,
+        execution_role_arn: values.execution_role_arn,
+        input_payload: values.input_payload,
+        endpoint_url: values.endpoint_url,
+        http_method: values.http_method,
+        headers: values.headers,
+        body: values.body,
+        authorization_type: values.authorization_type,
+        event_bus_arn: values.event_bus_arn,
+        event_payload: values.event_payload,
+        queue_url: values.queue_url,
+        message_body: values.message_body,
+        message_group_id: values.message_group_id,
+        cluster_arn: values.cluster_arn,
+        task_definition_arn: values.task_definition_arn,
+        launch_type: values.launch_type,
+        network_configuration: values.network_configuration,
+        overrides: values.overrides,
+        stream_arn: values.stream_arn,
+        partition_key: values.partition_key,
+        training_job_definition_arn: values.training_job_definition_arn,
+        hyper_parameters: values.hyper_parameters,
+        input_data_config: values.input_data_config
+      };
+      
       // If external submit handler is provided, use it
-      externalSubmit(values);
+      externalSubmit(cronJobValues);
     } else {
       try {
         // Otherwise, use the default submit handler
