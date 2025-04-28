@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -119,7 +120,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         setDefaultTimeZone(timezone);
         if (!job) {
           // Only set the form value if we're creating a new job
-          form.setValue("timeZone", timezone);
+          form.setValue("timezone", timezone);
         }
       } catch (error) {
         console.error("Error loading default timezone:", error);
@@ -191,7 +192,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     defaultValues: {
       name: job?.name || "",
       description: job?.description || "",
-      scheduleExpression: job?.cronExpression || "0 0 * * *",
+      scheduleExpression: job?.scheduleExpression || "0 0 * * *",
       startTime: job?.startTime || null,
       endTime: job?.endTime || null,
       status: job?.status || "active",
@@ -199,7 +200,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
-      timezone: job?.timeZone || defaultTimeZone,
+      timezone: job?.timezone || defaultTimeZone,
       tags: job?.tags || [],
       flexibleTimeWindowMode: job?.flexibleTimeWindowMode || "OFF",
       flexibleWindowMinutes: job?.flexibleWindowMinutes || null,
@@ -287,7 +288,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       form.reset({
         name: job.name,
         description: job.description || "",
-        scheduleExpression: job.cronExpression,
+        scheduleExpression: job.scheduleExpression,
         startTime: job.startTime || null,
         endTime: job.endTime || null,
         status: job.status,
@@ -295,7 +296,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         isApi: job.isApi,
         endpointName: job.endpointName,
         iacCode: job.iacCode,
-        timezone: job.timeZone,
+        timezone: job.timezone,
         tags: job.tags,
         flexibleTimeWindowMode: job.flexibleTimeWindowMode,
         flexibleWindowMinutes: job.flexibleWindowMinutes,
@@ -328,7 +329,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       });
       setIsApiMode(job.isApi);
       setIsFlexibleTime(job.flexibleTimeWindowMode === 'FLEXIBLE');
-      parseCronExpression(job.cronExpression);
+      parseCronExpression(job.scheduleExpression);
     } else {
       // Set default cron values
       parseCronExpression("0 0 * * *");
@@ -873,4 +874,92 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         Job can start anytime within this window after the scheduled time
                       </p>
                       <FormMessage />
-                    </
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <TagInput 
+                      placeholder="Add tags..." 
+                      tags={field.value}
+                      setTags={(newTags) => field.onChange(newTags)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          {/* Right Panel - Target Configuration */}
+          <div className="space-y-6">
+            <div className="border rounded-md p-4">
+              <h2 className="text-lg font-medium mb-4 flex items-center">
+                <Target className="mr-2 h-5 w-5" />
+                Target Configuration
+              </h2>
+              
+              <FormField
+                control={form.control}
+                name="targetType"
+                render={({ field }) => (
+                  <FormItem className="mb-6">
+                    <FormLabel>Target Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select target type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="LAMBDA">Lambda Function</SelectItem>
+                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                        <SelectItem value="SQS">SQS Queue</SelectItem>
+                        <SelectItem value="ECS">ECS Task</SelectItem>
+                        <SelectItem value="KINESIS">Kinesis Stream</SelectItem>
+                        <SelectItem value="SAGEMAKER">SageMaker Training Job</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Target-specific form based on selected target type */}
+              <TargetForm 
+                targetType={form.watch("targetType")} 
+                form={form} 
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">
+            {job ? "Update Job" : "Create Job"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default CronJobForm;
+
