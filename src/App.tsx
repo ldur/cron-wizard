@@ -9,6 +9,7 @@ import { initializeDatabase } from "./lib/supabase";
 import Index from "./pages/Index";
 import Groups from "./pages/Groups";
 import Settings from "./pages/Settings";
+import TargetTemplates from "./pages/TargetTemplates";
 import NotFound from "./pages/NotFound";
 import { toast } from "@/hooks/use-toast";
 
@@ -55,6 +56,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/groups" element={<Groups />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/target-templates" element={<TargetTemplates />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
