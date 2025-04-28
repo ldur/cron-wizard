@@ -21,6 +21,7 @@ import { getTimeZones } from 'timezone-support';
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CronJobFormProps {
   initialValues?: CronJob;
@@ -179,9 +180,14 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-            {/* Left Column - Cron Job Fields */}
-            <div className="space-y-8">
+          <Tabs defaultValue="schedule" className="w-full">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="schedule" className="flex-1">Job Schedule</TabsTrigger>
+              <TabsTrigger value="target" className="flex-1">AWS Target Configuration</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="schedule" className="space-y-6">
+              {/* Job Schedule Content */}
               <div className="space-y-6">
                 {/* General Form Fields */}
                 <GeneralFormFields control={form.control} />
@@ -189,17 +195,13 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 {/* Scheduling Fields */}
                 <SchedulingFields control={form.control} timezones={timezones} />
               </div>
-            </div>
+            </TabsContent>
 
-            {/* Separator */}
-            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 -ml-px">
-              <div className="w-px h-full bg-gradient-to-b from-transparent via-border to-transparent" />
-            </div>
-
-            {/* Right Column - AWS Configuration */}
-            <div className="space-y-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">AWS Configuration</h2>
+            <TabsContent value="target" className="space-y-6">
+              {/* AWS Target Configuration Content */}
               <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-foreground mb-4">AWS Configuration</h2>
+                
                 {/* Target Type */}
                 <TargetTypeField control={form.control} />
 
@@ -259,8 +261,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Group Fields at the bottom */}
