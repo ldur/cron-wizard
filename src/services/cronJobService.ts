@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -94,47 +95,52 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
 
   return data.map((job) => {
     try {
-      const nextRun = calculateNextRun(job.cron_expression);
+      const nextRun = calculateNextRun(job.schedule_expression);
       
       return {
         id: job.id,
         name: job.name,
-        command: job.command,
-        cronExpression: job.cron_expression,
+        description: job.description,
+        scheduleExpression: job.schedule_expression,
+        startTime: job.start_time,
+        endTime: job.end_time,
         status: job.status,
-        nextRun: nextRun,
         isApi: job.is_api,
         endpointName: job.endpoint_name,
         iacCode: job.iac_code,
         groupId: job.group_id,
         groupName: job.schedule_groups?.name || 'Default',
-        timeZone: job.time_zone,
+        timezone: job.timezone,
         tags: job.tags || [],
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
-      };
+        // Next run is calculated but not stored in the database or the interface
+        nextRun: nextRun
+      } as CronJob & { nextRun: string };
     } catch (error) {
       console.error(`Error processing job ${job.id}:`, error);
       // In case of error, return the job with current date as nextRun
       return {
         id: job.id,
         name: job.name,
-        command: job.command,
-        cronExpression: job.cron_expression,
+        description: job.description,
+        scheduleExpression: job.schedule_expression,
+        startTime: job.start_time,
+        endTime: job.end_time,
         status: job.status,
-        nextRun: new Date().toISOString(),
         isApi: job.is_api,
         endpointName: job.endpoint_name,
         iacCode: job.iac_code,
         groupId: job.group_id,
         groupName: job.schedule_groups?.name || 'Default',
-        timeZone: job.time_zone,
+        timezone: job.timezone,
         tags: job.tags || [],
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
-      };
+        nextRun: new Date().toISOString()
+      } as CronJob & { nextRun: string };
     }
   });
 };
@@ -155,20 +161,22 @@ export const fetchDefaultTimezone = async (): Promise<string> => {
 };
 
 // Create a new cron job - modified to explicitly include the time_zone in the insert
-export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
+export const createCronJob = async (job: Omit<CronJob, 'id'> & { nextRun?: string }): Promise<CronJob & { nextRun: string }> => {
   // First, insert the main cron job
   const { data, error } = await supabase
     .from('cron_jobs')
     .insert({
       name: job.name,
-      command: job.command,
-      cron_expression: job.cronExpression,
+      description: job.description,
+      schedule_expression: job.scheduleExpression,
+      start_time: job.startTime,
+      end_time: job.endTime,
       status: job.status,
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
       group_id: job.groupId,
-      time_zone: job.timeZone,
+      timezone: job.timezone,
       tags: job.tags || [],
       flexible_time_window_mode: job.flexibleTimeWindowMode,
       flexible_window_minutes: job.flexibleWindowMinutes,
@@ -292,41 +300,46 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     // Consider whether to delete the main job record here if target insertion fails
   }
 
+  const nextRun = calculateNextRun(data.schedule_expression);
+  
   return {
     id: data.id,
     name: data.name,
-    command: data.command,
-    cronExpression: data.cron_expression,
+    description: data.description,
+    scheduleExpression: data.schedule_expression,
+    startTime: data.start_time,
+    endTime: data.end_time,
     status: data.status,
-    nextRun: calculateNextRun(data.cron_expression),
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
-    timeZone: data.time_zone,
+    timezone: data.timezone,
     tags: data.tags || [],
     flexibleTimeWindowMode: data.flexible_time_window_mode,
     flexibleWindowMinutes: data.flexible_window_minutes,
     targetType: data.target_type,
-    // Target-specific data will be loaded separately when needed
+    nextRun: nextRun
   };
 };
 
 // Update the updateCronJob function to handle target-specific data
-export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
+export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id'>>): Promise<CronJob & { nextRun: string }> => {
   // Prepare the main job update
   const updateData: any = {};
   
   if (job.name !== undefined) updateData.name = job.name;
-  if (job.command !== undefined) updateData.command = job.command;
-  if (job.cronExpression !== undefined) updateData.cron_expression = job.cronExpression;
+  if (job.description !== undefined) updateData.description = job.description;
+  if (job.scheduleExpression !== undefined) updateData.schedule_expression = job.scheduleExpression;
+  if (job.startTime !== undefined) updateData.start_time = job.startTime;
+  if (job.endTime !== undefined) updateData.end_time = job.endTime;
   if (job.status !== undefined) updateData.status = job.status;
   if (job.isApi !== undefined) updateData.is_api = job.isApi;
   if (job.endpointName !== undefined) updateData.endpoint_name = job.endpointName;
   if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
   if (job.groupId !== undefined) updateData.group_id = job.groupId;
-  if (job.timeZone !== undefined) updateData.time_zone = job.timeZone;
+  if (job.timezone !== undefined) updateData.timezone = job.timezone;
   if (job.tags !== undefined) updateData.tags = job.tags;
   if (job.flexibleTimeWindowMode !== undefined) updateData.flexible_time_window_mode = job.flexibleTimeWindowMode;
   if (job.flexibleWindowMinutes !== undefined) updateData.flexible_window_minutes = job.flexibleWindowMinutes;
@@ -469,24 +482,27 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     }
   }
 
+  const nextRun = calculateNextRun(data.schedule_expression);
+
   return {
     id: data.id,
     name: data.name,
-    command: data.command,
-    cronExpression: data.cron_expression,
+    description: data.description,
+    scheduleExpression: data.schedule_expression,
+    startTime: data.start_time,
+    endTime: data.end_time,
     status: data.status,
-    nextRun: calculateNextRun(data.cron_expression),
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
-    timeZone: data.time_zone,
+    timezone: data.timezone,
     tags: data.tags || [],
     flexibleTimeWindowMode: data.flexible_time_window_mode,
     flexibleWindowMinutes: data.flexible_window_minutes,
     targetType: data.target_type,
-    // Target-specific data will be loaded separately when needed
+    nextRun: nextRun
   };
 };
 
@@ -502,7 +518,7 @@ export const deleteCronJob = async (id: string): Promise<void> => {
   }
 };
 
-export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 'paused'): Promise<CronJob> => {
+export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 'paused'): Promise<CronJob & { nextRun: string }> => {
   const newStatus = currentStatus === 'active' ? 'paused' : 'active';
   
   const { data, error } = await supabase
@@ -520,22 +536,26 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     throw error;
   }
 
+  const nextRun = calculateNextRun(data.schedule_expression);
+  
   return {
     id: data.id,
     name: data.name,
-    command: data.command,
-    cronExpression: data.cron_expression,
+    description: data.description,
+    scheduleExpression: data.schedule_expression,
+    startTime: data.start_time,
+    endTime: data.end_time,
     status: data.status,
-    nextRun: calculateNextRun(data.cron_expression),
     isApi: data.is_api,
     endpointName: data.endpoint_name,
     iacCode: data.iac_code,
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
-    timeZone: data.time_zone,
+    timezone: data.timezone,
     tags: data.tags || [],
     flexibleTimeWindowMode: data.flexible_time_window_mode,
     flexibleWindowMinutes: data.flexible_window_minutes,
     targetType: data.target_type,
+    nextRun: nextRun
   };
 };

@@ -64,9 +64,11 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     } else if (sortBy === 'nextRun') {
+      const aNextRun = (a as any).nextRun ? new Date((a as any).nextRun).getTime() : 0;
+      const bNextRun = (b as any).nextRun ? new Date((b as any).nextRun).getTime() : 0;
       return sortOrder === 'asc' 
-        ? new Date(a.nextRun).getTime() - new Date(b.nextRun).getTime()
-        : new Date(b.nextRun).getTime() - new Date(a.nextRun).getTime();
+        ? aNextRun - bNextRun
+        : bNextRun - aNextRun;
     } else {
       return sortOrder === 'asc'
         ? a.status.localeCompare(b.status)
@@ -123,10 +125,10 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
               <div className="w-2/6">
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {job.cronExpression}
+                  {job.scheduleExpression}
                   <span className="ml-2 text-blue-500">
                     <Clock className="h-3 w-3 inline mr-1" />
-                    {job.timeZone || "UTC"}
+                    {job.timezone || "UTC"}
                   </span>
                 </p>
               </div>
@@ -138,7 +140,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
               </div>
               <div className="w-1/6 flex items-center">
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
-                <span className="text-sm">{new Date(job.nextRun).toLocaleString()}</span>
+                <span className="text-sm">{(job as any).nextRun ? new Date((job as any).nextRun).toLocaleString() : "N/A"}</span>
               </div>
 
               <div className="w-1/6">

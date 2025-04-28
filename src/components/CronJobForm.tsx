@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -25,8 +24,8 @@ import TagInput from './TagInput';
 import TargetForm from './TargetForm';
 
 interface CronJobFormProps {
-  job?: CronJob;
-  onSubmit: (job: Omit<CronJob, "id" | "nextRun">) => void;
+  job?: CronJob & { nextRun?: string };
+  onSubmit: (job: Omit<CronJob, "id">) => void;
   onCancel: () => void;
 }
 
@@ -166,10 +165,10 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     execution_role_arn: z.string().optional(),
     input_payload: z.any().optional(),
     endpoint_url: z.string().optional(),
-    http_method: z.string().optional(),
+    http_method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']).optional(),
     headers: z.any().optional(),
     body: z.any().optional(),
-    authorization_type: z.string().optional(),
+    authorization_type: z.enum(['NONE', 'IAM', 'COGNITO_USER_POOLS']).optional(),
     event_bus_arn: z.string().optional(),
     event_payload: z.any().optional(),
     queue_url: z.string().optional(),
@@ -177,7 +176,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     message_group_id: z.string().optional(),
     cluster_arn: z.string().optional(),
     task_definition_arn: z.string().optional(),
-    launch_type: z.string().optional(),
+    launch_type: z.enum(['FARGATE', 'EC2']).optional(),
     network_configuration: z.any().optional(),
     overrides: z.any().optional(),
     stream_arn: z.string().optional(),
@@ -424,7 +423,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
   const onFormSubmit = async (values: z.infer<typeof formSchema>) => {
     // Create a new object with all required fields ensuring they aren't undefined
-    const submissionData: Omit<CronJob, "id" | "nextRun"> = {
+    const submissionData: Omit<CronJob, "id"> = {
       name: values.name,
       description: values.description,
       scheduleExpression: values.scheduleExpression,
@@ -479,7 +478,6 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
-          {/* Left Panel */}
           <div className="space-y-6">
             <div className="grid gap-6">
               <FormField
@@ -870,96 +868,4 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         <span>minutes</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        <Clock className="inline h-3 w-3 mr-1" />
-                        Job can start anytime within this window after the scheduled time
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <TagInput 
-                      placeholder="Add tags..." 
-                      tags={field.value}
-                      setTags={(newTags) => field.onChange(newTags)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          {/* Right Panel - Target Configuration */}
-          <div className="space-y-6">
-            <div className="border rounded-md p-4">
-              <h2 className="text-lg font-medium mb-4 flex items-center">
-                <Target className="mr-2 h-5 w-5" />
-                Target Configuration
-              </h2>
-              
-              <FormField
-                control={form.control}
-                name="targetType"
-                render={({ field }) => (
-                  <FormItem className="mb-6">
-                    <FormLabel>Target Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select target type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="LAMBDA">Lambda Function</SelectItem>
-                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
-                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
-                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
-                        <SelectItem value="SQS">SQS Queue</SelectItem>
-                        <SelectItem value="ECS">ECS Task</SelectItem>
-                        <SelectItem value="KINESIS">Kinesis Stream</SelectItem>
-                        <SelectItem value="SAGEMAKER">SageMaker Training Job</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Target-specific form based on selected target type */}
-              <TargetForm 
-                targetType={form.watch("targetType")} 
-                form={form} 
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <Button type="submit">
-            {job ? "Update Job" : "Create Job"}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-};
-
-export default CronJobForm;
-
+                        <Clock className="inline h-3 w-3
