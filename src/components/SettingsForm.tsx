@@ -21,16 +21,6 @@ const SettingsForm = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const form = useForm<SettingsFormData>();
-  const [isReadOnly, setIsReadOnly] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsReadOnly(!session);
-    };
-
-    checkAuth();
-  }, []);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -65,15 +55,6 @@ const SettingsForm = () => {
   }, [form, toast]);
 
   const onSubmit = async (data: SettingsFormData) => {
-    if (isReadOnly) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to update settings",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       const { error } = await supabase
@@ -114,7 +95,7 @@ const SettingsForm = () => {
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input {...field} readOnly={isReadOnly} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -128,7 +109,7 @@ const SettingsForm = () => {
             <FormItem>
               <FormLabel>IAC Description</FormLabel>
               <FormControl>
-                <Textarea {...field} readOnly={isReadOnly} />
+                <Textarea {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -142,7 +123,7 @@ const SettingsForm = () => {
             <FormItem>
               <FormLabel>IAC Code</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value || ''} readOnly={isReadOnly} />
+                <Textarea {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -156,7 +137,7 @@ const SettingsForm = () => {
             <FormItem>
               <FormLabel>Time Zone</FormLabel>
               <FormControl>
-                <Input {...field} readOnly={isReadOnly} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -170,25 +151,17 @@ const SettingsForm = () => {
             <FormItem>
               <FormLabel>Time Zone Description</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value || ''} readOnly={isReadOnly} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {!isReadOnly && (
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Settings
-          </Button>
-        )}
-
-        {isReadOnly && (
-          <p className="text-sm text-muted-foreground">
-            You must be logged in to update settings
-          </p>
-        )}
+        <Button type="submit" disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Save Settings
+        </Button>
       </form>
     </Form>
   );
