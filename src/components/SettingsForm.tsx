@@ -10,14 +10,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import TimeZoneSelect from "@/components/TimeZoneSelect";
 
-// Define a more specific type for targetTemplates to avoid circular references
-type SimpleJsonValue = 
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: SimpleJsonValue }
-  | SimpleJsonValue[];
+// Define a non-recursive type for JSON values
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+interface JsonArray extends Array<JsonValue> {}
+
+type JsonPrimitive = string | number | boolean | null;
+
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 interface SettingsFormData {
   name: string;
@@ -25,7 +27,7 @@ interface SettingsFormData {
   iacCode: string | null;
   timeZone: string;
   timeZoneDescription: string | null;
-  targetTemplates: SimpleJsonValue | null;
+  targetTemplates: JsonValue | null;
 }
 
 interface TimeZoneOption {
