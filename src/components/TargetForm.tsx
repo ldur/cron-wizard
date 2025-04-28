@@ -1,13 +1,15 @@
 
 import React from 'react';
+import { Control } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CronJob } from '@/types/CronJob';
 
 interface TargetFormProps {
-  targetType: string;
-  form: any;
+  targetType: CronJob['targetType'];
+  form: any; // We keep this as any since it's already working with the form context
 }
 
 const TargetForm = ({ targetType, form }: TargetFormProps) => {
