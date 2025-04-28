@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Terminal, Globe, Code } from "lucide-react";
 
 interface CronJobIacDialogProps {
-  open: boolean; // Changed from isOpen to open
+  open: boolean; 
   onOpenChange: (open: boolean) => void;
   job?: {
     name: string;
@@ -14,15 +14,17 @@ interface CronJobIacDialogProps {
     iacCode: string | null;
   } | null;
   iacCode?: string; // Added to support direct iacCode prop
-  onSave?: (code: string) => void; // Added optional onSave callback
+  onSave?: (code: string) => void; // For saving the code
+  formData?: any; // Added to support form data
+  onGenerate?: (code: string) => void; // Added to support code generation
 }
 
-const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave }: CronJobIacDialogProps) => {
+const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, onGenerate }: CronJobIacDialogProps) => {
   // Determine which iacCode to use (either from job or direct prop)
   const codeToShow = job?.iacCode || iacCode || '';
-  const nameToShow = job?.name || 'Unnamed Job';
-  const isApi = job?.isApi || false;
-  const endpointName = job?.endpointName || 'unnamed resource';
+  const nameToShow = job?.name || (formData?.name || 'Unnamed Job');
+  const isApi = job?.isApi || (formData?.isApi || false);
+  const endpointName = job?.endpointName || (formData?.endpointName || 'unnamed resource');
 
   // Function to apply syntax highlighting to the code
   const highlightCode = (code: string): string => {
@@ -47,6 +49,58 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave }: CronJobI
       .replace(/([(){}[\]<>])/g, '<span class="text-[#d8dee9]">$1</span>')
       // Special characters
       .replace(/([+\-*/%&|^!=<>?:;.,])/g, '<span class="text-[#89DDFF]">$1</span>');
+  };
+
+  // Handle code generation based on form data
+  const handleGenerate = () => {
+    if (onGenerate && formData) {
+      // Generate a simple IAC code template based on the form data
+      const targetType = formData.targetType || 'LAMBDA';
+      
+      // Generate basic IAC code based on target type
+      let generatedCode = `// Infrastructure as Code for ${formData.name || 'Unnamed Job'}\n`;
+      generatedCode += `// Target Type: ${targetType}\n\n`;
+      
+      generatedCode += `import { aws_events as events, aws_events_targets as targets, Duration } from 'aws-cdk-lib';\n`;
+      generatedCode += `import { Construct } from 'constructs';\n\n`;
+      
+      generatedCode += `export function create${targetType.charAt(0).toUpperCase() + targetType.slice(1).toLowerCase()}Job(scope: Construct) {\n`;
+      generatedCode += `  // Create the schedule rule\n`;
+      generatedCode += `  const rule = new events.Rule(scope, '${formData.name || 'Job'}Rule', {\n`;
+      generatedCode += `    schedule: events.Schedule.expression('${formData.scheduleExpression || 'cron(0 12 * * ? *)'}'),\n`;
+      generatedCode += `    description: '${formData.description || 'No description provided'}',\n`;
+      
+      if (formData.timezone) {
+        generatedCode += `    timezone: '${formData.timezone}',\n`;
+      }
+      
+      generatedCode += `  });\n\n`;
+      
+      // Add target-specific code
+      switch (targetType) {
+        case 'LAMBDA':
+          generatedCode += `  // Add Lambda target\n`;
+          generatedCode += `  const lambdaArn = '${formData.function_arn || 'YOUR_LAMBDA_ARN'}';\n`;
+          generatedCode += `  rule.addTarget(new targets.LambdaFunction(lambdaFunction));\n`;
+          break;
+        case 'API_GATEWAY':
+          generatedCode += `  // Add API Gateway target\n`;
+          generatedCode += `  const apiEndpoint = '${formData.endpoint_url || 'YOUR_API_ENDPOINT'}';\n`;
+          generatedCode += `  rule.addTarget(new targets.ApiGateway({\n`;
+          generatedCode += `    httpMethod: '${formData.http_method || 'GET'}',\n`;
+          generatedCode += `    path: '/path',\n`;
+          generatedCode += `  }));\n`;
+          break;
+        default:
+          generatedCode += `  // Add ${targetType} target\n`;
+          generatedCode += `  // TODO: Configure specific target properties\n`;
+      }
+      
+      generatedCode += `\n  return rule;\n`;
+      generatedCode += `}\n`;
+      
+      onGenerate(generatedCode);
+    }
   };
 
   return (
@@ -88,16 +142,25 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave }: CronJobI
           )}
         </ScrollArea>
         
-        {onSave && (
-          <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end space-x-2">
+          {formData && onGenerate && (
+            <button 
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md"
+              onClick={handleGenerate}
+            >
+              Generate Code
+            </button>
+          )}
+          
+          {onSave && (
             <button 
               className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
               onClick={() => onSave(codeToShow)}
             >
               Save Code
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

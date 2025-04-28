@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -168,7 +167,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     http_method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']).optional(),
     headers: z.any().optional(),
     body: z.any().optional(),
-    authorization_type: z.enum(['NONE', 'IAM', 'COGNITO_USER_POOLS']).optional(),
+    authorization_type: z.enum(['NONE', 'IAM' | 'COGNITO_USER_POOLS']).optional(),
     event_bus_arn: z.string().optional(),
     event_payload: z.any().optional(),
     queue_url: z.string().optional(),
@@ -865,107 +864,4 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
                         <SelectItem value="SQS">SQS</SelectItem>
                         <SelectItem value="ECS">ECS</SelectItem>
-                        <SelectItem value="KINESIS">Kinesis</SelectItem>
-                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="mt-4">
-                <TargetForm targetType={form.watch("targetType")} form={form} />
-              </div>
-            </div>
-            
-            {/* Flexible Time Window section */}
-            <div className="border-b pb-4">
-              <h2 className="text-lg font-semibold mb-4">
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 mr-2" />
-                  Flexible Time Window
-                </div>
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="flexible-mode"
-                    checked={isFlexibleTime}
-                    onCheckedChange={handleFlexibleModeChange}
-                  />
-                  <label
-                    htmlFor="flexible-mode"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Enable Flexible Time Window
-                  </label>
-                </div>
-                
-                {isFlexibleTime && (
-                  <FormField
-                    control={form.control}
-                    name="flexibleWindowMinutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Window Size (in minutes)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={1440}
-                            placeholder="15"
-                            {...field}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value, 10);
-                              field.onChange(isNaN(value) ? null : value);
-                            }}
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                
-                {isFlexibleTime && (
-                  <div className="text-sm text-muted-foreground">
-                    <p>
-                      Flexible time window allows your job to be executed at any point 
-                      within the specified window of time after its scheduled time.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {job ? "Update Job" : "Create Job"}
-          </Button>
-        </div>
-      </form>
-      
-      {isIacDialogOpen && (
-        <CronJobIacDialog
-          open={isIacDialogOpen}
-          onOpenChange={setIsIacDialogOpen}
-          job={job}
-          formData={form.getValues()}
-          onGenerate={(code) => {
-            form.setValue("iacCode", code);
-          }}
-        />
-      )}
-    </Form>
-  );
-};
-
-export default CronJobForm;
+                        <SelectItem value="KINESIS">Kinesis
