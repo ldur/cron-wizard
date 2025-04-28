@@ -155,6 +155,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       "KINESIS",
       "SAGEMAKER"
     ]).default("LAMBDA"),
+    
+    // Target-specific fields with appropriate types
     function_arn: z.string().optional(),
     payload: z.any().optional(),
     state_machine_arn: z.string().optional(),
@@ -364,9 +366,71 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   };
 
   const onFormSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Pass all form values directly to onSubmit
-    // The parent component will handle extracting the relevant data
-    onSubmit(values);
+    // Create a new object with all required fields ensuring they aren't undefined
+    const submissionData: Omit<CronJob, "id" | "nextRun"> = {
+      name: values.name,
+      command: values.command,
+      cronExpression: values.cronExpression,
+      status: values.status,
+      isApi: values.isApi ?? false,
+      endpointName: values.endpointName ?? null,
+      iacCode: values.iacCode ?? null,
+      groupId: values.groupId,
+      timeZone: values.timeZone ?? null,
+      tags: values.tags ?? [],
+      flexibleTimeWindowMode: values.flexibleTimeWindowMode,
+      flexibleWindowMinutes: values.flexibleWindowMinutes,
+      targetType: values.targetType
+    };
+
+    // Add target-specific fields based on the target type
+    switch (values.targetType) {
+      case 'LAMBDA':
+        if (values.function_arn) submissionData.function_arn = values.function_arn;
+        if (values.payload !== undefined) submissionData.payload = values.payload;
+        break;
+      case 'STEP_FUNCTION':
+        if (values.state_machine_arn) submissionData.state_machine_arn = values.state_machine_arn;
+        if (values.execution_role_arn) submissionData.execution_role_arn = values.execution_role_arn;
+        if (values.input_payload !== undefined) submissionData.input_payload = values.input_payload;
+        break;
+      case 'API_GATEWAY':
+        if (values.endpoint_url) submissionData.endpoint_url = values.endpoint_url;
+        if (values.http_method) submissionData.http_method = values.http_method;
+        if (values.headers !== undefined) submissionData.headers = values.headers;
+        if (values.body !== undefined) submissionData.body = values.body;
+        if (values.authorization_type) submissionData.authorization_type = values.authorization_type;
+        break;
+      case 'EVENTBRIDGE':
+        if (values.event_bus_arn) submissionData.event_bus_arn = values.event_bus_arn;
+        if (values.event_payload !== undefined) submissionData.event_payload = values.event_payload;
+        break;
+      case 'SQS':
+        if (values.queue_url) submissionData.queue_url = values.queue_url;
+        if (values.message_body) submissionData.message_body = values.message_body;
+        if (values.message_group_id) submissionData.message_group_id = values.message_group_id;
+        break;
+      case 'ECS':
+        if (values.cluster_arn) submissionData.cluster_arn = values.cluster_arn;
+        if (values.task_definition_arn) submissionData.task_definition_arn = values.task_definition_arn;
+        if (values.launch_type) submissionData.launch_type = values.launch_type;
+        if (values.network_configuration !== undefined) submissionData.network_configuration = values.network_configuration;
+        if (values.overrides !== undefined) submissionData.overrides = values.overrides;
+        break;
+      case 'KINESIS':
+        if (values.stream_arn) submissionData.stream_arn = values.stream_arn;
+        if (values.partition_key) submissionData.partition_key = values.partition_key;
+        if (values.payload !== undefined) submissionData.payload = values.payload;
+        break;
+      case 'SAGEMAKER':
+        if (values.training_job_definition_arn) submissionData.training_job_definition_arn = values.training_job_definition_arn;
+        if (values.hyper_parameters !== undefined) submissionData.hyper_parameters = values.hyper_parameters;
+        if (values.input_data_config !== undefined) submissionData.input_data_config = values.input_data_config;
+        break;
+    }
+
+    // Submit the form with all required data
+    onSubmit(submissionData);
   };
 
   const handleIacDialogOpen = () => {
