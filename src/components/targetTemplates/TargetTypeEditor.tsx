@@ -1,16 +1,5 @@
-
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { 
   Table, 
   TableBody, 
@@ -19,14 +8,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Save, Trash2 } from "lucide-react";
+import { Plus, Save, Trash2, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TargetType, TemplateAttribute } from "@/pages/TargetTemplates";
@@ -93,13 +74,18 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       // Get current templates
       const { data, error: fetchError } = await supabase
         .from('settings')
-        .select('target_templates')
+        .select('target_templates, id')
         .single();
       
       if (fetchError) throw fetchError;
       
+      // Initialize templates as an object if it's null or not an object
+      const currentTemplates = 
+        (data?.target_templates && typeof data.target_templates === 'object' && !Array.isArray(data.target_templates)) 
+          ? data.target_templates as Record<string, TemplateAttribute[]> 
+          : {};
+      
       // Update templates for this target type
-      const currentTemplates = data?.target_templates || {};
       const updatedTemplates = {
         ...currentTemplates,
         [targetType]: attributes

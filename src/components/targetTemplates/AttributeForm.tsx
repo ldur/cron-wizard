@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,7 +55,7 @@ export const AttributeForm = ({ attribute, onSubmit, onCancel }: AttributeFormPr
   
   const handleSubmit = (values: z.infer<typeof attributeSchema>) => {
     try {
-      let parsedDefaultValue: string | number | boolean | object | null | undefined = values.default_value;
+      let parsedDefaultValue: string | number | boolean | null | undefined = values.default_value;
       
       // Parse the default value based on the data type
       if (values.default_value !== undefined && values.default_value !== "") {
@@ -76,7 +75,10 @@ export const AttributeForm = ({ attribute, onSubmit, onCancel }: AttributeFormPr
           }
         } else if (values.data_type === "json") {
           try {
-            parsedDefaultValue = JSON.parse(values.default_value);
+            // For json type, parse but don't include in default_value directly
+            // We'll store it as a string in the TemplateAttribute
+            JSON.parse(values.default_value);
+            parsedDefaultValue = values.default_value;
           } catch (e) {
             throw new Error("Default value must be a valid JSON");
           }

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,11 @@ export const TargetTemplatesTable = ({
         if (error) throw error;
 
         // Get existing target templates or initialize empty object
-        const templates = (data?.target_templates as TargetTemplates) || {};
+        const rawTemplates = data?.target_templates;
+        const templates = (rawTemplates && typeof rawTemplates === 'object' && !Array.isArray(rawTemplates))
+          ? rawTemplates as TargetTemplates
+          : {} as TargetTemplates;
+          
         setTargetTemplates(templates);
         
         // Get the list of target types that have templates defined
