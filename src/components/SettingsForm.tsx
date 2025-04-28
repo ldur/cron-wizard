@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -46,7 +46,7 @@ const formSchema = z.object({
 
 interface SettingsFormProps {
   setting?: Settings;
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onSubmit: (data: z.infer<typeof formSchema> & { timeZoneDescription?: string }) => void;
   onCancel: () => void;
 }
 
@@ -61,9 +61,21 @@ const SettingsForm = ({ setting, onSubmit, onCancel }: SettingsFormProps) => {
     },
   });
 
+  const handleFormSubmit = (data: z.infer<typeof formSchema>) => {
+    // Find the label for the selected time zone
+    const selectedTimeZone = timeZones.find(tz => tz.value === data.timeZone);
+    const timeZoneDescription = selectedTimeZone?.label || "";
+    
+    // Pass both the time zone value and description to the submit handler
+    onSubmit({
+      ...data,
+      timeZoneDescription
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"

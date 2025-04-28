@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import type { Settings } from '@/types/Settings';
 
@@ -29,11 +30,15 @@ export const fetchSetting = async (id: string): Promise<Settings> => {
     .from('settings')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching setting:', error);
     throw error;
+  }
+
+  if (!data) {
+    throw new Error(`Setting with ID ${id} not found`);
   }
 
   return {
@@ -59,11 +64,15 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
       time_zone_decription: setting.timeZoneDescription,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error creating setting:', error);
     throw error;
+  }
+
+  if (!data) {
+    throw new Error('Failed to create setting: No data returned');
   }
 
   return {
@@ -109,11 +118,15 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error updating setting:', error);
     throw error;
+  }
+
+  if (!data) {
+    throw new Error(`Failed to update setting: No data returned for ID ${id}`);
   }
 
   return {
