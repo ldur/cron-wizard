@@ -17,7 +17,7 @@ import SchedulingFields from './cronJob/SchedulingFields';
 import TargetTypeField from './cronJob/TargetTypeField';
 import GroupFields from './cronJob/GroupFields';
 import { submitCronJob } from '@/services/cronJobFormService';
-import { getTimeZones } from 'timezone-support';
+import { listTimeZones } from 'timezone-support';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Import schema definition
@@ -33,7 +33,7 @@ interface CronJobFormProps {
   onCancel?: () => void;
 }
 
-const timezones = getTimeZones();
+const timezones = listTimeZones();
 
 const CronJobForm: React.FC<CronJobFormProps> = ({ 
   initialValues, 
@@ -54,6 +54,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   useEffect(() => {
     console.log("CronJobForm rendering");
     console.log("Tabs component should be ready");
+    console.log("Timezones loaded:", timezones.length);
   }, []);
 
   const form = useForm<z.infer<typeof cronJobSchema>>({

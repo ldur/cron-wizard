@@ -21,14 +21,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Control, useFormContext } from "react-hook-form";
 
-interface TimeZone {
-  name: string;
-  group?: string;
-}
-
 interface SchedulingFieldsProps {
   control: Control<any>;
-  timezones: TimeZone[];
+  timezones: string[];
 }
 
 const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones }) => {
@@ -67,8 +62,8 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
                 </FormControl>
                 <SelectContent className="max-h-96 overflow-y-auto">
                   {timezones.map((timezone) => (
-                    <SelectItem key={timezone.name} value={timezone.name}>
-                      {timezone.name}
+                    <SelectItem key={timezone} value={timezone}>
+                      {timezone}
                     </SelectItem>
                   ))}
                 </SelectContent>
