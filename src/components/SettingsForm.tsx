@@ -9,7 +9,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { Json } from "@/integrations/supabase/types";
+import TimeZoneSelect from "@/components/TimeZoneSelect";
+
+// Import types from our defined types, not from Supabase directly
+import { Json } from "@/types/supabase";
 
 interface SettingsFormData {
   name: string;
@@ -166,30 +169,7 @@ const SettingsForm = () => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="timeZone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Time Zone</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a timezone" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {timeZones.map((tz) => (
-                    <SelectItem key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <TimeZoneSelect control={form.control} name="timeZone" />
 
         <FormField
           control={form.control}
