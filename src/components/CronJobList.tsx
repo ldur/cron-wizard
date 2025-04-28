@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -122,17 +121,18 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
             <div className="flex items-center justify-between p-4">
               <div className="w-1/6">
                 <h3 className="font-medium line-clamp-1">{job.name}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{job.cronExpression}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {job.cronExpression}
+                  <span className="ml-2 text-blue-500">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    {job.timeZone || "UTC"}
+                  </span>
+                </p>
               </div>
-              <div className="w-2/6 flex gap-2 items-center">
+              <div className="w-2/6">
                 <div className="flex items-center">
                   <FolderTree className="h-4 w-4 text-blue-500 mr-2" />
                   <span className="text-sm">{job.groupName || "Default"}</span>
-                </div>
-                <span className="text-muted-foreground">/</span>
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 text-blue-500 mr-2" />
-                  <span className="text-sm">{job.timeZone || "UTC"}</span>
                 </div>
               </div>
               <div className="w-1/6 flex items-center">
