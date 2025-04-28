@@ -15,7 +15,7 @@ import SchedulingFields from './cronJob/SchedulingFields';
 import TargetTypeField from './cronJob/TargetTypeField';
 import GroupFields from './cronJob/GroupFields';
 import { submitCronJob } from '@/services/cronJobFormService';
-import { getAllTimezones } from 'timezone-support';
+import { findTimeZone, getTimeZones } from 'timezone-support';
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
@@ -30,7 +30,7 @@ interface CronJobFormProps {
   onCancel?: () => void;
 }
 
-const timezones = getAllTimezones();
+const timezones = getTimeZones();
 
 const CronJobForm: React.FC<CronJobFormProps> = ({ 
   initialValues, 
