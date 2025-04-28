@@ -262,7 +262,11 @@ const Index = () => {
                 </div>
                 
                 <div className="mb-6">
-                  <DashboardStats jobs={jobs} />
+                  <DashboardStats 
+                    jobs={jobs} 
+                    nameFilter={nameFilter} 
+                    selectedGroup={selectedGroup} 
+                  />
                 </div>
                 
                 <Tabs defaultValue="all">

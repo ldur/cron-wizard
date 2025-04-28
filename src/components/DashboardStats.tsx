@@ -5,12 +5,20 @@ import { CronJob } from "@/types/CronJob";
 
 interface DashboardStatsProps {
   jobs: CronJob[];
+  nameFilter: string;
+  selectedGroup: string | null;
 }
 
-const DashboardStats = ({ jobs }: DashboardStatsProps) => {
-  const totalJobs = jobs.length;
-  const activeJobs = jobs.filter(job => job.status === 'active').length;
-  const pausedJobs = jobs.filter(job => job.status === 'paused').length;
+const DashboardStats = ({ jobs, nameFilter, selectedGroup }: DashboardStatsProps) => {
+  // Filter jobs based on the current filters
+  const filteredJobs = jobs.filter(job => 
+    (!selectedGroup || job.groupId === selectedGroup) &&
+    (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase()))
+  );
+  
+  const totalJobs = filteredJobs.length;
+  const activeJobs = filteredJobs.filter(job => job.status === 'active').length;
+  const pausedJobs = filteredJobs.filter(job => job.status === 'paused').length;
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -19,7 +27,12 @@ const DashboardStats = ({ jobs }: DashboardStatsProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Jobs</p>
-              <h4 className="text-2xl font-bold mt-1">{totalJobs}</h4>
+              <div className="flex items-baseline gap-2">
+                <h4 className="text-2xl font-bold mt-1">{totalJobs}</h4>
+                <span className="text-sm text-muted-foreground">
+                  {totalJobs === jobs.length ? '' : `of ${jobs.length}`}
+                </span>
+              </div>
             </div>
             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
               <Clock className="h-5 w-5 text-blue-600" />
@@ -33,7 +46,13 @@ const DashboardStats = ({ jobs }: DashboardStatsProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Active Jobs</p>
-              <h4 className="text-2xl font-bold mt-1">{activeJobs}</h4>
+              <div className="flex items-baseline gap-2">
+                <h4 className="text-2xl font-bold mt-1">{activeJobs}</h4>
+                <span className="text-sm text-muted-foreground">
+                  {activeJobs === jobs.filter(job => job.status === 'active').length ? '' : 
+                   `of ${jobs.filter(job => job.status === 'active').length}`}
+                </span>
+              </div>
             </div>
             <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
               <CalendarCheck className="h-5 w-5 text-green-600" />
@@ -47,7 +66,13 @@ const DashboardStats = ({ jobs }: DashboardStatsProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Paused Jobs</p>
-              <h4 className="text-2xl font-bold mt-1">{pausedJobs}</h4>
+              <div className="flex items-baseline gap-2">
+                <h4 className="text-2xl font-bold mt-1">{pausedJobs}</h4>
+                <span className="text-sm text-muted-foreground">
+                  {pausedJobs === jobs.filter(job => job.status === 'paused').length ? '' : 
+                   `of ${jobs.filter(job => job.status === 'paused').length}`}
+                </span>
+              </div>
             </div>
             <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
               <AlertCircle className="h-5 w-5 text-amber-600" />
