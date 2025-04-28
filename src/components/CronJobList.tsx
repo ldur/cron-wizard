@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
 import CronJobIacDialog from "./CronJobIacDialog";
+import { getTargetTypeIcon, targetTypeLabels } from "@/utils/targetTypeIcons";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -139,6 +140,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
                 <span className="text-sm">{new Date(job.nextRun).toLocaleString()}</span>
               </div>
+
               <div className="w-1/6">
                 <TooltipProvider>
                   <Tooltip>
@@ -150,23 +152,23 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                           className="p-0 h-auto mr-2"
                           onClick={() => handleShowIacCode(job)}
                         >
-                          {job.isApi ? (
-                            <Globe className="h-4 w-4 text-blue-500" />
-                          ) : (
-                            <Terminal className="h-4 w-4 text-amber-500" />
-                          )}
+                          {(() => {
+                            const Icon = getTargetTypeIcon(job.targetType);
+                            return <Icon className="h-4 w-4 text-blue-500" />;
+                          })()}
                         </Button>
                         <span className="text-sm truncate max-w-[150px]">
-                          {job.endpointName || (job.isApi ? "API Endpoint" : "Lambda Function")}
+                          {targetTypeLabels[job.targetType]}
                         </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Click to view IAC code for: {job.endpointName || (job.isApi ? "API Endpoint" : "Lambda Function")}
+                      {`View IAC code for ${targetTypeLabels[job.targetType]}`}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
+
               <div className="w-1/6">
                 <Badge 
                   variant={job.status === 'active' ? 'default' : 'outline'}
