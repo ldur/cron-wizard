@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -111,6 +110,8 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         groupName: job.schedule_groups?.name || 'Default',
         timeZone: job.time_zone,
         tags: job.tags || [],
+        flexibleTimeWindowMode: job.flexible_time_window_mode,
+        flexibleWindowMinutes: job.flexible_window_minutes,
       };
     } catch (error) {
       console.error(`Error processing job ${job.id}:`, error);
@@ -129,6 +130,8 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         groupName: job.schedule_groups?.name || 'Default',
         timeZone: job.time_zone,
         tags: job.tags || [],
+        flexibleTimeWindowMode: job.flexible_time_window_mode,
+        flexibleWindowMinutes: job.flexible_window_minutes,
       };
     }
   });
@@ -164,6 +167,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       group_id: job.groupId,
       time_zone: job.timeZone,
       tags: job.tags || [],
+      flexible_time_window_mode: job.flexibleTimeWindowMode,
+      flexible_window_minutes: job.flexibleWindowMinutes,
     })
     .select(`
       *,
@@ -190,6 +195,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     groupName: data.schedule_groups?.name || 'Default',
     timeZone: data.time_zone,
     tags: data.tags || [],
+    flexibleTimeWindowMode: data.flexible_time_window_mode,
+    flexibleWindowMinutes: data.flexible_window_minutes,
   };
 };
 
@@ -207,6 +214,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.groupId !== undefined) updateData.group_id = job.groupId;
   if (job.timeZone !== undefined) updateData.time_zone = job.timeZone;
   if (job.tags !== undefined) updateData.tags = job.tags;
+  if (job.flexibleTimeWindowMode !== undefined) updateData.flexible_time_window_mode = job.flexibleTimeWindowMode;
+  if (job.flexibleWindowMinutes !== undefined) updateData.flexible_window_minutes = job.flexibleWindowMinutes;
   
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -237,6 +246,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     groupName: data.schedule_groups?.name || 'Default',
     timeZone: data.time_zone,
     tags: data.tags || [],
+    flexibleTimeWindowMode: data.flexible_time_window_mode,
+    flexibleWindowMinutes: data.flexible_window_minutes,
   };
 };
 
@@ -284,5 +295,7 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     groupName: data.schedule_groups?.name || 'Default',
     timeZone: data.time_zone,
     tags: data.tags || [],
+    flexibleTimeWindowMode: data.flexible_time_window_mode,
+    flexibleWindowMinutes: data.flexible_window_minutes,
   };
 };

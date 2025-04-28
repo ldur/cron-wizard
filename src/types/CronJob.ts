@@ -13,4 +13,6 @@ export interface CronJob {
   groupName?: string;
   timeZone?: string | null;
   tags: string[];
+  flexibleTimeWindowMode: 'OFF' | 'FLEXIBLE';
+  flexibleWindowMinutes: number | null;
 }

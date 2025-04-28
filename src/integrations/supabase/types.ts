@@ -15,6 +15,8 @@ export type Database = {
           created_at: string | null
           cron_expression: string
           endpoint_name: string | null
+          flexible_time_window_mode: Database["public"]["Enums"]["flexible_mode"]
+          flexible_window_minutes: number | null
           group_id: string | null
           iac_code: string | null
           id: string
@@ -30,6 +32,8 @@ export type Database = {
           created_at?: string | null
           cron_expression: string
           endpoint_name?: string | null
+          flexible_time_window_mode?: Database["public"]["Enums"]["flexible_mode"]
+          flexible_window_minutes?: number | null
           group_id?: string | null
           iac_code?: string | null
           id?: string
@@ -45,6 +49,8 @@ export type Database = {
           created_at?: string | null
           cron_expression?: string
           endpoint_name?: string | null
+          flexible_time_window_mode?: Database["public"]["Enums"]["flexible_mode"]
+          flexible_window_minutes?: number | null
           group_id?: string | null
           iac_code?: string | null
           id?: string
@@ -130,7 +136,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      flexible_mode: "OFF" | "FLEXIBLE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -245,6 +251,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      flexible_mode: ["OFF", "FLEXIBLE"],
+    },
   },
 } as const

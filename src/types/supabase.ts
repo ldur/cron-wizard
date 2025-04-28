@@ -19,6 +19,8 @@ export interface Database {
           status: 'active' | 'paused'
           created_at: string
           updated_at: string
+          flexible_time_window_mode: 'OFF' | 'FLEXIBLE'
+          flexible_window_minutes: number | null
         }
         Insert: {
           id?: string
@@ -28,6 +30,8 @@ export interface Database {
           status?: 'active' | 'paused'
           created_at?: string
           updated_at?: string
+          flexible_time_window_mode?: 'OFF' | 'FLEXIBLE'
+          flexible_window_minutes?: number | null
         }
         Update: {
           id?: string
@@ -37,6 +41,8 @@ export interface Database {
           status?: 'active' | 'paused'
           created_at?: string
           updated_at?: string
+          flexible_time_window_mode?: 'OFF' | 'FLEXIBLE'
+          flexible_window_minutes?: number | null
         }
       }
     }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Code, ChevronDown, RefreshCw } from "lucide-react";
+import { Code, ChevronDown, RefreshCw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
 import { fetchGroups } from "@/services/cronJobService";
 import { CronJob } from "@/types/CronJob";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const [groups, setGroups] = useState<any[]>([]);
   const [defaultTimeZone, setDefaultTimeZone] = useState("Europe/Oslo");
   const { toast } = useToast();
+  
+  // Flexible time window state
+  const [isFlexibleTime, setIsFlexibleTime] = useState(job?.flexibleTimeWindowMode === 'FLEXIBLE');
   
   // State for individual cron components
   const [minute, setMinute] = useState("0");
@@ -135,6 +139,11 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     iacCode: z.string().optional().nullable(),
     timeZone: z.string().optional(),
     tags: z.array(z.string()).default([]),
+    flexibleTimeWindowMode: z.enum(["OFF", "FLEXIBLE"]).default("OFF"),
+    flexibleWindowMinutes: z.number().nullable().refine(
+      (val) => val === null || (val >= 1 && val <= 1440),
+      { message: "Minutes must be between 1 and 1440 when in flexible mode" }
+    ),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -150,8 +159,25 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       iacCode: job?.iacCode || null,
       timeZone: job?.timeZone || defaultTimeZone,
       tags: job?.tags || [],
+      flexibleTimeWindowMode: job?.flexibleTimeWindowMode || "OFF",
+      flexibleWindowMinutes: job?.flexibleWindowMinutes || null,
     },
   });
+
+  // Handle flexible time window mode change
+  const handleFlexibleModeChange = (checked: boolean) => {
+    setIsFlexibleTime(checked);
+    const newMode = checked ? "FLEXIBLE" : "OFF";
+    form.setValue("flexibleTimeWindowMode", newMode);
+    
+    // Reset flexibleWindowMinutes when turning off flexible mode
+    if (!checked) {
+      form.setValue("flexibleWindowMinutes", null);
+    } else if (!form.getValues("flexibleWindowMinutes")) {
+      // Set a default value when enabling flexible mode
+      form.setValue("flexibleWindowMinutes", 15);
+    }
+  };
 
   // Parse cron expression into individual components
   const parseCronExpression = (expression: string) => {
@@ -201,8 +227,11 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         iacCode: job.iacCode,
         timeZone: job.timeZone,
         tags: job.tags,
+        flexibleTimeWindowMode: job.flexibleTimeWindowMode,
+        flexibleWindowMinutes: job.flexibleWindowMinutes,
       });
       setIsApiMode(job.isApi);
+      setIsFlexibleTime(job.flexibleTimeWindowMode === 'FLEXIBLE');
       parseCronExpression(job.cronExpression);
     } else {
       // Set default cron values
@@ -297,7 +326,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone, tags } = values;
+    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone, tags, flexibleTimeWindowMode, flexibleWindowMinutes } = values;
     onSubmit({
       name,
       command,
@@ -309,6 +338,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       groupId: groupId ?? undefined,
       timeZone: timeZone ?? undefined,
       tags: tags,
+      flexibleTimeWindowMode,
+      flexibleWindowMinutes,
     });
   };
 
@@ -593,6 +624,66 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               </FormItem>
             )}
           />
+        </div>
+
+        {/* New Flexible Time Window section */}
+        <div className="border rounded-md p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <h3 className="text-base font-medium">Flexible Time Window</h3>
+              <p className="text-sm text-muted-foreground">
+                Allow the schedule to run within a flexible time window
+              </p>
+            </div>
+            <FormField
+              control={form.control}
+              name="flexibleTimeWindowMode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Switch 
+                      checked={isFlexibleTime}
+                      onCheckedChange={handleFlexibleModeChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          {isFlexibleTime && (
+            <FormField
+              control={form.control}
+              name="flexibleWindowMinutes"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-2">
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={1440}
+                        placeholder="15"
+                        {...field}
+                        value={field.value === null ? '' : field.value}
+                        onChange={(e) => {
+                          const val = e.target.value !== '' ? parseInt(e.target.value, 10) : null;
+                          field.onChange(val);
+                        }}
+                        className="w-24"
+                      />
+                    </FormControl>
+                    <span>minutes</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <Clock className="inline h-3 w-3 mr-1" />
+                    Job can start anytime within this window after the scheduled time
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <FormField
