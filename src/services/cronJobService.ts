@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CronJob } from "@/types/CronJob";
 
@@ -29,10 +30,24 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     const jobs = jobsData.map((job: any) => {
       const groupInfo = job.group_id ? groupMap.get(job.group_id) : { name: 'Default', icon_name: 'briefcase' };
       return {
-        ...job,
+        id: job.id,
+        name: job.name,
+        description: job.description,
+        scheduleExpression: job.schedule_expression,
+        startTime: job.start_time,
+        endTime: job.end_time,
+        status: job.status,
+        isApi: job.is_api,
+        endpointName: job.endpoint_name,
+        iacCode: job.iac_code,
+        groupId: job.group_id,
         groupName: groupInfo ? groupInfo.name : 'Default',
         groupIcon: groupInfo ? groupInfo.icon_name : 'briefcase',
+        timezone: job.timezone,
         tags: job.tags || [],
+        flexibleTimeWindowMode: job.flexible_time_window_mode,
+        flexibleWindowMinutes: job.flexible_window_minutes,
+        targetType: job.target_type,
       };
     });
 
@@ -45,19 +60,55 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
 
 export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   try {
+    // Convert from TypeScript CronJob type to database format (snake_case)
+    const dbJob = {
+      name: job.name,
+      description: job.description,
+      schedule_expression: job.scheduleExpression,
+      start_time: job.startTime,
+      end_time: job.endTime,
+      status: job.status,
+      is_api: job.isApi,
+      endpoint_name: job.endpointName,
+      iac_code: job.iacCode,
+      group_id: job.groupId,
+      timezone: job.timezone,
+      tags: job.tags || [],
+      flexible_time_window_mode: job.flexibleTimeWindowMode,
+      flexible_window_minutes: job.flexibleWindowMinutes,
+      target_type: job.targetType,
+      command: job.scheduleExpression, // Required by database schema
+    };
+
     const { data, error } = await supabase
       .from('cron_jobs')
-      .insert([
-        { 
-          ...job,
-          tags: job.tags || [],
-        }
-      ])
+      .insert([dbJob])
       .select('*')
       .single();
 
     if (error) throw error;
-    return data as CronJob;
+    
+    // Convert database response back to CronJob type
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      scheduleExpression: data.schedule_expression,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      status: data.status,
+      isApi: data.is_api,
+      endpointName: data.endpoint_name,
+      iacCode: data.iac_code,
+      groupId: data.group_id,
+      groupName: job.groupName,
+      groupIcon: job.groupIcon,
+      timezone: data.timezone,
+      tags: data.tags || [],
+      flexibleTimeWindowMode: data.flexible_time_window_mode,
+      flexibleWindowMinutes: data.flexible_window_minutes,
+      targetType: data.target_type,
+    };
   } catch (error) {
     console.error('Error creating cron job:', error);
     throw error;
@@ -66,15 +117,60 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
 
 export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
   try {
+    // Convert from TypeScript CronJob type to database format (snake_case)
+    const dbJob: any = {};
+    
+    // Only map fields that are provided
+    if (job.name !== undefined) dbJob.name = job.name;
+    if (job.description !== undefined) dbJob.description = job.description;
+    if (job.scheduleExpression !== undefined) {
+      dbJob.schedule_expression = job.scheduleExpression;
+      dbJob.command = job.scheduleExpression; // Also update command field
+    }
+    if (job.startTime !== undefined) dbJob.start_time = job.startTime;
+    if (job.endTime !== undefined) dbJob.end_time = job.endTime;
+    if (job.status !== undefined) dbJob.status = job.status;
+    if (job.isApi !== undefined) dbJob.is_api = job.isApi;
+    if (job.endpointName !== undefined) dbJob.endpoint_name = job.endpointName;
+    if (job.iacCode !== undefined) dbJob.iac_code = job.iacCode;
+    if (job.groupId !== undefined) dbJob.group_id = job.groupId;
+    if (job.timezone !== undefined) dbJob.timezone = job.timezone;
+    if (job.tags !== undefined) dbJob.tags = job.tags;
+    if (job.flexibleTimeWindowMode !== undefined) dbJob.flexible_time_window_mode = job.flexibleTimeWindowMode;
+    if (job.flexibleWindowMinutes !== undefined) dbJob.flexible_window_minutes = job.flexibleWindowMinutes;
+    if (job.targetType !== undefined) dbJob.target_type = job.targetType;
+
     const { data, error } = await supabase
       .from('cron_jobs')
-      .update(job)
+      .update(dbJob)
       .eq('id', id)
       .select('*')
       .single();
 
     if (error) throw error;
-    return data as CronJob;
+    
+    // Convert database response back to CronJob type
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      scheduleExpression: data.schedule_expression,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      status: data.status,
+      isApi: data.is_api,
+      endpointName: data.endpoint_name,
+      iacCode: data.iac_code,
+      groupId: data.group_id,
+      // Use groupName from job if available, otherwise leave undefined
+      groupName: job.groupName,
+      groupIcon: job.groupIcon,
+      timezone: data.timezone,
+      tags: data.tags || [],
+      flexibleTimeWindowMode: data.flexible_time_window_mode,
+      flexibleWindowMinutes: data.flexible_window_minutes,
+      targetType: data.target_type,
+    };
   } catch (error) {
     console.error('Error updating cron job:', error);
     throw error;
