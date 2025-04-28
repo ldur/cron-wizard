@@ -5,14 +5,19 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import TimeZoneSelect from "@/components/TimeZoneSelect";
 
-// Import types from our defined types, not from Supabase directly
-import { Json } from "@/types/supabase";
+// Define a more specific type for targetTemplates to avoid circular references
+type SimpleJsonValue = 
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: SimpleJsonValue }
+  | SimpleJsonValue[];
 
 interface SettingsFormData {
   name: string;
@@ -20,7 +25,7 @@ interface SettingsFormData {
   iacCode: string | null;
   timeZone: string;
   timeZoneDescription: string | null;
-  targetTemplates: Json | null;
+  targetTemplates: SimpleJsonValue | null;
 }
 
 interface TimeZoneOption {
