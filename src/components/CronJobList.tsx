@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,11 +65,10 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     } else if (sortBy === 'nextRun') {
-      const aNextRun = (a as any).nextRun ? new Date((a as any).nextRun).getTime() : 0;
-      const bNextRun = (b as any).nextRun ? new Date((b as any).nextRun).getTime() : 0;
+      // Changed to use scheduleExpression instead of nextRun
       return sortOrder === 'asc' 
-        ? aNextRun - bNextRun
-        : bNextRun - aNextRun;
+        ? a.scheduleExpression.localeCompare(b.scheduleExpression)
+        : b.scheduleExpression.localeCompare(a.scheduleExpression);
     } else {
       return sortOrder === 'asc'
         ? a.status.localeCompare(b.status)
@@ -140,7 +140,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
               </div>
               <div className="w-1/6 flex items-center">
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
-                <span className="text-sm">{(job as any).nextRun ? new Date((job as any).nextRun).toLocaleString() : "N/A"}</span>
+                <span className="text-sm">Next Run TBD</span>
               </div>
 
               <div className="w-1/6">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -24,7 +25,7 @@ import TagInput from './TagInput';
 import TargetForm from './TargetForm';
 
 interface CronJobFormProps {
-  job?: CronJob & { nextRun?: string };
+  job?: CronJob;
   onSubmit: (job: Omit<CronJob, "id">) => void;
   onCancel: () => void;
 }
@@ -597,19 +598,13 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="command">
-                <FormField
-                  control={form.control}
-                  name="command"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Command</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="ls -l" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormItem>
+                  <FormLabel>Command</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="ls -l" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               </TabsContent>
               <TabsContent value="iac">
                 <div className="grid gap-6">
@@ -868,4 +863,81 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         <span>minutes</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        <Clock className="inline h-3 w-3
+                        <Clock className="inline h-3 w-3 mr-1" />
+                        The job will run randomly within the specified window
+                      </p>
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="targetType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Target Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a target type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="LAMBDA">AWS Lambda</SelectItem>
+                      <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                      <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                      <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                      <SelectItem value="SQS">SQS</SelectItem>
+                      <SelectItem value="ECS">ECS</SelectItem>
+                      <SelectItem value="KINESIS">Kinesis</SelectItem>
+                      <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <TargetForm targetType={form.watch("targetType")} form={form} />
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <TagInput
+                      tags={field.value || []}
+                      setTags={(newTags) => field.onChange(newTags)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-end space-x-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            {job ? "Update Job" : "Create Job"}
+          </Button>
+        </div>
+      </form>
+
+      <CronJobIacDialog 
+        open={isIacDialogOpen}
+        onOpenChange={setIsIacDialogOpen}
+        job={job}
+      />
+    </Form>
+  );
+};
+
+export default CronJobForm;
