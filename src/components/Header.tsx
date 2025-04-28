@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Settings, FolderTree, Home } from "lucide-react";
+import { Menu, X, FolderTree, Home, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -15,7 +14,6 @@ const Header = () => {
   const navigation = [
     { name: "Dashboard", href: "/", icon: Home },
     { name: "Job Groups", href: "/groups", icon: FolderTree },
-    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   const isActive = (path: string) => {
