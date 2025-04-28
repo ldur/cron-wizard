@@ -19,6 +19,7 @@ import GroupFields from './cronJob/GroupFields';
 import { submitCronJob } from '@/services/cronJobFormService';
 import { listTimeZones } from 'timezone-support';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
@@ -46,12 +47,12 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Debug logs
   useEffect(() => {
-    console.log("CronJobForm rendering");
-    console.log("Tabs component should be ready");
-  }, []);
+    console.log("CronJobForm rendering with job data:", jobData);
+  }, [jobData]);
 
   const form = useForm<z.infer<typeof cronJobSchema>>({
     resolver: zodResolver(cronJobSchema),
@@ -101,6 +102,57 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       input_data_config: jobData?.input_data_config || null,
     },
   });
+
+  // Reset form when initialValues change
+  useEffect(() => {
+    if (jobData) {
+      console.log("Resetting form with updated job data:", jobData);
+      form.reset({
+        id: jobData.id,
+        name: jobData.name || "",
+        description: jobData.description || "",
+        scheduleExpression: jobData.scheduleExpression || "",
+        startTime: jobData.startTime ? new Date(jobData.startTime) : undefined,
+        endTime: jobData.endTime ? new Date(jobData.endTime) : undefined,
+        status: jobData.status || "active",
+        isApi: jobData.isApi || false,
+        endpointName: jobData.endpointName || null,
+        iacCode: jobData.iacCode || null,
+        groupId: jobData.groupId || groupId,
+        timezone: jobData.timezone || "Europe/Oslo",
+        tags: jobData.tags || [],
+        flexibleTimeWindowMode: jobData.flexibleTimeWindowMode || 'OFF',
+        flexibleWindowMinutes: jobData.flexibleWindowMinutes || null,
+        targetType: jobData.targetType || 'LAMBDA',
+        // Target fields also need to be reset
+        function_arn: jobData?.function_arn || "",
+        payload: jobData?.payload || null,
+        state_machine_arn: jobData?.state_machine_arn || "",
+        execution_role_arn: jobData?.execution_role_arn || "",
+        input_payload: jobData?.input_payload || null,
+        endpoint_url: jobData?.endpoint_url || "",
+        http_method: jobData?.http_method || undefined,
+        headers: jobData?.headers || null,
+        body: jobData?.body || null,
+        authorization_type: jobData?.authorization_type || undefined,
+        event_bus_arn: jobData?.event_bus_arn || "",
+        event_payload: jobData?.event_payload || null,
+        queue_url: jobData?.queue_url || "",
+        message_body: jobData?.message_body || "",
+        message_group_id: jobData?.message_group_id || "",
+        cluster_arn: jobData?.cluster_arn || "",
+        task_definition_arn: jobData?.task_definition_arn || "",
+        launch_type: jobData?.launch_type || undefined,
+        network_configuration: jobData?.network_configuration || null,
+        overrides: jobData?.overrides || null,
+        stream_arn: jobData?.stream_arn || "",
+        partition_key: jobData?.partition_key || "",
+        training_job_definition_arn: jobData?.training_job_definition_arn || "",
+        hyper_parameters: jobData?.hyper_parameters || null,
+        input_data_config: jobData?.input_data_config || null,
+      });
+    }
+  }, [jobData, form, groupId]);
 
   const onSubmitForm = async (values: z.infer<typeof cronJobSchema>) => {
     if (externalSubmit) {
@@ -159,6 +211,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       try {
         // Otherwise, use the default submit handler
         await submitCronJob(values, !!jobData);
+        
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
         
         toast({
           title: "Success",

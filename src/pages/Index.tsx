@@ -50,10 +50,12 @@ const Index = () => {
     loadGroups();
   }, []);
 
-  // Query to fetch jobs
+  // Query to fetch jobs with automatic refetching enabled
   const { data: jobs = [], isLoading, error, refetch } = useQuery({
     queryKey: ['cronJobs'],
     queryFn: fetchCronJobs,
+    refetchOnWindowFocus: true,
+    staleTime: 1000, // Consider data stale after 1 second
   });
 
   // Mutations for CRUD operations
@@ -81,13 +83,14 @@ const Index = () => {
       updateCronJob(id, job),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
-      refetch(); // Explicitly refetch after update
       setEditingJob(undefined);
       setIsFormVisible(false);
       toast({
         title: "Job Updated",
         description: "The cron job has been updated successfully.",
       });
+      // Explicitly refetch to ensure we have the latest data
+      refetch();
     },
     onError: (error) => {
       toast({
@@ -106,6 +109,7 @@ const Index = () => {
         title: "Job Deleted",
         description: "The cron job has been deleted successfully.",
       });
+      refetch();
     },
     onError: (error) => {
       toast({
@@ -121,11 +125,11 @@ const Index = () => {
       toggleCronJobStatus(id, status),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['cronJobs'] });
-      refetch(); // Explicitly refetch after status change
       toast({
         title: data.status === "active" ? "Job Activated" : "Job Paused",
         description: `The job "${data.name}" has been ${data.status === "active" ? "activated" : "paused"}.`,
       });
+      refetch();
     },
     onError: (error) => {
       toast({
@@ -146,10 +150,23 @@ const Index = () => {
   };
 
   const handleEdit = (job: CronJob) => {
-    // Fetch the latest job data before editing
-    const currentJob = jobs.find(j => j.id === job.id);
-    setEditingJob(currentJob);
-    setIsFormVisible(true);
+    // Refetch the job data directly before editing to ensure we have the latest
+    const fetchLatestJobData = async () => {
+      try {
+        const latestJob = await updateCronJob(job.id, {});
+        setEditingJob(latestJob);
+        setIsFormVisible(true);
+      } catch (error) {
+        console.error("Error fetching latest job data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load the latest job data for editing.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchLatestJobData();
   };
 
   const handleDelete = (id: string) => {
@@ -247,7 +264,10 @@ const Index = () => {
           <div className="mb-8">
             <CronJobForm
               initialValues={editingJob}
-              onSuccess={handleFormCancel}
+              onSuccess={() => {
+                handleFormCancel();
+                refetch(); // Ensure data is refreshed after form submission
+              }}
               onCancel={handleFormCancel}
             />
           </div>
@@ -296,6 +316,15 @@ const Index = () => {
                       </Button>
                     ))}
                   </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => refetch()}
+                    className="ml-auto"
+                  >
+                    Refresh
+                  </Button>
                 </div>
                 
                 <div className="mb-6">
