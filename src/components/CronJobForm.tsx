@@ -127,7 +127,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
-      timeZone: job?.timeZone || undefined,
+      timeZone: job?.timeZone || "Europe/Oslo", // Setting a default timezone
     },
   });
 

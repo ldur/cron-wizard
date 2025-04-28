@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -132,7 +131,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
   });
 };
 
-// Create a new cron job - timezone will be set by database trigger
+// Create a new cron job - modified to explicitly include the time_zone in the insert
 export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -144,8 +143,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
-      group_id: job.groupId, 
-      // No need to set time_zone explicitly, the trigger will handle it
+      group_id: job.groupId,
+      time_zone: job.timeZone, // Explicitly include the timeZone when creating a job
     })
     .select(`
       *,
