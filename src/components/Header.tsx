@@ -16,7 +16,7 @@ const Header = () => {
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-2">
           <CalendarClock className="h-6 w-6 text-accent" />
-          <h1 className="text-lg font-semibold font-mono">
+          <h1 className="text-2xl font-semibold font-mono">
             <Link to="/">Scheduler</Link>
           </h1>
         </div>

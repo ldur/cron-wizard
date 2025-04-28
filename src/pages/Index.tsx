@@ -247,7 +247,7 @@ const Index = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Clock className="h-6 w-6 text-wizard" />
-            <h2 className="text-3xl font-bold tracking-tight font-serif">Job Scheduler</h2>
+            <h2 className="text-2xl font-bold tracking-tight font-serif">Job Scheduler</h2>
           </div>
           {!isFormVisible && (
             <Button onClick={() => setIsFormVisible(true)}>
