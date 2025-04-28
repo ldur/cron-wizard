@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import type { Settings } from '@/types/Settings';
 
@@ -102,89 +101,65 @@ export const updateSetting = async (
   
   console.log('Update data being sent to Supabase:', updateData);
   
-  // First check if the setting exists
-  const { data: existingData, error: checkError } = await supabase
-    .from('settings')
-    .select('id')
-    .eq('id', id)
-    .maybeSingle();
-    
-  if (checkError) {
-    console.error('Error checking if setting exists:', checkError);
-    throw checkError;
-  }
-  
-  if (!existingData) {
-    console.error('Setting not found:', id);
-    throw new Error(`Setting with ID ${id} not found`);
-  }
-  
+  // First verify the record exists before attempting to update
   try {
-    // Perform the update with explicit fields
-    const { data, error } = await supabase
+    // Check if the record exists first
+    const { data: existingData, error: checkError } = await supabase
       .from('settings')
-      .update(updateData)
+      .select('id')
       .eq('id', id)
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error updating setting:', error);
-      throw error;
-    }
-
-    if (!data) {
-      console.error(`No data returned when updating setting ${id}. Fetching current data.`);
+      .single();
       
-      // If no data was returned from the update, fetch the current state
-      const { data: currentData, error: fetchError } = await supabase
-        .from('settings')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+    if (checkError) {
+      // If we get a not found error, return early with updated = false
+      if (checkError.code === 'PGRST116') {
+        console.error('Setting not found for update:', id);
         
-      if (fetchError) {
-        console.error('Error fetching current setting data:', fetchError);
-        throw fetchError;
+        // Return the original data without updating
+        return await fetchCurrentSettingData(id);
       }
       
-      if (!currentData) {
-        throw new Error(`Setting with ID ${id} not found after update attempt`);
-      }
-      
-      console.log('Retrieved current setting data after update:', currentData);
-      return {
-        data: {
-          id: currentData.id,
-          name: currentData.name,
-          iacDescription: currentData.iac_description,
-          iacCode: currentData.iac_code,
-          createdAt: currentData.created_at,
-          updatedAt: currentData.updated_at,
-          timeZone: currentData.time_zone || 'UTC',
-          timeZoneDescription: currentData.time_zone_decription,
-        },
-        updated: false // Indicate that the actual update failed
-      };
+      // For other errors, throw them
+      throw checkError;
     }
+    
+    // If we found the record, proceed with update
+    if (existingData) {
+      const { data, error } = await supabase
+        .from('settings')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
 
-    return {
-      data: {
-        id: data.id,
-        name: data.name,
-        iacDescription: data.iac_description,
-        iacCode: data.iac_code,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        timeZone: data.time_zone || 'UTC',
-        timeZoneDescription: data.time_zone_decription,
-      },
-      updated: true // Indicate successful update
-    };
+      if (error) {
+        console.error('Error updating setting:', error);
+        return await fetchCurrentSettingData(id);
+      }
+
+      if (!data) {
+        console.error('No data returned when updating setting', id);
+        return await fetchCurrentSettingData(id);
+      }
+
+      // Successful update
+      return {
+        data: mapToSettingsModel(data),
+        updated: true
+      };
+    } else {
+      console.error('Setting not found:', id);
+      return await fetchCurrentSettingData(id);
+    }
   } catch (error) {
     console.error('Caught error during update:', error);
-    
-    // If the update fails, fetch the current state of the setting
+    return await fetchCurrentSettingData(id);
+  }
+};
+
+// Helper function to fetch current setting data when update fails
+async function fetchCurrentSettingData(id: string): Promise<{ data: Settings; updated: false }> {
+  try {
     const { data: currentData, error: fetchError } = await supabase
       .from('settings')
       .select('*')
@@ -192,31 +167,37 @@ export const updateSetting = async (
       .maybeSingle();
       
     if (fetchError) {
-      console.error('Error fetching current setting after error:', fetchError);
+      console.error('Error fetching current setting data:', fetchError);
       throw fetchError;
     }
     
-    if (currentData) {
-      console.log('Retrieved current setting data:', currentData);
-      return {
-        data: {
-          id: currentData.id,
-          name: currentData.name,
-          iacDescription: currentData.iac_description,
-          iacCode: currentData.iac_code,
-          createdAt: currentData.created_at,
-          updatedAt: currentData.updated_at,
-          timeZone: currentData.time_zone || 'UTC',
-          timeZoneDescription: currentData.time_zone_decription,
-        },
-        updated: false // Indicate that the update failed
-      };
+    if (!currentData) {
+      throw new Error(`Setting with ID ${id} not found`);
     }
     
-    // If we can't get the current data either, re-throw the original error
-    throw error;
+    return {
+      data: mapToSettingsModel(currentData),
+      updated: false
+    };
+  } catch (error) {
+    console.error('Error retrieving current setting data:', error);
+    throw new Error(`Failed to retrieve setting with ID ${id}: ${error instanceof Error ? error.message : String(error)}`);
   }
-};
+}
+
+// Helper function to map database record to Settings model
+function mapToSettingsModel(data: any): Settings {
+  return {
+    id: data.id,
+    name: data.name,
+    iacDescription: data.iac_description,
+    iacCode: data.iac_code,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    timeZone: data.time_zone || 'UTC',
+    timeZoneDescription: data.time_zone_decription,
+  };
+}
 
 export const deleteSetting = async (id: string): Promise<void> => {
   const { error } = await supabase

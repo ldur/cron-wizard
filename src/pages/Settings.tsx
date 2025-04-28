@@ -63,7 +63,7 @@ const Settings = () => {
       } else {
         toast({
           title: "Update Issue",
-          description: "The setting was not updated, but your data has been preserved.",
+          description: "The setting could not be updated. It may have been deleted or you may not have permission to edit it.",
           variant: "destructive",
         });
       }
