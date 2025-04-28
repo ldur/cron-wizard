@@ -250,12 +250,14 @@ const Index = () => {
             {jobs.length > 0 ? (
               <>
                 <div className="mb-4 flex items-center gap-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <span>Group:</span>
+                  <div className="flex flex-col space-y-2 min-w-[200px]">
+                    <label className="text-sm font-medium leading-none text-muted-foreground">
+                      Group
+                    </label>
                     <select 
                       value={selectedGroup || ''} 
                       onChange={(e) => setSelectedGroup(e.target.value || null)}
-                      className="border rounded px-2 py-1"
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="">All Groups</option>
                       {groups.map(group => (
