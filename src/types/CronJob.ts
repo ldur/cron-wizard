@@ -11,4 +11,5 @@ export interface CronJob {
   iacCode: string | null;
   groupId?: string;  // Optional group ID
   groupName?: string; // Optional group name
+  timeZone?: string | null; // Added the timeZone property
 }
