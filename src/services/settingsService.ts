@@ -87,6 +87,7 @@ export const updateSetting = async (
   try {
     const updateData: Record<string, any> = {};
 
+    // Populate updateData only with defined fields
     if (setting.name !== undefined) updateData.name = setting.name;
     if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
     if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode;
@@ -95,10 +96,12 @@ export const updateSetting = async (
 
     console.log('Final update data being sent to Supabase:', updateData);
 
+    // Check if updateData is empty
     if (Object.keys(updateData).length === 0) {
       throw new Error('No valid fields provided for update');
     }
 
+    // Perform the update
     const { data, error } = await supabase
       .from('settings')
       .update(updateData)
