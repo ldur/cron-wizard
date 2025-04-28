@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, X, Search, Tags, Clock, AlarmClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -320,14 +319,6 @@ const Index = () => {
                     ))}
                   </div>
                   
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => refetch()}
-                    className="ml-auto"
-                  >
-                    Refresh
-                  </Button>
                 </div>
                 
                 <div className="mb-6">
