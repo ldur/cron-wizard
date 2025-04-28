@@ -4,25 +4,36 @@ import { CronJob } from "@/types/CronJob";
 import { v4 as uuidv4 } from 'uuid';
 import { calculateNextRun } from "@/utils/cronCalculator";
 
+// Define valid target table types to match Supabase schema
+type TargetTableName = 
+  | "lambda_targets" 
+  | "stepfunction_targets" 
+  | "api_gateway_targets" 
+  | "eventbridge_targets" 
+  | "sqs_targets" 
+  | "ecs_targets" 
+  | "kinesis_targets" 
+  | "sagemaker_targets";
+
 // Get the corresponding target table for a target type
-const getTargetTable = (targetType: string): string => {
+const getTargetTable = (targetType: string): TargetTableName => {
   switch (targetType) {
     case 'LAMBDA':
-      return 'lambda_targets';
+      return "lambda_targets";
     case 'STEP_FUNCTION':
-      return 'stepfunction_targets';
+      return "stepfunction_targets";
     case 'API_GATEWAY':
-      return 'api_gateway_targets';
+      return "api_gateway_targets";
     case 'EVENTBRIDGE':
-      return 'eventbridge_targets';
+      return "eventbridge_targets";
     case 'SQS':
-      return 'sqs_targets';
+      return "sqs_targets";
     case 'ECS':
-      return 'ecs_targets';
+      return "ecs_targets";
     case 'KINESIS':
-      return 'kinesis_targets';
+      return "kinesis_targets";
     case 'SAGEMAKER':
-      return 'sagemaker_targets';
+      return "sagemaker_targets";
     default:
       throw new Error(`Unknown target type: ${targetType}`);
   }
