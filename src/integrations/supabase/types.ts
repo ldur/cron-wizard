@@ -297,6 +297,7 @@ export type Database = {
           iac_description: string
           id: string
           name: string
+          target_templates: Json | null
           time_zone: string
           time_zone_description: string | null
           updated_at: string
@@ -307,6 +308,7 @@ export type Database = {
           iac_description: string
           id?: string
           name: string
+          target_templates?: Json | null
           time_zone?: string
           time_zone_description?: string | null
           updated_at?: string
@@ -317,6 +319,7 @@ export type Database = {
           iac_description?: string
           id?: string
           name?: string
+          target_templates?: Json | null
           time_zone?: string
           time_zone_description?: string | null
           updated_at?: string

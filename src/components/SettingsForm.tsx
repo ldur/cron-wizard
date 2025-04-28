@@ -16,6 +16,7 @@ interface SettingsFormData {
   iacCode: string | null;
   timeZone: string;
   timeZoneDescription: string | null;
+  targetTemplates: Record<string, any> | null;
 }
 
 interface TimeZoneOption {
@@ -58,6 +59,7 @@ const SettingsForm = () => {
             iacCode: data.iac_code,
             timeZone: data.time_zone,
             timeZoneDescription: data.time_zone_description,
+            targetTemplates: data.target_templates,
           });
         }
       } catch (error) {
@@ -76,7 +78,11 @@ const SettingsForm = () => {
   const onSubmit = async (data: SettingsFormData) => {
     setLoading(true);
     try {
-      // First get the existing record's ID
+      // Find the selected timezone description
+      const selectedTimeZone = timeZones.find(tz => tz.value === data.timeZone);
+      const timeZoneDescription = selectedTimeZone ? selectedTimeZone.label : null;
+
+      // Update the existing record using its ID
       const { data: existingSettings, error: fetchError } = await supabase
         .from('settings')
         .select('id')
@@ -84,11 +90,6 @@ const SettingsForm = () => {
 
       if (fetchError) throw fetchError;
 
-      // Find the selected timezone description
-      const selectedTimeZone = timeZones.find(tz => tz.value === data.timeZone);
-      const timeZoneDescription = selectedTimeZone ? selectedTimeZone.label : null;
-
-      // Update the existing record using its ID
       const { error: updateError } = await supabase
         .from('settings')
         .update({
@@ -97,6 +98,7 @@ const SettingsForm = () => {
           iac_code: data.iacCode,
           time_zone: data.timeZone,
           time_zone_description: timeZoneDescription,
+          target_templates: data.targetTemplates,
         })
         .eq('id', existingSettings.id);
 
@@ -183,6 +185,25 @@ const SettingsForm = () => {
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="targetTemplates"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Target Templates</FormLabel>
+              <FormControl>
+                <Textarea 
+                  {...field} 
+                  value={field.value ? JSON.stringify(field.value, null, 2) : ''}
+                  className="font-mono h-96"
+                  readOnly
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
