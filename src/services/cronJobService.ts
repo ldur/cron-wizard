@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -108,6 +109,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         iacCode: job.iac_code,
         groupId: job.group_id,
         groupName: job.schedule_groups?.name || 'Default',
+        timeZone: job.time_zone,
       };
     } catch (error) {
       console.error(`Error processing job ${job.id}:`, error);
@@ -124,12 +126,13 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         iacCode: job.iac_code,
         groupId: job.group_id,
         groupName: job.schedule_groups?.name || 'Default',
+        timeZone: job.time_zone,
       };
     }
   });
 };
 
-// Update existing CRUD methods to include group_id
+// Create a new cron job - timezone will be set by database trigger
 export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -141,7 +144,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
-      group_id: job.groupId, // Add group_id to insertion
+      group_id: job.groupId, 
+      // No need to set time_zone explicitly, the trigger will handle it
     })
     .select(`
       *,
@@ -166,6 +170,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     iacCode: data.iac_code,
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
+    timeZone: data.time_zone,
   };
 };
 
@@ -181,6 +186,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.endpointName !== undefined) updateData.endpoint_name = job.endpointName;
   if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
   if (job.groupId !== undefined) updateData.group_id = job.groupId;
+  if (job.timeZone !== undefined) updateData.time_zone = job.timeZone;
   
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -209,6 +215,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     iacCode: data.iac_code,
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
+    timeZone: data.time_zone,
   };
 };
 
@@ -254,5 +261,6 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     iacCode: data.iac_code,
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
+    timeZone: data.time_zone,
   };
 };
