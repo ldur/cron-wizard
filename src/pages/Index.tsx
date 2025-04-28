@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Plus, X, Search, Tags } from "lucide-react";
+import { Plus, X, Search, Tags, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -245,7 +245,10 @@ const Index = () => {
       
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold tracking-tight">Job Scheduler</h2>
+          <div className="flex items-center gap-2">
+            <Clock className="h-6 w-6 text-wizard" />
+            <h2 className="text-3xl font-bold tracking-tight font-serif">Job Scheduler</h2>
+          </div>
           {!isFormVisible && (
             <Button onClick={() => setIsFormVisible(true)}>
               <Plus className="h-4 w-4 mr-2" />

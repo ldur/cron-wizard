@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, UsersRound, Settings } from "lucide-react";
+import { LayoutDashboard, UsersRound, Settings, CalendarClock } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -14,8 +14,9 @@ const Header = () => {
   return (
     <header className="bg-background border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <div className="flex items-center">
-          <h1 className="text-lg font-semibold">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="h-6 w-6 text-accent" />
+          <h1 className="text-lg font-semibold font-mono">
             <Link to="/">Scheduler</Link>
           </h1>
         </div>
