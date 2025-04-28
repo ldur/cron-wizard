@@ -473,6 +473,13 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     setIsIacDialogOpen(true);
   };
 
+  // This function is missing but is referenced elsewhere in the code
+  const fetchDefaultTimezone = async () => {
+    // Since this function is missing implementation, we'll just return Europe/Oslo
+    // In a real app, you'd likely fetch this from your backend
+    return "Europe/Oslo";
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
@@ -857,14 +864,4 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
                         <SelectItem value="SQS">SQS</SelectItem>
                         <SelectItem value="ECS">ECS</SelectItem>
-                        <SelectItem value="KINESIS">Kinesis</SelectItem>
-                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="mt-4">
-                <TargetForm targetType={form.watch("targetType")} form={form
+                        <SelectItem value="KINESIS">Kinesis</
