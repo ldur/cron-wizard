@@ -9,8 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import TimeZoneSelect from "@/components/TimeZoneSelect";
-import { Badge } from "@/components/ui/badge";
-import { getTargetTypeIcon } from "@/utils/targetTypeIcons";
 
 // Define a non-recursive type for JSON values
 interface JsonObject {
@@ -52,7 +50,6 @@ const timeZones: TimeZoneOption[] = [
 
 const SettingsForm = () => {
   const [loading, setLoading] = useState(false);
-  const [targetTypes, setTargetTypes] = useState<string[]>([]);
   const { toast } = useToast();
   const form = useForm<SettingsFormData>();
 
@@ -75,11 +72,6 @@ const SettingsForm = () => {
             timeZoneDescription: data.time_zone_description,
             targetTemplates: data.target_templates,
           });
-
-          // Extract target types from target_templates
-          if (data.target_templates && typeof data.target_templates === 'object') {
-            setTargetTypes(Object.keys(data.target_templates));
-          }
         }
       } catch (error) {
         console.error('Error fetching settings:', error);
@@ -139,19 +131,6 @@ const SettingsForm = () => {
     }
   };
 
-  // Helper function to render target type badges
-  const renderTargetTypeBadges = () => {
-    return targetTypes.map(targetType => {
-      const IconComponent = getTargetTypeIcon(targetType as any);
-      return (
-        <Badge key={targetType} variant="outline" className="flex items-center gap-2 px-3 py-1">
-          <IconComponent className="h-4 w-4" />
-          <span>{targetType}</span>
-        </Badge>
-      );
-    });
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -198,20 +177,6 @@ const SettingsForm = () => {
         />
 
         <TimeZoneSelect control={form.control} name="timeZone" />
-
-        <div className="space-y-2">
-          <div className="font-medium">Target Templates</div>
-          <div className="flex flex-wrap gap-2">
-            {targetTypes.length > 0 ? (
-              renderTargetTypeBadges()
-            ) : (
-              <p className="text-sm text-muted-foreground">No target templates configured.</p>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            You can manage target templates from the "Edit Target Templates" button at the top of this page.
-          </p>
-        </div>
 
         <Button type="submit" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
