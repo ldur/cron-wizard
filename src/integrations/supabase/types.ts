@@ -86,7 +86,7 @@ export type Database = {
       settings: {
         Row: {
           created_at: string
-          iac_code: string
+          iac_code: string | null
           iac_description: string
           id: string
           name: string
@@ -96,7 +96,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          iac_code: string
+          iac_code?: string | null
           iac_description: string
           id?: string
           name: string
@@ -106,7 +106,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          iac_code?: string
+          iac_code?: string | null
           iac_description?: string
           id?: string
           name?: string

@@ -3,7 +3,7 @@ export interface Settings {
   id: string;
   name: string;
   iacDescription: string;
-  iacCode: string;
+  iacCode: string | null;
   createdAt: string;
   updatedAt: string;
   timeZone: string;

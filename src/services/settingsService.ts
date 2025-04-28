@@ -58,7 +58,7 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
     .insert({
       name: setting.name,
       iac_description: setting.iacDescription,
-      iac_code: setting.iacCode,
+      iac_code: setting.iacCode || null,
       time_zone: setting.timeZone,
       time_zone_decription: setting.timeZoneDescription,
     })
@@ -74,16 +74,7 @@ export const createSetting = async (setting: Omit<Settings, 'id' | 'createdAt' |
     throw new Error('Failed to create setting: No data returned');
   }
 
-  return {
-    id: data.id,
-    name: data.name,
-    iacDescription: data.iac_description,
-    iacCode: data.iac_code,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    timeZone: data.time_zone || 'UTC',
-    timeZoneDescription: data.time_zone_decription,
-  };
+  return mapToSettingsModel(data);
 };
 
 export const updateSetting = async (
@@ -95,13 +86,12 @@ export const updateSetting = async (
   
   if (setting.name !== undefined) updateData.name = setting.name;
   if (setting.iacDescription !== undefined) updateData.iac_description = setting.iacDescription;
-  if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode;
+  if (setting.iacCode !== undefined) updateData.iac_code = setting.iacCode || null;
   if (setting.timeZone !== undefined) updateData.time_zone = setting.timeZone;
   if (setting.timeZoneDescription !== undefined) updateData.time_zone_decription = setting.timeZoneDescription;
   
   console.log('Update data being sent to Supabase:', updateData);
   
-  // First verify the record exists before attempting to update
   try {
     // Check if the record exists first
     const { data: existingData, error: checkError } = await supabase
@@ -111,16 +101,8 @@ export const updateSetting = async (
       .single();
       
     if (checkError) {
-      // If we get a not found error, return early with updated = false
-      if (checkError.code === 'PGRST116') {
-        console.error('Setting not found for update:', id);
-        
-        // Return the original data without updating
-        return await fetchCurrentSettingData(id);
-      }
-      
-      // For other errors, throw them
-      throw checkError;
+      console.error('Setting not found for update:', id);
+      return await fetchCurrentSettingData(id);
     }
     
     // If we found the record, proceed with update
@@ -191,7 +173,7 @@ function mapToSettingsModel(data: any): Settings {
     id: data.id,
     name: data.name,
     iacDescription: data.iac_description,
-    iacCode: data.iac_code,
+    iacCode: data.iac_code || null,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     timeZone: data.time_zone || 'UTC',
