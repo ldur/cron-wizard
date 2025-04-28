@@ -20,7 +20,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Control, useFormContext } from "react-hook-form";
-import { Slider } from "@/components/ui/slider";
 
 interface TimeZone {
   name: string;
@@ -37,7 +36,7 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
   
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         {/* Schedule Expression */}
         <FormField
           control={control}
@@ -94,7 +93,7 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
+                        "w-full pl-3 text-left font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -136,7 +135,7 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
+                        "w-full pl-3 text-left font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -167,56 +166,6 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
             </FormItem>
           )}
         />
-      </div>
-
-      {/* Flexible Time Window */}
-      <div>
-        <FormLabel>Flexible Time Window</FormLabel>
-        <div className="flex items-center space-x-2">
-          <FormField
-            control={control}
-            name="flexibleTimeWindowMode"
-            render={({ field }) => (
-              <FormItem>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="OFF">Off</SelectItem>
-                    <SelectItem value="FLEXIBLE">Flexible</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {form.watch("flexibleTimeWindowMode") === "FLEXIBLE" && (
-            <FormField
-              control={control}
-              name="flexibleWindowMinutes"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormControl>
-                    <Slider
-                      defaultValue={[field.value || 0]}
-                      max={60}
-                      step={1}
-                      onValueChange={(value) => field.onChange(value[0])}
-                      aria-label="Flexible Window Minutes"
-                    />
-                  </FormControl>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {field.value || 0} minutes
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-        </div>
       </div>
     </>
   );

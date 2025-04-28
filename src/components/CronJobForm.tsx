@@ -176,22 +176,90 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
-        {/* General Form Fields */}
-        <GeneralFormFields control={form.control} />
-        
-        {/* Scheduling Fields */}
-        <SchedulingFields control={form.control} timezones={timezones} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+          {/* Left Column - Cron Job Fields */}
+          <div className="space-y-8">
+            <div className="space-y-6">
+              {/* General Form Fields */}
+              <GeneralFormFields control={form.control} />
+              
+              {/* Scheduling Fields */}
+              <SchedulingFields control={form.control} timezones={timezones} />
+            </div>
+          </div>
 
-        {/* Target Type */}
-        <TargetTypeField control={form.control} />
+          {/* Separator */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 -ml-px">
+            <div className="w-px h-full bg-gradient-to-b from-transparent via-border to-transparent" />
+          </div>
 
-        {/* Target Form */}
-        <TargetForm 
-          form={form}
-          targetType={form.watch("targetType")}
-        />
+          {/* Right Column - AWS Configuration */}
+          <div className="space-y-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4">AWS Configuration</h2>
+            <div className="space-y-6">
+              {/* Target Type */}
+              <TargetTypeField control={form.control} />
 
-        {/* Group Fields */}
+              {/* Target Form */}
+              <TargetForm 
+                form={form}
+                targetType={form.watch("targetType")}
+              />
+
+              {/* Flexible Time Window */}
+              <div>
+                <FormLabel>Flexible Time Window</FormLabel>
+                <div className="flex items-center space-x-2">
+                  <FormField
+                    control={form.control}
+                    name="flexibleTimeWindowMode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="OFF">Off</SelectItem>
+                            <SelectItem value="FLEXIBLE">Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("flexibleTimeWindowMode") === "FLEXIBLE" && (
+                    <FormField
+                      control={form.control}
+                      name="flexibleWindowMinutes"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormControl>
+                            <Slider
+                              defaultValue={[field.value || 0]}
+                              max={60}
+                              step={1}
+                              onValueChange={(value) => field.onChange(value[0])}
+                              aria-label="Flexible Window Minutes"
+                            />
+                          </FormControl>
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            {field.value || 0} minutes
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Group Fields at the bottom */}
         <GroupFields 
           control={form.control} 
           groupId={groupId} 
@@ -205,7 +273,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               Cancel
             </Button>
           )}
-          <Button type="submit" className="w-full md:w-auto">
+          <Button type="submit">
             {jobData ? "Update Cron Job" : "Create Cron Job"}
           </Button>
         </div>
