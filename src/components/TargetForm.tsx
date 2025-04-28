@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -147,6 +146,8 @@ const TargetForm = ({ targetType, form }: TargetFormProps) => {
                     <SelectItem value="PUT">PUT</SelectItem>
                     <SelectItem value="DELETE">DELETE</SelectItem>
                     <SelectItem value="PATCH">PATCH</SelectItem>
+                    <SelectItem value="HEAD">HEAD</SelectItem>
+                    <SelectItem value="OPTIONS">OPTIONS</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

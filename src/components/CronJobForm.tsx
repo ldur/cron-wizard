@@ -131,14 +131,16 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   // Add the groups field to the form schema
   const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
-    command: z.string().min(1, "Command is required"),
-    cronExpression: z.string().min(1, "Cron expression is required"),
+    description: z.string().optional(),
+    scheduleExpression: z.string().min(1, "Schedule expression is required"),
+    startTime: z.string().optional().nullable(),
+    endTime: z.string().optional().nullable(),
     status: z.enum(["active", "paused"]),
     groupId: z.string().optional(),
     isApi: z.boolean().optional(),
     endpointName: z.string().optional().nullable(),
     iacCode: z.string().optional().nullable(),
-    timeZone: z.string().optional(),
+    timezone: z.string().optional(),
     tags: z.array(z.string()).default([]),
     flexibleTimeWindowMode: z.enum(["OFF", "FLEXIBLE"]).default("OFF"),
     flexibleWindowMinutes: z.number().nullable().refine(
@@ -188,18 +190,45 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: job?.name || "",
-      command: job?.command || "",
-      cronExpression: job?.cronExpression || "0 0 * * *",
+      description: job?.description || "",
+      scheduleExpression: job?.cronExpression || "0 0 * * *",
+      startTime: job?.startTime || null,
+      endTime: job?.endTime || null,
       status: job?.status || "active",
       groupId: job?.groupId || groups[0]?.id || undefined,
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
-      timeZone: job?.timeZone || defaultTimeZone,
+      timezone: job?.timeZone || defaultTimeZone,
       tags: job?.tags || [],
       flexibleTimeWindowMode: job?.flexibleTimeWindowMode || "OFF",
       flexibleWindowMinutes: job?.flexibleWindowMinutes || null,
       targetType: job?.targetType || "LAMBDA",
+      function_arn: job?.function_arn || undefined,
+      payload: job?.payload || undefined,
+      state_machine_arn: job?.state_machine_arn || undefined,
+      execution_role_arn: job?.execution_role_arn || undefined,
+      input_payload: job?.input_payload || undefined,
+      endpoint_url: job?.endpoint_url || undefined,
+      http_method: job?.http_method || undefined,
+      headers: job?.headers || undefined,
+      body: job?.body || undefined,
+      authorization_type: job?.authorization_type || undefined,
+      event_bus_arn: job?.event_bus_arn || undefined,
+      event_payload: job?.event_payload || undefined,
+      queue_url: job?.queue_url || undefined,
+      message_body: job?.message_body || undefined,
+      message_group_id: job?.message_group_id || undefined,
+      cluster_arn: job?.cluster_arn || undefined,
+      task_definition_arn: job?.task_definition_arn || undefined,
+      launch_type: job?.launch_type || undefined,
+      network_configuration: job?.network_configuration || undefined,
+      overrides: job?.overrides || undefined,
+      stream_arn: job?.stream_arn || undefined,
+      partition_key: job?.partition_key || undefined,
+      training_job_definition_arn: job?.training_job_definition_arn || undefined,
+      hyper_parameters: job?.hyper_parameters || undefined,
+      input_data_config: job?.input_data_config || undefined,
     },
   });
 
@@ -234,14 +263,14 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const updateCronExpression = () => {
     try {
       const cronExpression = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
-      form.setValue("cronExpression", cronExpression); // Update form value
+      form.setValue("scheduleExpression", cronExpression); // Update form value
 
       // Also update the preview
       const preview = parseSchedule(cronExpression);
       setSchedulePreview(preview);
 
       // Trigger re-render for immediate UI update
-      form.trigger("cronExpression");
+      form.trigger("scheduleExpression");
     } catch (error) {
       console.error("Error updating cron expression:", error);
       toast({
@@ -257,18 +286,45 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     if (job) {
       form.reset({
         name: job.name,
-        command: job.command,
-        cronExpression: job.cronExpression,
+        description: job.description || "",
+        scheduleExpression: job.cronExpression,
+        startTime: job.startTime || null,
+        endTime: job.endTime || null,
         status: job.status,
         groupId: job.groupId,
         isApi: job.isApi,
         endpointName: job.endpointName,
         iacCode: job.iacCode,
-        timeZone: job.timeZone,
+        timezone: job.timeZone,
         tags: job.tags,
         flexibleTimeWindowMode: job.flexibleTimeWindowMode,
         flexibleWindowMinutes: job.flexibleWindowMinutes,
         targetType: job.targetType,
+        function_arn: job?.function_arn || undefined,
+        payload: job?.payload || undefined,
+        state_machine_arn: job?.state_machine_arn || undefined,
+        execution_role_arn: job?.execution_role_arn || undefined,
+        input_payload: job?.input_payload || undefined,
+        endpoint_url: job?.endpoint_url || undefined,
+        http_method: job?.http_method || undefined,
+        headers: job?.headers || undefined,
+        body: job?.body || undefined,
+        authorization_type: job?.authorization_type || undefined,
+        event_bus_arn: job?.event_bus_arn || undefined,
+        event_payload: job?.event_payload || undefined,
+        queue_url: job?.queue_url || undefined,
+        message_body: job?.message_body || undefined,
+        message_group_id: job?.message_group_id || undefined,
+        cluster_arn: job?.cluster_arn || undefined,
+        task_definition_arn: job?.task_definition_arn || undefined,
+        launch_type: job?.launch_type || undefined,
+        network_configuration: job?.network_configuration || undefined,
+        overrides: job?.overrides || undefined,
+        stream_arn: job?.stream_arn || undefined,
+        partition_key: job?.partition_key || undefined,
+        training_job_definition_arn: job?.training_job_definition_arn || undefined,
+        hyper_parameters: job?.hyper_parameters || undefined,
+        input_data_config: job?.input_data_config || undefined,
       });
       setIsApiMode(job.isApi);
       setIsFlexibleTime(job.flexibleTimeWindowMode === 'FLEXIBLE');
@@ -281,7 +337,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
 
   // Update schedule preview when cron expression changes
   useEffect(() => {
-    const cronExpression = form.getValues("cronExpression");
+    const cronExpression = form.getValues("scheduleExpression");
     const preview = parseSchedule(cronExpression);
     setSchedulePreview(preview);
     
@@ -292,7 +348,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     
     // Parse the expression to update individual fields
     parseCronExpression(cronExpression);
-  }, [form.watch("cronExpression"), cronMode]);
+  }, [form.watch("scheduleExpression"), cronMode]);
 
   // Handler for natural language input
   const handleNaturalLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,7 +379,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       // Remove the extra locale and timeFormat arguments
       const cronExpression = convertToCron(naturalLanguage.trim());
   
-      form.setValue("cronExpression", cronExpression);
+      form.setValue("scheduleExpression", cronExpression);
   
       // Update the schedule preview
       const preview = parseSchedule(cronExpression);
@@ -369,65 +425,46 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     // Create a new object with all required fields ensuring they aren't undefined
     const submissionData: Omit<CronJob, "id" | "nextRun"> = {
       name: values.name,
-      command: values.command,
-      cronExpression: values.cronExpression,
+      description: values.description,
+      scheduleExpression: values.scheduleExpression,
+      startTime: values.startTime,
+      endTime: values.endTime,
       status: values.status,
       isApi: values.isApi ?? false,
       endpointName: values.endpointName ?? null,
       iacCode: values.iacCode ?? null,
       groupId: values.groupId,
-      timeZone: values.timeZone ?? null,
+      timezone: values.timezone ?? null,
       tags: values.tags ?? [],
       flexibleTimeWindowMode: values.flexibleTimeWindowMode,
       flexibleWindowMinutes: values.flexibleWindowMinutes,
-      targetType: values.targetType
+      targetType: values.targetType,
+      function_arn: values.function_arn,
+      payload: values.payload,
+      state_machine_arn: values.state_machine_arn,
+      execution_role_arn: values.execution_role_arn,
+      input_payload: values.input_payload,
+      endpoint_url: values.endpoint_url,
+      http_method: values.http_method,
+      headers: values.headers,
+      body: values.body,
+      authorization_type: values.authorization_type,
+      event_bus_arn: values.event_bus_arn,
+      event_payload: values.event_payload,
+      queue_url: values.queue_url,
+      message_body: values.message_body,
+      message_group_id: values.message_group_id,
+      cluster_arn: values.cluster_arn,
+      task_definition_arn: values.task_definition_arn,
+      launch_type: values.launch_type,
+      network_configuration: values.network_configuration,
+      overrides: values.overrides,
+      stream_arn: values.stream_arn,
+      partition_key: values.partition_key,
+      training_job_definition_arn: values.training_job_definition_arn,
+      hyper_parameters: values.hyper_parameters,
+      input_data_config: values.input_data_config,
     };
-
-    // Add target-specific fields based on the target type
-    switch (values.targetType) {
-      case 'LAMBDA':
-        if (values.function_arn) submissionData.function_arn = values.function_arn;
-        if (values.payload !== undefined) submissionData.payload = values.payload;
-        break;
-      case 'STEP_FUNCTION':
-        if (values.state_machine_arn) submissionData.state_machine_arn = values.state_machine_arn;
-        if (values.execution_role_arn) submissionData.execution_role_arn = values.execution_role_arn;
-        if (values.input_payload !== undefined) submissionData.input_payload = values.input_payload;
-        break;
-      case 'API_GATEWAY':
-        if (values.endpoint_url) submissionData.endpoint_url = values.endpoint_url;
-        if (values.http_method) submissionData.http_method = values.http_method;
-        if (values.headers !== undefined) submissionData.headers = values.headers;
-        if (values.body !== undefined) submissionData.body = values.body;
-        if (values.authorization_type) submissionData.authorization_type = values.authorization_type;
-        break;
-      case 'EVENTBRIDGE':
-        if (values.event_bus_arn) submissionData.event_bus_arn = values.event_bus_arn;
-        if (values.event_payload !== undefined) submissionData.event_payload = values.event_payload;
-        break;
-      case 'SQS':
-        if (values.queue_url) submissionData.queue_url = values.queue_url;
-        if (values.message_body) submissionData.message_body = values.message_body;
-        if (values.message_group_id) submissionData.message_group_id = values.message_group_id;
-        break;
-      case 'ECS':
-        if (values.cluster_arn) submissionData.cluster_arn = values.cluster_arn;
-        if (values.task_definition_arn) submissionData.task_definition_arn = values.task_definition_arn;
-        if (values.launch_type) submissionData.launch_type = values.launch_type;
-        if (values.network_configuration !== undefined) submissionData.network_configuration = values.network_configuration;
-        if (values.overrides !== undefined) submissionData.overrides = values.overrides;
-        break;
-      case 'KINESIS':
-        if (values.stream_arn) submissionData.stream_arn = values.stream_arn;
-        if (values.partition_key) submissionData.partition_key = values.partition_key;
-        if (values.payload !== undefined) submissionData.payload = values.payload;
-        break;
-      case 'SAGEMAKER':
-        if (values.training_job_definition_arn) submissionData.training_job_definition_arn = values.training_job_definition_arn;
-        if (values.hyper_parameters !== undefined) submissionData.hyper_parameters = values.hyper_parameters;
-        if (values.input_data_config !== undefined) submissionData.input_data_config = values.input_data_config;
-        break;
-    }
 
     // Submit the form with all required data
     onSubmit(submissionData);
@@ -457,7 +494,71 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                   </FormItem>
                 )}
               />
-              
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter a description for this job" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="scheduleExpression"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Schedule Expression</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="rate(5 minutes) or cron(0 12 * * ? *)" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Time (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Time (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="groupId"
@@ -557,12 +658,12 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                     <p className="text-sm font-medium">Schedule Preview:</p>
                     <p className="text-sm mt-1">{schedulePreview}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Next run would be around: {new Date(calculateNextRun(form.getValues("cronExpression"))).toLocaleString()}
+                      Next run would be around: {new Date(calculateNextRun(form.getValues("scheduleExpression"))).toLocaleString()}
                     </p>
                     <div className="mt-2 pt-2 border-t border-border">
                       <p className="text-sm font-medium">Cron Expression:</p>
                       <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                        {form.getValues("cronExpression")}
+                        {form.getValues("scheduleExpression")}
                       </code>
                     </div>
                   </div>
@@ -677,7 +778,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                       <div>
                         <p className="text-sm font-medium">Cron Expression:</p>
                         <code className="text-xs bg-muted-foreground/10 px-1 py-0.5 rounded">
-                          {form.watch("cronExpression")} {/* Dynamically watch the cronExpression */}
+                          {form.watch("scheduleExpression")} {/* Dynamically watch the cronExpression */}
                         </code>
                       </div>
                     </div>
@@ -685,7 +786,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                       <p className="text-sm font-medium">Schedule Preview:</p>
                       <p className="text-sm mt-1">{schedulePreview}</p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Next run would be around: {new Date(calculateNextRun(form.watch("cronExpression"))).toLocaleString()}
+                        Next run would be around: {new Date(calculateNextRun(form.watch("scheduleExpression"))).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -694,7 +795,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             </Tabs>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <TimeZoneSelect control={form.control} name="timeZone" />
+              <TimeZoneSelect control={form.control} name="timezone" />
               
               <FormField
                 control={form.control}
@@ -772,103 +873,4 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                         Job can start anytime within this window after the scheduled time
                       </p>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <TagInput 
-                      tags={field.value} 
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Right Panel */}
-          <div className="space-y-6 border-l pl-6">
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Target Configuration</h2>
-              <FormField
-                control={form.control}
-                name="targetType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Target Type</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.reset({
-                          ...form.getValues(),
-                          targetType: value as any,
-                          function_arn: undefined,
-                          payload: undefined,
-                          state_machine_arn: undefined,
-                          execution_role_arn: undefined,
-                        });
-                      }} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select target type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="LAMBDA">Lambda Function</SelectItem>
-                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
-                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
-                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
-                        <SelectItem value="SQS">Simple Queue Service</SelectItem>
-                        <SelectItem value="ECS">Elastic Container Service</SelectItem>
-                        <SelectItem value="KINESIS">Kinesis</SelectItem>
-                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="mt-6">
-                <TargetForm targetType={form.watch("targetType")} form={form} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-2 mt-6">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {job ? "Update Job" : "Create Job"}
-          </Button>
-        </div>
-      </form>
-
-      <CronJobIacDialog
-        open={isIacDialogOpen}
-        onOpenChange={setIsIacDialogOpen}
-        iacCode={form.getValues("iacCode") || ""}
-        onSave={(code) => {
-          form.setValue("iacCode", code);
-          setIsIacDialogOpen(false);
-        }}
-      />
-    </Form>
-  );
-};
-
-export default CronJobForm;
+                    </

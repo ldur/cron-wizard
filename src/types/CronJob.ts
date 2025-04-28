@@ -2,16 +2,17 @@
 export interface CronJob {
   id: string;
   name: string;
-  command: string;
-  cronExpression: string;
+  description?: string;
+  scheduleExpression: string;
+  startTime?: string;
+  endTime?: string;
   status: 'active' | 'paused';
-  nextRun: string;
   isApi: boolean;
   endpointName: string | null;
   iacCode: string | null;
   groupId?: string;
   groupName?: string;
-  timeZone?: string | null;
+  timezone?: string | null;
   tags: string[];
   flexibleTimeWindowMode: 'OFF' | 'FLEXIBLE';
   flexibleWindowMinutes: number | null;
@@ -29,10 +30,10 @@ export interface CronJob {
   
   // API Gateway
   endpoint_url?: string;
-  http_method?: string;
+  http_method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
   headers?: any;
   body?: any;
-  authorization_type?: string;
+  authorization_type?: 'NONE' | 'IAM' | 'COGNITO_USER_POOLS';
   
   // EventBridge
   event_bus_arn?: string;
@@ -46,7 +47,7 @@ export interface CronJob {
   // ECS
   cluster_arn?: string;
   task_definition_arn?: string;
-  launch_type?: string;
+  launch_type?: 'FARGATE' | 'EC2';
   network_configuration?: any;
   overrides?: any;
   

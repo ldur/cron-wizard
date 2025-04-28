@@ -11,27 +11,33 @@ export type Database = {
     Tables: {
       api_gateway_targets: {
         Row: {
-          authorization_type: string | null
+          authorization_type:
+            | Database["public"]["Enums"]["authorization_type"]
+            | null
           body: Json | null
           endpoint_url: string
           headers: Json | null
-          http_method: string
+          http_method: Database["public"]["Enums"]["http_method_type"]
           id: string
         }
         Insert: {
-          authorization_type?: string | null
+          authorization_type?:
+            | Database["public"]["Enums"]["authorization_type"]
+            | null
           body?: Json | null
           endpoint_url: string
           headers?: Json | null
-          http_method: string
+          http_method: Database["public"]["Enums"]["http_method_type"]
           id: string
         }
         Update: {
-          authorization_type?: string | null
+          authorization_type?:
+            | Database["public"]["Enums"]["authorization_type"]
+            | null
           body?: Json | null
           endpoint_url?: string
           headers?: Json | null
-          http_method?: string
+          http_method?: Database["public"]["Enums"]["http_method_type"]
           id?: string
         }
         Relationships: [
@@ -48,7 +54,8 @@ export type Database = {
         Row: {
           command: string
           created_at: string | null
-          cron_expression: string
+          description: string | null
+          end_time: string | null
           endpoint_name: string | null
           flexible_time_window_mode: Database["public"]["Enums"]["flexible_mode"]
           flexible_window_minutes: number | null
@@ -57,16 +64,19 @@ export type Database = {
           id: string
           is_api: boolean
           name: string
+          schedule_expression: string
+          start_time: string | null
           status: string
           tags: string[]
           target_type: Database["public"]["Enums"]["target_type"]
-          time_zone: string | null
+          timezone: string | null
           updated_at: string | null
         }
         Insert: {
           command: string
           created_at?: string | null
-          cron_expression: string
+          description?: string | null
+          end_time?: string | null
           endpoint_name?: string | null
           flexible_time_window_mode?: Database["public"]["Enums"]["flexible_mode"]
           flexible_window_minutes?: number | null
@@ -75,16 +85,19 @@ export type Database = {
           id?: string
           is_api?: boolean
           name: string
+          schedule_expression: string
+          start_time?: string | null
           status: string
           tags?: string[]
           target_type: Database["public"]["Enums"]["target_type"]
-          time_zone?: string | null
+          timezone?: string | null
           updated_at?: string | null
         }
         Update: {
           command?: string
           created_at?: string | null
-          cron_expression?: string
+          description?: string | null
+          end_time?: string | null
           endpoint_name?: string | null
           flexible_time_window_mode?: Database["public"]["Enums"]["flexible_mode"]
           flexible_window_minutes?: number | null
@@ -93,10 +106,12 @@ export type Database = {
           id?: string
           is_api?: boolean
           name?: string
+          schedule_expression?: string
+          start_time?: string | null
           status?: string
           tags?: string[]
           target_type?: Database["public"]["Enums"]["target_type"]
-          time_zone?: string | null
+          timezone?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -113,7 +128,7 @@ export type Database = {
         Row: {
           cluster_arn: string
           id: string
-          launch_type: string | null
+          launch_type: Database["public"]["Enums"]["ecs_launch_type"] | null
           network_configuration: Json | null
           overrides: Json | null
           task_definition_arn: string
@@ -121,7 +136,7 @@ export type Database = {
         Insert: {
           cluster_arn: string
           id: string
-          launch_type?: string | null
+          launch_type?: Database["public"]["Enums"]["ecs_launch_type"] | null
           network_configuration?: Json | null
           overrides?: Json | null
           task_definition_arn: string
@@ -129,7 +144,7 @@ export type Database = {
         Update: {
           cluster_arn?: string
           id?: string
-          launch_type?: string | null
+          launch_type?: Database["public"]["Enums"]["ecs_launch_type"] | null
           network_configuration?: Json | null
           overrides?: Json | null
           task_definition_arn?: string
@@ -377,7 +392,17 @@ export type Database = {
       }
     }
     Enums: {
+      authorization_type: "NONE" | "IAM" | "COGNITO_USER_POOLS"
+      ecs_launch_type: "FARGATE" | "EC2"
       flexible_mode: "OFF" | "FLEXIBLE"
+      http_method_type:
+        | "GET"
+        | "POST"
+        | "PUT"
+        | "DELETE"
+        | "PATCH"
+        | "HEAD"
+        | "OPTIONS"
       target_type:
         | "LAMBDA"
         | "STEP_FUNCTION"
@@ -502,7 +527,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      authorization_type: ["NONE", "IAM", "COGNITO_USER_POOLS"],
+      ecs_launch_type: ["FARGATE", "EC2"],
       flexible_mode: ["OFF", "FLEXIBLE"],
+      http_method_type: [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS",
+      ],
       target_type: [
         "LAMBDA",
         "STEP_FUNCTION",
