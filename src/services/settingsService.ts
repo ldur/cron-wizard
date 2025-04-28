@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import type { Settings } from '@/types/Settings';
 
@@ -105,7 +104,6 @@ export const updateSetting = async (id: string, setting: Partial<Omit<Settings, 
     throw new Error(`Setting with ID ${id} not found`);
   }
   
-  // Then update it
   const { data, error } = await supabase
     .from('settings')
     .update(updateData)
