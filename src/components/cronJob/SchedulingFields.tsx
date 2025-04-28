@@ -10,7 +10,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
@@ -20,13 +19,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Control, useFormContext } from "react-hook-form";
+import TimeZoneSelect from "@/components/TimeZoneSelect";
 
 interface SchedulingFieldsProps {
   control: Control<any>;
-  timezones: string[];
 }
 
-const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones }) => {
+const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
   const form = useFormContext();
   
   return (
@@ -47,31 +46,8 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control, timezones 
           )}
         />
 
-        {/* Timezone */}
-        <FormField
-          control={control}
-          name="timezone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Timezone</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a timezone" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="max-h-96 overflow-y-auto">
-                  {timezones.map((timezone) => (
-                    <SelectItem key={timezone} value={timezone}>
-                      {timezone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Timezone using our new component */}
+        <TimeZoneSelect control={control} name="timezone" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

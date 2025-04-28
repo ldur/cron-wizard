@@ -25,15 +25,13 @@ import { cronJobSchema } from '@/schemas/cronJobSchema';
 
 interface CronJobFormProps {
   initialValues?: CronJob;
-  job?: CronJob; // Added to match usage in Index.tsx
+  job?: CronJob;
   groupId?: string;
   groupName?: string;
   onSuccess?: () => void;
-  onSubmit?: (values: CronJob) => void; // Updated type to match what's expected
+  onSubmit?: (values: CronJob) => void;
   onCancel?: () => void;
 }
-
-const timezones = listTimeZones();
 
 const CronJobForm: React.FC<CronJobFormProps> = ({ 
   initialValues, 
@@ -44,7 +42,6 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   onSubmit: externalSubmit, 
   onCancel 
 }) => {
-  // Use job prop if provided, otherwise use initialValues
   const jobData = job || initialValues;
   
   const navigate = useNavigate();
@@ -54,7 +51,6 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   useEffect(() => {
     console.log("CronJobForm rendering");
     console.log("Tabs component should be ready");
-    console.log("Timezones loaded:", timezones.length);
   }, []);
 
   const form = useForm<z.infer<typeof cronJobSchema>>({
@@ -71,7 +67,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       endpointName: jobData?.endpointName || null,
       iacCode: jobData?.iacCode || null,
       groupId: jobData?.groupId || groupId,
-      timezone: jobData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezone: jobData?.timezone || "Europe/Oslo",
       tags: jobData?.tags || [],
       flexibleTimeWindowMode: jobData?.flexibleTimeWindowMode || 'OFF',
       flexibleWindowMinutes: jobData?.flexibleWindowMinutes || null,
@@ -196,7 +192,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             <TabsContent value="schedule" className="space-y-6">
               <div className="space-y-6">
                 <GeneralFormFields control={form.control} />
-                <SchedulingFields control={form.control} timezones={timezones} />
+                <SchedulingFields control={form.control} />
               </div>
             </TabsContent>
 
