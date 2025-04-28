@@ -30,6 +30,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTab, setSelectedTab] = useState<"all" | "active" | "paused">("all");
 
   // Fetch groups
   useEffect(() => {
@@ -298,10 +299,11 @@ const Index = () => {
                     nameFilter={nameFilter} 
                     selectedGroup={selectedGroup}
                     selectedTags={selectedTags}
+                    selectedTab={selectedTab}
                   />
                 </div>
                 
-                <Tabs defaultValue="all">
+                <Tabs defaultValue="all" onValueChange={(value) => setSelectedTab(value as "all" | "active" | "paused")}>
                   <TabsList className="mb-4">
                     <TabsTrigger value="all">All Jobs</TabsTrigger>
                     <TabsTrigger value="active">Active</TabsTrigger>

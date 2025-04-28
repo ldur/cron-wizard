@@ -8,19 +8,25 @@ interface DashboardStatsProps {
   nameFilter: string;
   selectedGroup: string | null;
   selectedTags: string[];
+  selectedTab: "all" | "active" | "paused";
 }
 
-const DashboardStats = ({ jobs, nameFilter, selectedGroup, selectedTags }: DashboardStatsProps) => {
+const DashboardStats = ({ jobs, nameFilter, selectedGroup, selectedTags, selectedTab }: DashboardStatsProps) => {
   // Filter jobs based on all current filters
   const filteredJobs = jobs.filter(job => 
     (!selectedGroup || job.groupId === selectedGroup) &&
     (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase())) &&
     (selectedTags.length === 0 || selectedTags.some(tag => job.tags.includes(tag)))
   );
+
+  // Further filter based on selected tab
+  const tabFilteredJobs = selectedTab === "all" 
+    ? filteredJobs 
+    : filteredJobs.filter(job => job.status === selectedTab);
   
-  const totalJobs = filteredJobs.length;
-  const activeJobs = filteredJobs.filter(job => job.status === 'active').length;
-  const pausedJobs = filteredJobs.filter(job => job.status === 'paused').length;
+  const totalJobs = tabFilteredJobs.length;
+  const activeJobs = tabFilteredJobs.filter(job => job.status === 'active').length;
+  const pausedJobs = tabFilteredJobs.filter(job => job.status === 'paused').length;
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -87,3 +93,4 @@ const DashboardStats = ({ jobs, nameFilter, selectedGroup, selectedTags }: Dashb
 };
 
 export default DashboardStats;
+
