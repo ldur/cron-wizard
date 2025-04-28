@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { fetchGroups } from "@/services/cronJobService";
+import { fetchGroups, fetchDefaultTimezone } from "@/services/cronJobService";
 import { CronJob } from "@/types/CronJob";
 import { useToast } from "@/hooks/use-toast";
 import CronJobIacDialog from "./CronJobIacDialog";
@@ -27,6 +26,15 @@ interface CronJobFormProps {
   job?: CronJob;
   onSubmit: (job: Omit<CronJob, "id">) => void;
   onCancel: () => void;
+}
+
+// Define the interface for the CronJobIacDialog component props
+interface CronJobIacDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  job?: CronJob;
+  formData: any;
+  onGenerate: (code: string) => void;
 }
 
 const CronJobForm: React.FC<CronJobFormProps> = ({
@@ -862,107 +870,3 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Target Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a target type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="LAMBDA">AWS Lambda</SelectItem>
-                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
-                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
-                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
-                        <SelectItem value="SQS">SQS</SelectItem>
-                        <SelectItem value="ECS">ECS</SelectItem>
-                        <SelectItem value="KINESIS">Kinesis</SelectItem>
-                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="mt-4">
-              <TargetForm targetType={form.watch("targetType")} form={form} />
-            </div>
-
-            {/* Flexible Time Window Configuration */}
-            <div className="mt-6 border-t pt-4">
-              <h2 className="text-lg font-semibold mb-4">Flexible Time Window</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Enable Flexible Time Window</p>
-                    <p className="text-sm text-muted-foreground">
-                      Allow EventBridge Scheduler to trigger this target within a flexible time window
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={isFlexibleTime}
-                    onCheckedChange={handleFlexibleModeChange}
-                  />
-                </div>
-                
-                {isFlexibleTime && (
-                  <FormField
-                    control={form.control}
-                    name="flexibleWindowMinutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Window Size (minutes)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="1440" 
-                            placeholder="15"
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || null)}
-                          />
-                        </FormControl>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          The schedule can be invoked any time within this window (1-1440 minutes)
-                        </p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="border-t pt-4 flex justify-between">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={form.formState.isSubmitting}
-          >
-            {job ? "Update Job" : "Create Job"}
-          </Button>
-        </div>
-      </form>
-
-      {/* IAC Dialog */}
-      <CronJobIacDialog
-        open={isIacDialogOpen}
-        onOpenChange={setIsIacDialogOpen}
-        job={job}
-        formData={form.getValues()}
-        onGenerate={handleIacCodeGenerate}
-      />
-    </Form>
-  );
-};
-
-export default CronJobForm;

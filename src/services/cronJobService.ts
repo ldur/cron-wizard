@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -195,106 +194,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id'> & { nextRun?: strin
 
   // Insert target-specific data based on target type
   try {
-    switch (job.targetType) {
-      case 'LAMBDA':
-        if (job.function_arn) {
-          await supabase
-            .from('lambda_targets')
-            .insert({
-              id: data.id,
-              function_arn: job.function_arn,
-              payload: job.payload
-            });
-        }
-        break;
-      case 'STEP_FUNCTION':
-        if (job.state_machine_arn && job.execution_role_arn) {
-          await supabase
-            .from('stepfunction_targets')
-            .insert({
-              id: data.id,
-              state_machine_arn: job.state_machine_arn,
-              execution_role_arn: job.execution_role_arn,
-              input_payload: job.input_payload
-            });
-        }
-        break;
-      case 'API_GATEWAY':
-        if (job.endpoint_url && job.http_method) {
-          await supabase
-            .from('api_gateway_targets')
-            .insert({
-              id: data.id,
-              endpoint_url: job.endpoint_url,
-              http_method: job.http_method,
-              headers: job.headers,
-              body: job.body,
-              authorization_type: job.authorization_type
-            });
-        }
-        break;
-      case 'EVENTBRIDGE':
-        if (job.event_bus_arn) {
-          await supabase
-            .from('eventbridge_targets')
-            .insert({
-              id: data.id,
-              event_bus_arn: job.event_bus_arn,
-              event_payload: job.event_payload
-            });
-        }
-        break;
-      case 'SQS':
-        if (job.queue_url && job.message_body) {
-          await supabase
-            .from('sqs_targets')
-            .insert({
-              id: data.id,
-              queue_url: job.queue_url,
-              message_body: job.message_body,
-              message_group_id: job.message_group_id
-            });
-        }
-        break;
-      case 'ECS':
-        if (job.cluster_arn && job.task_definition_arn) {
-          await supabase
-            .from('ecs_targets')
-            .insert({
-              id: data.id,
-              cluster_arn: job.cluster_arn,
-              task_definition_arn: job.task_definition_arn,
-              launch_type: job.launch_type,
-              network_configuration: job.network_configuration,
-              overrides: job.overrides
-            });
-        }
-        break;
-      case 'KINESIS':
-        if (job.stream_arn && job.partition_key) {
-          await supabase
-            .from('kinesis_targets')
-            .insert({
-              id: data.id,
-              stream_arn: job.stream_arn,
-              partition_key: job.partition_key,
-              payload: job.payload
-            });
-        }
-        break;
-      case 'SAGEMAKER':
-        if (job.training_job_definition_arn) {
-          await supabase
-            .from('sagemaker_targets')
-            .insert({
-              id: data.id,
-              training_job_definition_arn: job.training_job_definition_arn,
-              hyper_parameters: job.hyper_parameters,
-              input_data_config: job.input_data_config
-            });
-        }
-        break;
-    }
+    await insertTargetData(data.id, job);
   } catch (targetError) {
     console.error(`Error inserting target data for ${job.targetType}:`, targetError);
     // Consider whether to delete the main job record here if target insertion fails
@@ -307,8 +207,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id'> & { nextRun?: strin
     name: data.name,
     description: data.description,
     scheduleExpression: data.schedule_expression,
-    startTime: data.start_time,
-    endTime: data.end_time,
+    startTime: data.startTime,
+    endTime: data.endTime,
     status: data.status,
     isApi: data.is_api,
     endpointName: data.endpoint_name,
@@ -322,6 +222,352 @@ export const createCronJob = async (job: Omit<CronJob, 'id'> & { nextRun?: strin
     targetType: data.target_type,
     nextRun: nextRun
   };
+};
+
+// Helper function to insert target-specific data
+const insertTargetData = async (jobId: string, job: Partial<CronJob>) => {
+  switch (job.targetType) {
+    case 'LAMBDA':
+      if (job.function_arn) {
+        await supabase
+          .from('lambda_targets')
+          .insert({
+            id: jobId,
+            function_arn: job.function_arn,
+            payload: job.payload
+          });
+      }
+      break;
+    case 'STEP_FUNCTION':
+      if (job.state_machine_arn && job.execution_role_arn) {
+        await supabase
+          .from('stepfunction_targets')
+          .insert({
+            id: jobId,
+            state_machine_arn: job.state_machine_arn,
+            execution_role_arn: job.execution_role_arn,
+            input_payload: job.input_payload
+          });
+      }
+      break;
+    case 'API_GATEWAY':
+      if (job.endpoint_url && job.http_method) {
+        await supabase
+          .from('api_gateway_targets')
+          .insert({
+            id: jobId,
+            endpoint_url: job.endpoint_url,
+            http_method: job.http_method,
+            headers: job.headers,
+            body: job.body,
+            authorization_type: job.authorization_type
+          });
+      }
+      break;
+    case 'EVENTBRIDGE':
+      if (job.event_bus_arn) {
+        await supabase
+          .from('eventbridge_targets')
+          .insert({
+            id: jobId,
+            event_bus_arn: job.event_bus_arn,
+            event_payload: job.event_payload
+          });
+      }
+      break;
+    case 'SQS':
+      if (job.queue_url && job.message_body) {
+        await supabase
+          .from('sqs_targets')
+          .insert({
+            id: jobId,
+            queue_url: job.queue_url,
+            message_body: job.message_body,
+            message_group_id: job.message_group_id
+          });
+      }
+      break;
+    case 'ECS':
+      if (job.cluster_arn && job.task_definition_arn) {
+        await supabase
+          .from('ecs_targets')
+          .insert({
+            id: jobId,
+            cluster_arn: job.cluster_arn,
+            task_definition_arn: job.task_definition_arn,
+            launch_type: job.launch_type,
+            network_configuration: job.network_configuration,
+            overrides: job.overrides
+          });
+      }
+      break;
+    case 'KINESIS':
+      if (job.stream_arn && job.partition_key) {
+        await supabase
+          .from('kinesis_targets')
+          .insert({
+            id: jobId,
+            stream_arn: job.stream_arn,
+            partition_key: job.partition_key,
+            payload: job.payload
+          });
+      }
+      break;
+    case 'SAGEMAKER':
+      if (job.training_job_definition_arn) {
+        await supabase
+          .from('sagemaker_targets')
+          .insert({
+            id: jobId,
+            training_job_definition_arn: job.training_job_definition_arn,
+            hyper_parameters: job.hyper_parameters,
+            input_data_config: job.input_data_config
+          });
+      }
+      break;
+  }
+};
+
+// Helper function to update target-specific data
+const updateTargetData = async (jobId: string, job: Partial<CronJob>) => {
+  switch (job.targetType) {
+    case 'LAMBDA':
+      if (job.function_arn) {
+        const { data: existingData } = await supabase
+          .from('lambda_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('lambda_targets')
+            .update({
+              function_arn: job.function_arn,
+              payload: job.payload
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('lambda_targets')
+            .insert({
+              id: jobId,
+              function_arn: job.function_arn,
+              payload: job.payload
+            });
+        }
+      }
+      break;
+    case 'STEP_FUNCTION':
+      if (job.state_machine_arn && job.execution_role_arn) {
+        const { data: existingData } = await supabase
+          .from('stepfunction_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('stepfunction_targets')
+            .update({
+              state_machine_arn: job.state_machine_arn,
+              execution_role_arn: job.execution_role_arn,
+              input_payload: job.input_payload
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('stepfunction_targets')
+            .insert({
+              id: jobId,
+              state_machine_arn: job.state_machine_arn,
+              execution_role_arn: job.execution_role_arn,
+              input_payload: job.input_payload
+            });
+        }
+      }
+      break;
+    case 'API_GATEWAY':
+      if (job.endpoint_url && job.http_method) {
+        const { data: existingData } = await supabase
+          .from('api_gateway_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('api_gateway_targets')
+            .update({
+              endpoint_url: job.endpoint_url,
+              http_method: job.http_method,
+              headers: job.headers,
+              body: job.body,
+              authorization_type: job.authorization_type
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('api_gateway_targets')
+            .insert({
+              id: jobId,
+              endpoint_url: job.endpoint_url,
+              http_method: job.http_method,
+              headers: job.headers,
+              body: job.body,
+              authorization_type: job.authorization_type
+            });
+        }
+      }
+      break;
+    case 'EVENTBRIDGE':
+      if (job.event_bus_arn) {
+        const { data: existingData } = await supabase
+          .from('eventbridge_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('eventbridge_targets')
+            .update({
+              event_bus_arn: job.event_bus_arn,
+              event_payload: job.event_payload
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('eventbridge_targets')
+            .insert({
+              id: jobId,
+              event_bus_arn: job.event_bus_arn,
+              event_payload: job.event_payload
+            });
+        }
+      }
+      break;
+    case 'SQS':
+      if (job.queue_url && job.message_body) {
+        const { data: existingData } = await supabase
+          .from('sqs_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('sqs_targets')
+            .update({
+              queue_url: job.queue_url,
+              message_body: job.message_body,
+              message_group_id: job.message_group_id
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('sqs_targets')
+            .insert({
+              id: jobId,
+              queue_url: job.queue_url,
+              message_body: job.message_body,
+              message_group_id: job.message_group_id
+            });
+        }
+      }
+      break;
+    case 'ECS':
+      if (job.cluster_arn && job.task_definition_arn) {
+        const { data: existingData } = await supabase
+          .from('ecs_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('ecs_targets')
+            .update({
+              cluster_arn: job.cluster_arn,
+              task_definition_arn: job.task_definition_arn,
+              launch_type: job.launch_type,
+              network_configuration: job.network_configuration,
+              overrides: job.overrides
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('ecs_targets')
+            .insert({
+              id: jobId,
+              cluster_arn: job.cluster_arn,
+              task_definition_arn: job.task_definition_arn,
+              launch_type: job.launch_type,
+              network_configuration: job.network_configuration,
+              overrides: job.overrides
+            });
+        }
+      }
+      break;
+    case 'KINESIS':
+      if (job.stream_arn && job.partition_key) {
+        const { data: existingData } = await supabase
+          .from('kinesis_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('kinesis_targets')
+            .update({
+              stream_arn: job.stream_arn,
+              partition_key: job.partition_key,
+              payload: job.payload
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('kinesis_targets')
+            .insert({
+              id: jobId,
+              stream_arn: job.stream_arn,
+              partition_key: job.partition_key,
+              payload: job.payload
+            });
+        }
+      }
+      break;
+    case 'SAGEMAKER':
+      if (job.training_job_definition_arn) {
+        const { data: existingData } = await supabase
+          .from('sagemaker_targets')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle();
+        
+        if (existingData) {
+          await supabase
+            .from('sagemaker_targets')
+            .update({
+              training_job_definition_arn: job.training_job_definition_arn,
+              hyper_parameters: job.hyper_parameters,
+              input_data_config: job.input_data_config
+            })
+            .eq('id', jobId);
+        } else {
+          await supabase
+            .from('sagemaker_targets')
+            .insert({
+              id: jobId,
+              training_job_definition_arn: job.training_job_definition_arn,
+              hyper_parameters: job.hyper_parameters,
+              input_data_config: job.input_data_config
+            });
+        }
+      }
+      break;
+  }
 };
 
 // Update the updateCronJob function to handle target-specific data
@@ -361,125 +607,13 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id'>
     throw error;
   }
 
-  // Update target-specific data if target type is provided
-  if (job.targetType) {
-    try {
-      // First remove existing target data from all target tables
-      await Promise.all([
-        supabase.from('lambda_targets').delete().eq('id', id),
-        supabase.from('stepfunction_targets').delete().eq('id', id),
-        supabase.from('api_gateway_targets').delete().eq('id', id),
-        supabase.from('eventbridge_targets').delete().eq('id', id),
-        supabase.from('sqs_targets').delete().eq('id', id),
-        supabase.from('ecs_targets').delete().eq('id', id),
-        supabase.from('kinesis_targets').delete().eq('id', id),
-        supabase.from('sagemaker_targets').delete().eq('id', id)
-      ]);
-
-      // Then insert new target data based on target type
-      switch (job.targetType) {
-        case 'LAMBDA':
-          if (job.function_arn) {
-            await supabase
-              .from('lambda_targets')
-              .insert({
-                id,
-                function_arn: job.function_arn,
-                payload: job.payload
-              });
-          }
-          break;
-        case 'STEP_FUNCTION':
-          if (job.state_machine_arn && job.execution_role_arn) {
-            await supabase
-              .from('stepfunction_targets')
-              .insert({
-                id,
-                state_machine_arn: job.state_machine_arn,
-                execution_role_arn: job.execution_role_arn,
-                input_payload: job.input_payload
-              });
-          }
-          break;
-        case 'API_GATEWAY':
-          if (job.endpoint_url && job.http_method) {
-            await supabase
-              .from('api_gateway_targets')
-              .insert({
-                id,
-                endpoint_url: job.endpoint_url,
-                http_method: job.http_method,
-                headers: job.headers,
-                body: job.body,
-                authorization_type: job.authorization_type
-              });
-          }
-          break;
-        case 'EVENTBRIDGE':
-          if (job.event_bus_arn) {
-            await supabase
-              .from('eventbridge_targets')
-              .insert({
-                id,
-                event_bus_arn: job.event_bus_arn,
-                event_payload: job.event_payload
-              });
-          }
-          break;
-        case 'SQS':
-          if (job.queue_url && job.message_body) {
-            await supabase
-              .from('sqs_targets')
-              .insert({
-                id,
-                queue_url: job.queue_url,
-                message_body: job.message_body,
-                message_group_id: job.message_group_id
-              });
-          }
-          break;
-        case 'ECS':
-          if (job.cluster_arn && job.task_definition_arn) {
-            await supabase
-              .from('ecs_targets')
-              .insert({
-                id,
-                cluster_arn: job.cluster_arn,
-                task_definition_arn: job.task_definition_arn,
-                launch_type: job.launch_type,
-                network_configuration: job.network_configuration,
-                overrides: job.overrides
-              });
-          }
-          break;
-        case 'KINESIS':
-          if (job.stream_arn && job.partition_key) {
-            await supabase
-              .from('kinesis_targets')
-              .insert({
-                id,
-                stream_arn: job.stream_arn,
-                partition_key: job.partition_key,
-                payload: job.payload
-              });
-          }
-          break;
-        case 'SAGEMAKER':
-          if (job.training_job_definition_arn) {
-            await supabase
-              .from('sagemaker_targets')
-              .insert({
-                id,
-                training_job_definition_arn: job.training_job_definition_arn,
-                hyper_parameters: job.hyper_parameters,
-                input_data_config: job.input_data_config
-              });
-          }
-          break;
-      }
-    } catch (targetError) {
-      console.error(`Error updating target data for ${job.targetType}:`, targetError);
-    }
+  // Update target-specific data
+  try {
+    // Instead of deleting all target data first, we'll use a smarter approach
+    // that updates existing target data or creates new target data if it doesn't exist
+    await updateTargetData(id, job);
+  } catch (targetError) {
+    console.error(`Error updating target data for ${job.targetType}:`, targetError);
   }
 
   const nextRun = calculateNextRun(data.schedule_expression);
