@@ -96,7 +96,7 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
         rawTemplates && 
         typeof rawTemplates === 'object' && 
         !Array.isArray(rawTemplates)
-      ) ? (rawTemplates as Record<string, unknown>) : {};
+      ) ? rawTemplates : {};
       
       // Update templates for this target type
       const updatedTemplates = {
@@ -108,7 +108,7 @@ export const TargetTypeEditor = ({ targetType }: TargetTypeEditorProps) => {
       const { error: updateError } = await supabase
         .from('settings')
         .update({
-          target_templates: updatedTemplates
+          target_templates: updatedTemplates as any
         })
         .eq('id', data.id);
       
