@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { CronJob } from '@/types/CronJob';
 import { calculateNextRun } from '@/utils/cronCalculator';
@@ -109,6 +110,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         groupId: job.group_id,
         groupName: job.schedule_groups?.name || 'Default',
         timeZone: job.time_zone,
+        tags: job.tags || [],
       };
     } catch (error) {
       console.error(`Error processing job ${job.id}:`, error);
@@ -126,6 +128,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         groupId: job.group_id,
         groupName: job.schedule_groups?.name || 'Default',
         timeZone: job.time_zone,
+        tags: job.tags || [],
       };
     }
   });
@@ -159,7 +162,8 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
       group_id: job.groupId,
-      time_zone: job.timeZone, // Explicitly include the timeZone when creating a job
+      time_zone: job.timeZone,
+      tags: job.tags || [],
     })
     .select(`
       *,
@@ -185,6 +189,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
     timeZone: data.time_zone,
+    tags: data.tags || [],
   };
 };
 
@@ -201,6 +206,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   if (job.iacCode !== undefined) updateData.iac_code = job.iacCode;
   if (job.groupId !== undefined) updateData.group_id = job.groupId;
   if (job.timeZone !== undefined) updateData.time_zone = job.timeZone;
+  if (job.tags !== undefined) updateData.tags = job.tags;
   
   const { data, error } = await supabase
     .from('cron_jobs')
@@ -230,6 +236,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
     timeZone: data.time_zone,
+    tags: data.tags || [],
   };
 };
 
@@ -276,5 +283,6 @@ export const toggleCronJobStatus = async (id: string, currentStatus: 'active' | 
     groupId: data.group_id,
     groupName: data.schedule_groups?.name || 'Default',
     timeZone: data.time_zone,
+    tags: data.tags || [],
   };
 };
