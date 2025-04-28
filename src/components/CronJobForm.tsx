@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -870,3 +871,107 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Target Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a target type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="LAMBDA">AWS Lambda</SelectItem>
+                        <SelectItem value="STEP_FUNCTION">Step Function</SelectItem>
+                        <SelectItem value="API_GATEWAY">API Gateway</SelectItem>
+                        <SelectItem value="EVENTBRIDGE">EventBridge</SelectItem>
+                        <SelectItem value="SQS">SQS</SelectItem>
+                        <SelectItem value="ECS">ECS</SelectItem>
+                        <SelectItem value="KINESIS">Kinesis</SelectItem>
+                        <SelectItem value="SAGEMAKER">SageMaker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Target Form */}
+            <TargetForm 
+              control={form.control}
+              targetType={form.watch("targetType")}
+            />
+            
+            {/* Flexible Window Settings */}
+            <div className="border-t pt-4">
+              <h3 className="text-md font-medium mb-3">Flexible Time Window</h3>
+              <div className="flex items-center space-x-2 mb-3">
+                <Switch
+                  checked={isFlexibleTime}
+                  onCheckedChange={handleFlexibleModeChange}
+                  id="flexible-time"
+                />
+                <label
+                  htmlFor="flexible-time"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Enable flexible time window
+                </label>
+              </div>
+              
+              {isFlexibleTime && (
+                <FormField
+                  control={form.control}
+                  name="flexibleWindowMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Flexible Window (minutes, 1-1440)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={1440}
+                          value={field.value?.toString() || "15"}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            field.onChange(isNaN(value) ? null : value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Form Actions */}
+        <div className="flex justify-end space-x-2 pt-4 border-t">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">
+            {job ? "Update Job" : "Create Job"}
+          </Button>
+        </div>
+      </form>
+      
+      {/* IAC Dialog */}
+      {isIacDialogOpen && (
+        <CronJobIacDialog
+          open={isIacDialogOpen}
+          onOpenChange={setIsIacDialogOpen}
+          job={job}
+          formData={form.getValues()}
+          onGenerate={handleIacCodeGenerate}
+        />
+      )}
+    </Form>
+  );
+};
+
+export default CronJobForm;
