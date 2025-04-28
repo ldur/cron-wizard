@@ -19,6 +19,7 @@ import { parseSchedule, convertToCron } from "@/utils/cronParser";
 import { calculateNextRun } from "@/utils/cronCalculator";
 import TimeZoneSelect from "./TimeZoneSelect";
 import { fetchDefaultTimezone } from "@/services/cronJobService";
+import TagInput from './TagInput';
 
 interface CronJobFormProps {
   job?: CronJob;
@@ -133,6 +134,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     endpointName: z.string().optional().nullable(),
     iacCode: z.string().optional().nullable(),
     timeZone: z.string().optional(),
+    tags: z.array(z.string()).default([]),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -146,7 +148,8 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       isApi: job?.isApi || false,
       endpointName: job?.endpointName || null,
       iacCode: job?.iacCode || null,
-      timeZone: job?.timeZone || defaultTimeZone, // Use the fetched default timezone
+      timeZone: job?.timeZone || defaultTimeZone,
+      tags: job?.tags || [],
     },
   });
 
@@ -197,6 +200,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         endpointName: job.endpointName,
         iacCode: job.iacCode,
         timeZone: job.timeZone,
+        tags: job.tags,
       });
       setIsApiMode(job.isApi);
       parseCronExpression(job.cronExpression);
@@ -293,7 +297,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   };
 
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone } = values;
+    const { name, command, cronExpression, status, groupId, isApi, endpointName, iacCode, timeZone, tags } = values;
     onSubmit({
       name,
       command,
@@ -304,6 +308,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       iacCode: iacCode ?? null,
       groupId: groupId ?? undefined,
       timeZone: timeZone ?? undefined,
+      tags: tags,
     });
   };
 
@@ -589,6 +594,23 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="tags"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tags</FormLabel>
+              <FormControl>
+                <TagInput 
+                  tags={field.value} 
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>

@@ -21,6 +21,7 @@ export type Database = {
           is_api: boolean
           name: string
           status: string
+          tags: string[]
           time_zone: string | null
           updated_at: string | null
         }
@@ -35,6 +36,7 @@ export type Database = {
           is_api?: boolean
           name: string
           status: string
+          tags?: string[]
           time_zone?: string | null
           updated_at?: string | null
         }
@@ -49,6 +51,7 @@ export type Database = {
           is_api?: boolean
           name?: string
           status?: string
+          tags?: string[]
           time_zone?: string | null
           updated_at?: string | null
         }

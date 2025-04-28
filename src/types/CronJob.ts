@@ -9,7 +9,8 @@ export interface CronJob {
   isApi: boolean;
   endpointName: string | null;
   iacCode: string | null;
-  groupId?: string;  // Optional group ID
-  groupName?: string; // Optional group name
-  timeZone?: string | null; // Added the timeZone property
+  groupId?: string;
+  groupName?: string;
+  timeZone?: string | null;
+  tags: string[];
 }
