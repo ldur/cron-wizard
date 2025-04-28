@@ -6,24 +6,31 @@ import { Input } from "@/components/ui/input";
 
 interface TagInputProps {
   tags: string[];
-  onChange: (tags: string[]) => void;
+  onChange?: (tags: string[]) => void;
+  setTags?: (tags: string[]) => void; // Added this property
 }
 
-const TagInput = ({ tags, onChange }: TagInputProps) => {
+const TagInput = ({ tags, onChange, setTags }: TagInputProps) => {
   const [input, setInput] = useState('');
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && input.trim()) {
       e.preventDefault();
       if (!tags.includes(input.trim())) {
-        onChange([...tags, input.trim()]);
+        const newTags = [...tags, input.trim()];
+        // Use either onChange or setTags, depending on which is provided
+        if (onChange) onChange(newTags);
+        if (setTags) setTags(newTags);
       }
       setInput('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    onChange(tags.filter(tag => tag !== tagToRemove));
+    const newTags = tags.filter(tag => tag !== tagToRemove);
+    // Use either onChange or setTags, depending on which is provided
+    if (onChange) onChange(newTags);
+    if (setTags) setTags(newTags);
   };
 
   return (
