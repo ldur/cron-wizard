@@ -5,22 +5,19 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from "react-router-dom";
 import { CronJob } from "@/types/CronJob";
-import TargetForm from './TargetForm';
 import * as z from "zod";
 import GeneralFormFields from './cronJob/GeneralFormFields';
 import SchedulingFields from './cronJob/SchedulingFields';
 import TargetTypeField from './cronJob/TargetTypeField';
 import GroupFields from './cronJob/GroupFields';
 import { submitCronJob } from '@/services/cronJobFormService';
-import { listTimeZones } from 'timezone-support';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
-import DynamicTargetForm from './targetTemplates/DynamicTargetForm';
+import TargetFormWrapper from './target/TargetFormWrapper';
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
@@ -76,7 +73,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       targetType: jobData?.targetType || 'LAMBDA',
       targetConfig: jobData?.targetConfig || {},
 
-      // Target-specific fields
+      // Legacy fields kept for schema compatibility
       function_arn: jobData?.function_arn || "",
       payload: jobData?.payload || null,
       state_machine_arn: jobData?.state_machine_arn || "",
@@ -271,21 +268,12 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                 <h2 className="text-xl font-semibold text-foreground mb-4">AWS Configuration</h2>
                 <TargetTypeField control={form.control} />
                 
-                {/* Dynamic Target Form based on templates */}
-                <DynamicTargetForm 
+                {/* New Target Form using dynamic templates */}
+                <TargetFormWrapper
                   targetType={selectedTargetType}
                   form={form}
                   initialValues={jobData?.targetConfig}
                 />
-
-                {/* Legacy Target Form - kept for backward compatibility */}
-                <div className="mt-6 border-t pt-6 border-gray-200">
-                  <h3 className="text-lg font-medium text-foreground mb-4">Legacy Configuration</h3>
-                  <TargetForm 
-                    form={form}
-                    targetType={selectedTargetType}
-                  />
-                </div>
 
                 {/* Flexible Time Window */}
                 <div>

@@ -1,15 +1,19 @@
-
-import React, { useState, useEffect } from 'react';
-import { Form } from 'react-hook-form';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { CronJob } from '@/types/CronJob';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormMessage 
+} from '@/components/ui/form';
 
 interface TemplateAttribute {
   name: string;
@@ -22,15 +26,19 @@ interface TargetTemplate {
   [key: string]: TemplateAttribute[];
 }
 
-interface DynamicTargetFormProps {
-  targetType: string;
+interface DynamicTargetRendererProps {
+  targetType: CronJob['targetType'];
   form: any;
   initialValues?: Record<string, any>;
 }
 
-export const DynamicTargetForm = ({ targetType, form, initialValues }: DynamicTargetFormProps) => {
+const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
+  targetType,
+  form,
+  initialValues
+}) => {
   const { toast } = useToast();
-  const [targetConfig, setTargetConfig] = useState<Record<string, any>>(
+  const [targetConfig, setTargetConfig] = React.useState<Record<string, any>>(
     initialValues || {}
   );
 
@@ -52,7 +60,7 @@ export const DynamicTargetForm = ({ targetType, form, initialValues }: DynamicTa
   });
 
   // Update form values when target type changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (templates && targetType && templates[targetType]) {
       // Initialize form values for the selected target type
       const defaultValues: Record<string, any> = {};
@@ -200,4 +208,4 @@ export const DynamicTargetForm = ({ targetType, form, initialValues }: DynamicTa
   );
 };
 
-export default DynamicTargetForm;
+export default DynamicTargetRenderer;
