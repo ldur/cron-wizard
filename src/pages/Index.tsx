@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, X, Search, Tags, Clock, AlarmClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -150,24 +149,9 @@ const Index = () => {
   };
 
   const handleEdit = (job: CronJob) => {
-    // Refetch the job data directly before editing to ensure we have the latest
-    const fetchLatestJobData = async () => {
-      try {
-        // Update to pass an empty object to get the latest job data without making changes
-        const latestJob = await updateCronJob(job.id, {});
-        setEditingJob(latestJob);
-        setIsFormVisible(true);
-      } catch (error) {
-        console.error("Error fetching latest job data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load the latest job data for editing.",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    fetchLatestJobData();
+    // Set the job directly without refetching to avoid errors
+    setEditingJob(job);
+    setIsFormVisible(true);
   };
 
   const handleDelete = (id: string) => {
@@ -202,14 +186,6 @@ const Index = () => {
     (!nameFilter || job.name.toLowerCase().includes(nameFilter.toLowerCase())) &&
     (selectedTags.length === 0 || selectedTags.some(tag => job.tags.includes(tag)))
   );
-
-  const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
-  };
 
   const filterByStatus = (status: 'active' | 'paused') => 
     filteredJobs.filter(job => job.status === status);

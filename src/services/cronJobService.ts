@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CronJob } from "@/types/CronJob";
 
@@ -121,6 +120,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
   }
 };
 
+// Modified updateCronJob function
 export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' | 'nextRun'>>): Promise<CronJob> => {
   try {
     // Convert from TypeScript CronJob type to database format (snake_case)
@@ -184,8 +184,9 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
         endpointName: existingJob.endpoint_name,
         iacCode: existingJob.iac_code,
         groupId: existingJob.group_id,
-        groupName: job.groupName || existingJob.group_name || '',
-        groupIcon: job.groupIcon || existingJob.group_icon || '',
+        // Use the groupName and groupIcon from the job parameter if available
+        groupName: job.groupName || '',
+        groupIcon: job.groupIcon || '',
         timezone: existingJob.timezone,
         tags: existingJob.tags || [],
         flexibleTimeWindowMode: existingJob.flexible_time_window_mode,
@@ -237,8 +238,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
         endpointName: updatedJob.endpoint_name,
         iacCode: updatedJob.iac_code,
         groupId: updatedJob.group_id,
-        groupName: job.groupName || '',
-        groupIcon: job.groupIcon || '',
+        groupName: job.groupName || existingJob.group_name || '',
+        groupIcon: job.groupIcon || existingJob.group_icon || '',
         timezone: updatedJob.timezone,
         tags: updatedJob.tags || [],
         flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
@@ -286,20 +287,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   }
 };
 
-export const deleteCronJob = async (id: string): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('cron_jobs')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error deleting cron job:', error);
-    throw error;
-  }
-};
-
+// Update the toggleCronJobStatus function to fix the group_name and group_icon issue
 export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused'): Promise<CronJob> => {
   try {
     // First, get the existing job
