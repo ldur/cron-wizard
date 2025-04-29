@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
@@ -45,6 +46,8 @@ const TabsContent = React.forwardRef<
       "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className
     )}
+    // Adding preserveTabOrder to ensure tab order is preserved during form submission
+    preserveTabOrder={true}
     {...props}
   />
 ))

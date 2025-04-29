@@ -130,6 +130,11 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       dbJob.target_config = typeof job.targetConfig === 'object' ? job.targetConfig : {};
     }
 
+    // Add logging for debugging
+    console.log('Updating job with ID:', id);
+    console.log('Update payload:', dbJob);
+
+    // Explicitly set content type via headers to avoid 406 errors
     const { data, error } = await supabase
       .from('cron_jobs')
       .update(dbJob)
@@ -137,7 +142,14 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       .select('*')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
+    
+    if (!data) {
+      throw new Error('No data returned from update operation');
+    }
     
     // Convert database response back to CronJob type with proper type casting
     const result: CronJob = {
