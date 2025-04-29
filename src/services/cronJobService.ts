@@ -157,49 +157,62 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     console.log('Updating job with ID:', id);
     console.log('Update payload:', dbJob);
 
+    // First check if the job exists
+    const { data: existingJob, error: checkError } = await supabase
+      .from('cron_jobs')
+      .select('id')
+      .eq('id', id)
+      .single();
+      
+    if (checkError) {
+      console.error('Error checking if job exists:', checkError);
+      throw new Error(`Job with ID ${id} not found`);
+    }
+
     // Make the update request
     const { data, error } = await supabase
       .from('cron_jobs')
       .update(dbJob)
       .eq('id', id)
-      .select('*')
-      .single();
+      .select();
 
     if (error) {
       console.error('Supabase update error:', error);
       throw error;
     }
     
-    if (!data) {
+    if (!data || data.length === 0) {
       throw new Error('No data returned from update operation');
     }
     
+    const updatedJob = data[0];
+    
     // Ensure targetConfig is an object for the result
     let resultTargetConfig: Record<string, any> = {};
-    if (data.target_config && typeof data.target_config === 'object') {
-      resultTargetConfig = data.target_config;
+    if (updatedJob.target_config && typeof updatedJob.target_config === 'object') {
+      resultTargetConfig = updatedJob.target_config;
     }
     
     // Convert database response back to CronJob type with proper type casting
     const result: CronJob = {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      scheduleExpression: data.schedule_expression,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      status: data.status as 'active' | 'paused',
-      isApi: data.is_api,
-      endpointName: data.endpoint_name,
-      iacCode: data.iac_code,
-      groupId: data.group_id,
+      id: updatedJob.id,
+      name: updatedJob.name,
+      description: updatedJob.description,
+      scheduleExpression: updatedJob.schedule_expression,
+      startTime: updatedJob.start_time,
+      endTime: updatedJob.end_time,
+      status: updatedJob.status as 'active' | 'paused',
+      isApi: updatedJob.is_api,
+      endpointName: updatedJob.endpoint_name,
+      iacCode: updatedJob.iac_code,
+      groupId: updatedJob.group_id,
       groupName: job.groupName || '',
       groupIcon: job.groupIcon || '',
-      timezone: data.timezone,
-      tags: data.tags || [],
-      flexibleTimeWindowMode: data.flexible_time_window_mode,
-      flexibleWindowMinutes: data.flexible_window_minutes,
-      targetType: data.target_type,
+      timezone: updatedJob.timezone,
+      tags: updatedJob.tags || [],
+      flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
+      flexibleWindowMinutes: updatedJob.flexible_window_minutes,
+      targetType: updatedJob.target_type,
       targetConfig: resultTargetConfig,
     };
     return result;
@@ -229,35 +242,40 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
       .from('cron_jobs')
       .update({ status })
       .eq('id', id)
-      .select('*')
-      .single();
+      .select();
 
     if (error) throw error;
     
+    if (!data || data.length === 0) {
+      throw new Error(`No job found with ID ${id}`);
+    }
+    
+    const updatedJob = data[0];
+    
     // Ensure targetConfig is an object
     let targetConfig: Record<string, any> = {};
-    if (data.target_config && typeof data.target_config === 'object') {
-      targetConfig = data.target_config;
+    if (updatedJob.target_config && typeof updatedJob.target_config === 'object') {
+      targetConfig = updatedJob.target_config;
     }
     
     // Convert database response to CronJob type
     const result: CronJob = {
-      id: data.id,
-      name: data.name,
-      description: data.description || '',
-      scheduleExpression: data.schedule_expression,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      status: data.status as 'active' | 'paused',
-      isApi: data.is_api,
-      endpointName: data.endpoint_name,
-      iacCode: data.iac_code,
-      groupId: data.group_id,
-      timezone: data.timezone,
-      tags: data.tags || [],
-      flexibleTimeWindowMode: data.flexible_time_window_mode,
-      flexibleWindowMinutes: data.flexible_window_minutes,
-      targetType: data.target_type,
+      id: updatedJob.id,
+      name: updatedJob.name,
+      description: updatedJob.description || '',
+      scheduleExpression: updatedJob.schedule_expression,
+      startTime: updatedJob.start_time,
+      endTime: updatedJob.end_time,
+      status: updatedJob.status as 'active' | 'paused',
+      isApi: updatedJob.is_api,
+      endpointName: updatedJob.endpoint_name,
+      iacCode: updatedJob.iac_code,
+      groupId: updatedJob.group_id,
+      timezone: updatedJob.timezone,
+      tags: updatedJob.tags || [],
+      flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
+      flexibleWindowMinutes: updatedJob.flexible_window_minutes,
+      targetType: updatedJob.target_type,
       targetConfig: targetConfig,
     };
     
