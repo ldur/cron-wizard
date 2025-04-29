@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CronJob } from "@/types/CronJob";
 
@@ -40,33 +41,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
-        targetConfig: targetConfig,
-        // Legacy fields are kept for backward compatibility but will be removed in the future
-        function_arn: job.function_arn,
-        payload: job.payload,
-        state_machine_arn: job.state_machine_arn,
-        execution_role_arn: job.execution_role_arn,
-        input_payload: job.input_payload,
-        endpoint_url: job.endpoint_url,
-        http_method: job.http_method,
-        headers: job.headers,
-        body: job.body,
-        authorization_type: job.authorization_type,
-        event_bus_arn: job.event_bus_arn,
-        event_payload: job.event_payload,
-        queue_url: job.queue_url,
-        message_body: job.message_body,
-        message_group_id: job.message_group_id,
-        cluster_arn: job.cluster_arn,
-        task_definition_arn: job.task_definition_arn,
-        launch_type: job.launch_type,
-        network_configuration: job.network_configuration,
-        overrides: job.overrides,
-        stream_arn: job.stream_arn,
-        partition_key: job.partition_key,
-        training_job_definition_arn: job.training_job_definition_arn,
-        hyper_parameters: job.hyper_parameters,
-        input_data_config: job.input_data_config
+        targetConfig: targetConfig
       };
     });
 

@@ -25,32 +25,4 @@ export const cronJobSchema = z.object({
   
   // Primary field for target configuration
   targetConfig: z.record(z.string(), z.any()).optional(),
-
-  // Legacy fields - marked as deprecated and optional
-  // These will eventually be removed once all code is migrated
-  function_arn: z.string().optional(),
-  payload: z.any().optional(),
-  state_machine_arn: z.string().optional(),
-  execution_role_arn: z.string().optional(),
-  input_payload: z.any().optional(),
-  endpoint_url: z.string().optional(),
-  http_method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']).optional(),
-  headers: z.any().optional(),
-  body: z.any().optional(),
-  authorization_type: z.enum(['NONE', 'IAM', 'COGNITO_USER_POOLS']).optional(),
-  event_bus_arn: z.string().optional(),
-  event_payload: z.any().optional(),
-  queue_url: z.string().optional(),
-  message_body: z.string().optional(),
-  message_group_id: z.string().optional(),
-  cluster_arn: z.string().optional(),
-  task_definition_arn: z.string().optional(),
-  launch_type: z.enum(['FARGATE', 'EC2']).optional(),
-  network_configuration: z.any().optional(),
-  overrides: z.any().optional(),
-  stream_arn: z.string().optional(),
-  partition_key: z.string().optional(),
-  training_job_definition_arn: z.string().optional(),
-  hyper_parameters: z.any().optional(),
-  input_data_config: z.any().optional(),
 });
