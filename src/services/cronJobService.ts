@@ -18,7 +18,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         scheduleExpression: job.schedule_expression,
         startTime: job.start_time,
         endTime: job.end_time,
-        status: job.status,
+        status: job.status as 'active' | 'paused',
         isApi: job.is_api,
         endpointName: job.endpoint_name,
         iacCode: job.iac_code,
@@ -50,7 +50,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       schedule_expression: job.scheduleExpression,
       start_time: job.startTime,
       end_time: job.endTime,
-      status: job.status,
+      status: job.status as 'active' | 'paused', // Explicit casting for type safety
       is_api: job.isApi,
       endpoint_name: job.endpointName,
       iac_code: job.iacCode,
@@ -60,7 +60,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexible_time_window_mode: job.flexibleTimeWindowMode,
       flexible_window_minutes: job.flexibleWindowMinutes,
       target_type: job.targetType,
-      target_config: job.targetConfig || {},
+      target_config: job.targetConfig ? job.targetConfig : {}, // Ensure it's an object
       command: job.scheduleExpression, // Required by database schema
     };
 
@@ -80,7 +80,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       scheduleExpression: data.schedule_expression,
       startTime: data.start_time,
       endTime: data.end_time,
-      status: data.status,
+      status: data.status as 'active' | 'paused',
       isApi: data.is_api,
       endpointName: data.endpoint_name,
       iacCode: data.iac_code,
@@ -113,8 +113,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       dbJob.command = job.scheduleExpression; // Also update command field
     }
     if (job.startTime !== undefined) dbJob.start_time = job.startTime;
-    if (job.endTime !== undefined) dbJob.end_time = job.end_time;
-    if (job.status !== undefined) dbJob.status = job.status;
+    if (job.endTime !== undefined) dbJob.end_time = job.endTime;
+    if (job.status !== undefined) dbJob.status = job.status as 'active' | 'paused';
     if (job.isApi !== undefined) dbJob.is_api = job.isApi;
     if (job.endpointName !== undefined) dbJob.endpoint_name = job.endpointName;
     if (job.iacCode !== undefined) dbJob.iac_code = job.iacCode;
@@ -135,21 +135,21 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
 
     if (error) throw error;
     
-    // Convert database response back to CronJob type
-    return {
+    // Convert database response back to CronJob type (explicit conversion to ensure type safety)
+    const result: CronJob = {
       id: data.id,
       name: data.name,
       description: data.description,
       scheduleExpression: data.schedule_expression,
       startTime: data.start_time,
       endTime: data.end_time,
-      status: data.status,
+      status: data.status as 'active' | 'paused',
       isApi: data.is_api,
       endpointName: data.endpoint_name,
       iacCode: data.iac_code,
       groupId: data.group_id,
-      groupName: job.groupName,
-      groupIcon: job.groupIcon,
+      groupName: job.groupName || '',
+      groupIcon: job.groupIcon || '',
       timezone: data.timezone,
       tags: data.tags || [],
       flexibleTimeWindowMode: data.flexible_time_window_mode,
@@ -157,6 +157,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       targetType: data.target_type,
       targetConfig: data.target_config || {},
     };
+    return result;
   } catch (error) {
     console.error('Error updating cron job:', error);
     throw error;

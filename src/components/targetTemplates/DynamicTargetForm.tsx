@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Form } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -43,7 +44,10 @@ export const DynamicTargetForm = ({ targetType, form, initialValues }: DynamicTa
         .single();
         
       if (error) throw error;
-      return data?.target_templates as TargetTemplate || {};
+      
+      // Add explicit type casting to handle the JSON response properly
+      const targetTemplates = data?.target_templates as unknown as TargetTemplate || {};
+      return targetTemplates;
     },
   });
 
