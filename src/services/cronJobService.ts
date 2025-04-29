@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CronJob } from "@/types/CronJob";
 
@@ -6,29 +5,12 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
   try {
     const { data: jobsData, error: jobsError } = await supabase
       .from('cron_jobs')
-      .select('*');
+      .select('*, schedule_groups(name, icon_name)');
 
     if (jobsError) throw jobsError;
 
-    // Get all groups to map IDs to names and icons
-    const { data: groupsData, error: groupsError } = await supabase
-      .from('schedule_groups')
-      .select('*');
-
-    if (groupsError) throw groupsError;
-
-    // Create a map of group IDs to names and icons
-    const groupMap = new Map();
-    groupsData.forEach((group: any) => {
-      groupMap.set(group.id, { 
-        name: group.name,
-        icon_name: group.icon_name 
-      });
-    });
-
-    // Map the data to CronJob type and add group names and icons
+    // Map the data to CronJob type
     const jobs = jobsData.map((job: any) => {
-      const groupInfo = job.group_id ? groupMap.get(job.group_id) : { name: 'Default', icon_name: 'briefcase' };
       return {
         id: job.id,
         name: job.name,
@@ -41,13 +23,14 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         endpointName: job.endpoint_name,
         iacCode: job.iac_code,
         groupId: job.group_id,
-        groupName: groupInfo ? groupInfo.name : 'Default',
-        groupIcon: groupInfo ? groupInfo.icon_name : 'briefcase',
+        groupName: job.schedule_groups ? job.schedule_groups.name : 'Default',
+        groupIcon: job.schedule_groups ? job.schedule_groups.icon_name : 'briefcase',
         timezone: job.timezone,
         tags: job.tags || [],
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
+        targetConfig: job.target_config || {},
       };
     });
 
@@ -77,6 +60,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexible_time_window_mode: job.flexibleTimeWindowMode,
       flexible_window_minutes: job.flexibleWindowMinutes,
       target_type: job.targetType,
+      target_config: job.targetConfig || {},
       command: job.scheduleExpression, // Required by database schema
     };
 
@@ -108,6 +92,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
+      targetConfig: data.target_config || {},
     };
   } catch (error) {
     console.error('Error creating cron job:', error);
@@ -128,7 +113,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       dbJob.command = job.scheduleExpression; // Also update command field
     }
     if (job.startTime !== undefined) dbJob.start_time = job.startTime;
-    if (job.endTime !== undefined) dbJob.end_time = job.endTime;
+    if (job.endTime !== undefined) dbJob.end_time = job.end_time;
     if (job.status !== undefined) dbJob.status = job.status;
     if (job.isApi !== undefined) dbJob.is_api = job.isApi;
     if (job.endpointName !== undefined) dbJob.endpoint_name = job.endpointName;
@@ -139,6 +124,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     if (job.flexibleTimeWindowMode !== undefined) dbJob.flexible_time_window_mode = job.flexibleTimeWindowMode;
     if (job.flexibleWindowMinutes !== undefined) dbJob.flexible_window_minutes = job.flexibleWindowMinutes;
     if (job.targetType !== undefined) dbJob.target_type = job.targetType;
+    if (job.targetConfig !== undefined) dbJob.target_config = job.targetConfig;
 
     const { data, error } = await supabase
       .from('cron_jobs')
@@ -162,7 +148,6 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       endpointName: data.endpoint_name,
       iacCode: data.iac_code,
       groupId: data.group_id,
-      // Use groupName from job if available, otherwise leave undefined
       groupName: job.groupName,
       groupIcon: job.groupIcon,
       timezone: data.timezone,
@@ -170,6 +155,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
+      targetConfig: data.target_config || {},
     };
   } catch (error) {
     console.error('Error updating cron job:', error);

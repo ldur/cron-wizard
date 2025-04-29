@@ -68,6 +68,7 @@ export type Database = {
           start_time: string | null
           status: string
           tags: string[]
+          target_config: Json | null
           target_type: Database["public"]["Enums"]["target_type"]
           timezone: string | null
           updated_at: string | null
@@ -89,6 +90,7 @@ export type Database = {
           start_time?: string | null
           status: string
           tags?: string[]
+          target_config?: Json | null
           target_type: Database["public"]["Enums"]["target_type"]
           timezone?: string | null
           updated_at?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           start_time?: string | null
           status?: string
           tags?: string[]
+          target_config?: Json | null
           target_type?: Database["public"]["Enums"]["target_type"]
           timezone?: string | null
           updated_at?: string | null
