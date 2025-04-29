@@ -12,6 +12,16 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
 
     // Map the data to CronJob type
     const jobs = jobsData.map((job: any) => {
+      // Ensure targetConfig is always an object
+      let targetConfig: Record<string, any> = {};
+      if (job.target_config) {
+        if (typeof job.target_config === 'object' && job.target_config !== null) {
+          targetConfig = job.target_config;
+        } else {
+          console.warn(`Invalid targetConfig format for job ${job.id}, defaulting to empty object`);
+        }
+      }
+
       return {
         id: job.id,
         name: job.name,
@@ -31,7 +41,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         flexibleTimeWindowMode: job.flexible_time_window_mode,
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
-        targetConfig: job.target_config || {},
+        targetConfig: targetConfig,
         // Legacy fields - kept for backward compatibility
         function_arn: job.function_arn,
         payload: job.payload,
@@ -70,6 +80,10 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
 
 export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promise<CronJob> => {
   try {
+    // Ensure target_config is an object
+    const targetConfig: Record<string, any> = 
+      job.targetConfig && typeof job.targetConfig === 'object' ? job.targetConfig : {};
+    
     // Convert from TypeScript CronJob type to database format (snake_case)
     const dbJob = {
       name: job.name,
@@ -87,7 +101,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexible_time_window_mode: job.flexibleTimeWindowMode,
       flexible_window_minutes: job.flexibleWindowMinutes,
       target_type: job.targetType,
-      target_config: job.targetConfig || {}, // Primary field for target configuration
+      target_config: targetConfig, // Use our sanitized object
       command: job.scheduleExpression, // Required by database schema
     };
 
@@ -98,6 +112,12 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       .single();
 
     if (error) throw error;
+    
+    // Ensure targetConfig from the response is an object
+    let responseTargetConfig: Record<string, any> = {};
+    if (data.target_config && typeof data.target_config === 'object') {
+      responseTargetConfig = data.target_config;
+    }
     
     // Convert database response back to CronJob type
     return {
@@ -119,7 +139,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
-      targetConfig: data.target_config || {},
+      targetConfig: responseTargetConfig,
     };
   } catch (error) {
     console.error('Error creating cron job:', error);
@@ -153,7 +173,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     if (job.targetType !== undefined) dbJob.target_type = job.targetType;
     if (job.targetConfig !== undefined) {
       // Ensure targetConfig is always an object
-      dbJob.target_config = typeof job.targetConfig === 'object' ? job.targetConfig : {};
+      dbJob.target_config = 
+        typeof job.targetConfig === 'object' && job.targetConfig !== null ? job.targetConfig : {};
     }
 
     // Add logging for debugging
@@ -177,6 +198,12 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       throw new Error('No data returned from update operation');
     }
     
+    // Ensure targetConfig is an object for the result
+    let resultTargetConfig: Record<string, any> = {};
+    if (data.target_config && typeof data.target_config === 'object') {
+      resultTargetConfig = data.target_config;
+    }
+    
     // Convert database response back to CronJob type with proper type casting
     const result: CronJob = {
       id: data.id,
@@ -197,7 +224,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
-      targetConfig: data.target_config || {},
+      targetConfig: resultTargetConfig,
     };
     return result;
   } catch (error) {
@@ -231,6 +258,12 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
 
     if (error) throw error;
     
+    // Ensure targetConfig is an object
+    let targetConfig: Record<string, any> = {};
+    if (data.target_config && typeof data.target_config === 'object') {
+      targetConfig = data.target_config;
+    }
+    
     // Convert database response to CronJob type
     const result: CronJob = {
       id: data.id,
@@ -249,7 +282,7 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
-      targetConfig: data.target_config ? (typeof data.target_config === 'object' ? data.target_config : {}) : {},
+      targetConfig: targetConfig,
     };
     
     return result;
