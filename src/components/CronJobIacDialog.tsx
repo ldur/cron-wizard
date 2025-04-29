@@ -12,11 +12,13 @@ interface CronJobIacDialogProps {
     isApi: boolean;
     endpointName: string | null;
     iacCode: string | null;
+    targetType?: string;
+    targetConfig?: Record<string, any>;
   } | null;
-  iacCode?: string; // Added to support direct iacCode prop
-  onSave?: (code: string) => void; // For saving the code
-  formData?: any; // Added to support form data
-  onGenerate?: (code: string) => void; // Added to support code generation
+  iacCode?: string;
+  onSave?: (code: string) => void;
+  formData?: any;
+  onGenerate?: (code: string) => void;
 }
 
 const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, onGenerate }: CronJobIacDialogProps) => {
@@ -25,6 +27,8 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, 
   const nameToShow = job?.name || (formData?.name || 'Unnamed Job');
   const isApi = job?.isApi || (formData?.isApi || false);
   const endpointName = job?.endpointName || (formData?.endpointName || 'unnamed resource');
+  const targetType = job?.targetType || (formData?.targetType || 'LAMBDA');
+  const targetConfig = job?.targetConfig || (formData?.targetConfig || {});
 
   // Function to apply syntax highlighting to the code
   const highlightCode = (code: string): string => {
@@ -80,19 +84,22 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, 
       switch (targetType) {
         case 'LAMBDA':
           generatedCode += `  // Add Lambda target\n`;
-          generatedCode += `  const lambdaArn = '${formData.function_arn || 'YOUR_LAMBDA_ARN'}';\n`;
+          const lambdaArn = formData.targetConfig?.functionArn || 'YOUR_LAMBDA_ARN';
+          generatedCode += `  const lambdaArn = '${lambdaArn}';\n`;
           generatedCode += `  rule.addTarget(new targets.LambdaFunction(lambdaFunction));\n`;
           break;
         case 'API_GATEWAY':
           generatedCode += `  // Add API Gateway target\n`;
-          generatedCode += `  const apiEndpoint = '${formData.endpoint_url || 'YOUR_API_ENDPOINT'}';\n`;
+          const apiEndpoint = formData.targetConfig?.endpointUrl || 'YOUR_API_ENDPOINT';
+          generatedCode += `  const apiEndpoint = '${apiEndpoint}';\n`;
           generatedCode += `  rule.addTarget(new targets.ApiGateway({\n`;
-          generatedCode += `    httpMethod: '${formData.http_method || 'GET'}',\n`;
+          generatedCode += `    httpMethod: '${formData.targetConfig?.httpMethod || 'GET'}',\n`;
           generatedCode += `    path: '/path',\n`;
           generatedCode += `  }));\n`;
           break;
         default:
           generatedCode += `  // Add ${targetType} target\n`;
+          generatedCode += `  // Configuration: ${JSON.stringify(targetConfig)}\n`;
           generatedCode += `  // TODO: Configure specific target properties\n`;
       }
       

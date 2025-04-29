@@ -23,10 +23,11 @@ export const cronJobSchema = z.object({
   flexibleWindowMinutes: z.number().nullable().optional(),
   targetType: z.enum(['LAMBDA', 'STEP_FUNCTION', 'API_GATEWAY', 'EVENTBRIDGE', 'SQS', 'ECS', 'KINESIS', 'SAGEMAKER']),
   
-  // Add new targetConfig field
+  // Primary field for target configuration
   targetConfig: z.record(z.string(), z.any()).optional(),
 
-  // Target-specific fields (legacy - kept for backward compatibility)
+  // Legacy fields - marked as deprecated and optional
+  // These will eventually be removed once all code is migrated
   function_arn: z.string().optional(),
   payload: z.any().optional(),
   state_machine_arn: z.string().optional(),
