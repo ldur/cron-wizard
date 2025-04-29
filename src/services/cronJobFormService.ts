@@ -32,15 +32,30 @@ export const submitCronJob = async (values: any, isUpdate: boolean): Promise<voi
 
   console.log("Submitting cron job with data:", cronJobData);
 
-  if (isUpdate) {
-    await supabase
-      .from('cron_jobs')
-      .update(cronJobData)
-      .eq('id', jobId);
-  } else {
-    await supabase
-      .from('cron_jobs')
-      .insert(cronJobData);
+  try {
+    if (isUpdate) {
+      const { error } = await supabase
+        .from('cron_jobs')
+        .update(cronJobData)
+        .eq('id', jobId);
+      
+      if (error) {
+        console.error("Error updating cron job:", error);
+        throw error;
+      }
+    } else {
+      const { error } = await supabase
+        .from('cron_jobs')
+        .insert(cronJobData);
+      
+      if (error) {
+        console.error("Error creating cron job:", error);
+        throw error;
+      }
+    }
+  } catch (error) {
+    console.error("Database operation failed:", error);
+    throw error;
   }
 };
 

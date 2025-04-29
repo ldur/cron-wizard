@@ -134,7 +134,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     console.log('Updating job with ID:', id);
     console.log('Update payload:', dbJob);
 
-    // Explicitly set content type via headers to avoid 406 errors
+    // Make the update request
     const { data, error } = await supabase
       .from('cron_jobs')
       .update(dbJob)
