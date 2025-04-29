@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -143,7 +144,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
 
   return (
     <div className="space-y-4">
-      {templates[targetType].map((attribute) => (
+      {Array.isArray(templates[targetType]) && templates[targetType].map((attribute) => (
         <div key={attribute.name} className="space-y-2">
           {attribute.data_type === "boolean" ? (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
