@@ -1,48 +1,6 @@
 
 import { useState } from "react";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  X, 
-  Check, 
-  Briefcase, 
-  Folder,
-  Calendar,
-  Clock,
-  AlarmClock,
-  Timer,
-  CalendarClock,
-  CalendarDays,
-  CalendarCheck,
-  Truck,
-  Package,
-  Box,
-  Clipboard,
-  ClipboardCheck,
-  ClipboardList,
-  List,
-  ListTodo,
-  CheckSquare,
-  ListChecks,
-  FileSpreadsheet,
-  FileText,
-  Database,
-  HardDrive,
-  Megaphone,
-  Bell,
-  Mail,
-  MessageSquare,
-  Users,
-  FolderTree,
-  Network,
-  LayoutGrid,
-  Activity,
-  LineChart,
-  BarChart,
-  Gauge,
-  TimerReset
-} from "lucide-react";
+import { Plus, Edit, Trash2, X, Check, Briefcase, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -62,57 +20,10 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   const [iconName, setIconName] = useState("folder");
   const { toast } = useToast();
 
-  // Available icons for groups - expanded with many job scheduling and logistics related icons
+  // Available icons for groups - we're starting with just two options
   const availableIcons = [
-    // Scheduling related icons
-    { name: "calendar", icon: Calendar, category: "Scheduling" },
-    { name: "clock", icon: Clock, category: "Scheduling" },
-    { name: "alarm-clock", icon: AlarmClock, category: "Scheduling" },
-    { name: "timer", icon: Timer, category: "Scheduling" },
-    { name: "calendar-clock", icon: CalendarClock, category: "Scheduling" },
-    { name: "calendar-days", icon: CalendarDays, category: "Scheduling" },
-    { name: "calendar-check", icon: CalendarCheck, category: "Scheduling" },
-    { name: "timer-reset", icon: TimerReset, category: "Scheduling" },
-    
-    // Logistics related icons
-    { name: "truck", icon: Truck, category: "Logistics" },
-    { name: "package", icon: Package, category: "Logistics" },
-    { name: "box", icon: Box, category: "Logistics" },
-    
-    // Task management icons
-    { name: "clipboard", icon: Clipboard, category: "Tasks" },
-    { name: "clipboard-check", icon: ClipboardCheck, category: "Tasks" },
-    { name: "clipboard-list", icon: ClipboardList, category: "Tasks" },
-    { name: "list", icon: List, category: "Tasks" },
-    { name: "list-todo", icon: ListTodo, category: "Tasks" },
-    { name: "check-square", icon: CheckSquare, category: "Tasks" },
-    { name: "list-checks", icon: ListChecks, category: "Tasks" },
-    
-    // Data related icons
-    { name: "file-spreadsheet", icon: FileSpreadsheet, category: "Data" },
-    { name: "file-text", icon: FileText, category: "Data" },
-    { name: "database", icon: Database, category: "Data" },
-    { name: "hard-drive", icon: HardDrive, category: "Data" },
-    
-    // Communication icons
-    { name: "megaphone", icon: Megaphone, category: "Communication" },
-    { name: "bell", icon: Bell, category: "Communication" },
-    { name: "mail", icon: Mail, category: "Communication" },
-    { name: "message-square", icon: MessageSquare, category: "Communication" },
-    
-    // Organizational icons
-    { name: "users", icon: Users, category: "Organization" },
-    { name: "folder-tree", icon: FolderTree, category: "Organization" },
-    { name: "network", icon: Network, category: "Organization" },
-    { name: "layout-grid", icon: LayoutGrid, category: "Organization" },
-    { name: "folder", icon: Folder, category: "Organization" },
-    { name: "briefcase", icon: Briefcase, category: "Organization" },
-    
-    // Status icons
-    { name: "activity", icon: Activity, category: "Status" },
-    { name: "line-chart", icon: LineChart, category: "Status" },
-    { name: "bar-chart", icon: BarChart, category: "Status" },
-    { name: "gauge", icon: Gauge, category: "Status" }
+    { name: "folder", icon: Folder },
+    { name: "briefcase", icon: Briefcase }
   ];
 
   // Helper function to get icon component by name
@@ -203,17 +114,6 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
 
   const isDefaultGroup = (name: string) => name === "Default";
 
-  // Group the icons by category for better organization in the dropdown
-  const groupedIcons = availableIcons.reduce((acc, icon) => {
-    if (!acc[icon.category]) {
-      acc[icon.category] = [];
-    }
-    acc[icon.category].push(icon);
-    return acc;
-  }, {} as Record<string, typeof availableIcons>);
-
-  const categories = Object.keys(groupedIcons).sort();
-
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -287,25 +187,18 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select an icon" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {categories.map(category => (
-                      <div key={category}>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                          {category}
-                        </div>
-                        {groupedIcons[category].map(icon => {
-                          const IconComponent = icon.icon;
-                          return (
-                            <SelectItem key={icon.name} value={icon.name}>
-                              <div className="flex items-center gap-2">
-                                <IconComponent className="h-4 w-4" />
-                                <span className="capitalize">{icon.name.replace(/-/g, " ")}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </div>
-                    ))}
+                  <SelectContent>
+                    {availableIcons.map(icon => {
+                      const IconComponent = icon.icon;
+                      return (
+                        <SelectItem key={icon.name} value={icon.name}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="h-4 w-4" />
+                            <span className="capitalize">{icon.name}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
