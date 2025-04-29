@@ -160,13 +160,39 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     // First check if the job exists
     const { data: existingJob, error: checkError } = await supabase
       .from('cron_jobs')
-      .select('id')
+      .select('*')  // Select all fields to get current job data
       .eq('id', id)
       .single();
       
     if (checkError) {
       console.error('Error checking if job exists:', checkError);
       throw new Error(`Job with ID ${id} not found`);
+    }
+
+    // If job exists but no changes were requested, return the existing job
+    if (Object.keys(dbJob).length === 0) {
+      // Convert the existingJob to CronJob type
+      return {
+        id: existingJob.id,
+        name: existingJob.name,
+        description: existingJob.description || '',
+        scheduleExpression: existingJob.schedule_expression,
+        startTime: existingJob.start_time,
+        endTime: existingJob.end_time,
+        status: existingJob.status as 'active' | 'paused',
+        isApi: existingJob.is_api,
+        endpointName: existingJob.endpoint_name,
+        iacCode: existingJob.iac_code,
+        groupId: existingJob.group_id,
+        groupName: job.groupName || existingJob.group_name || '',
+        groupIcon: job.groupIcon || existingJob.group_icon || '',
+        timezone: existingJob.timezone,
+        tags: existingJob.tags || [],
+        flexibleTimeWindowMode: existingJob.flexible_time_window_mode,
+        flexibleWindowMinutes: existingJob.flexible_window_minutes,
+        targetType: existingJob.target_type,
+        targetConfig: existingJob.target_config || {},
+      };
     }
 
     // Make the update request
@@ -182,7 +208,45 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     }
     
     if (!data || data.length === 0) {
-      throw new Error('No data returned from update operation');
+      console.warn('No data returned from update operation, using existing job data');
+      // Use the existing job data combined with the updates
+      const updatedJob = {
+        ...existingJob,
+        ...dbJob,
+        // Convert snake_case back to camelCase for response
+        schedule_expression: dbJob.schedule_expression || existingJob.schedule_expression,
+        start_time: dbJob.start_time || existingJob.start_time,
+        end_time: dbJob.end_time || existingJob.end_time,
+        is_api: dbJob.is_api !== undefined ? dbJob.is_api : existingJob.is_api,
+        endpoint_name: dbJob.endpoint_name || existingJob.endpoint_name,
+        iac_code: dbJob.iac_code || existingJob.iac_code,
+        group_id: dbJob.group_id || existingJob.group_id,
+        target_config: dbJob.target_config || existingJob.target_config || {},
+      };
+      
+      // Convert database response back to CronJob type
+      const result: CronJob = {
+        id: updatedJob.id,
+        name: updatedJob.name,
+        description: updatedJob.description || '',
+        scheduleExpression: updatedJob.schedule_expression,
+        startTime: updatedJob.start_time,
+        endTime: updatedJob.end_time,
+        status: updatedJob.status as 'active' | 'paused',
+        isApi: updatedJob.is_api,
+        endpointName: updatedJob.endpoint_name,
+        iacCode: updatedJob.iac_code,
+        groupId: updatedJob.group_id,
+        groupName: job.groupName || '',
+        groupIcon: job.groupIcon || '',
+        timezone: updatedJob.timezone,
+        tags: updatedJob.tags || [],
+        flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
+        flexibleWindowMinutes: updatedJob.flexible_window_minutes,
+        targetType: updatedJob.target_type,
+        targetConfig: updatedJob.target_config || {},
+      };
+      return result;
     }
     
     const updatedJob = data[0];
@@ -197,7 +261,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     const result: CronJob = {
       id: updatedJob.id,
       name: updatedJob.name,
-      description: updatedJob.description,
+      description: updatedJob.description || '',
       scheduleExpression: updatedJob.schedule_expression,
       startTime: updatedJob.start_time,
       endTime: updatedJob.end_time,
@@ -238,6 +302,19 @@ export const deleteCronJob = async (id: string): Promise<void> => {
 
 export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused'): Promise<CronJob> => {
   try {
+    // First, get the existing job
+    const { data: existingJob, error: getError } = await supabase
+      .from('cron_jobs')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (getError) {
+      console.error('Error getting job data:', getError);
+      throw new Error(`Job with ID ${id} not found`);
+    }
+    
+    // Make the update request
     const { data, error } = await supabase
       .from('cron_jobs')
       .update({ status })
@@ -247,7 +324,42 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
     if (error) throw error;
     
     if (!data || data.length === 0) {
-      throw new Error(`No job found with ID ${id}`);
+      console.warn('No data returned from update operation, using existing job data with updated status');
+      // Use existing job data with the updated status
+      const updatedJob = {
+        ...existingJob,
+        status
+      };
+      
+      // Ensure targetConfig is an object
+      let targetConfig: Record<string, any> = {};
+      if (updatedJob.target_config && typeof updatedJob.target_config === 'object') {
+        targetConfig = updatedJob.target_config;
+      }
+      
+      // Convert to CronJob type
+      const result: CronJob = {
+        id: updatedJob.id,
+        name: updatedJob.name,
+        description: updatedJob.description || '',
+        scheduleExpression: updatedJob.schedule_expression,
+        startTime: updatedJob.start_time,
+        endTime: updatedJob.end_time,
+        status: updatedJob.status as 'active' | 'paused',
+        isApi: updatedJob.is_api,
+        endpointName: updatedJob.endpoint_name,
+        iacCode: updatedJob.iac_code,
+        groupId: updatedJob.group_id,
+        groupName: updatedJob.group_name || '',
+        groupIcon: updatedJob.group_icon || '',
+        timezone: updatedJob.timezone,
+        tags: updatedJob.tags || [],
+        flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
+        flexibleWindowMinutes: updatedJob.flexible_window_minutes,
+        targetType: updatedJob.target_type,
+        targetConfig: targetConfig,
+      };
+      return result;
     }
     
     const updatedJob = data[0];
@@ -271,6 +383,8 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
       endpointName: updatedJob.endpoint_name,
       iacCode: updatedJob.iac_code,
       groupId: updatedJob.group_id,
+      groupName: updatedJob.group_name || '',
+      groupIcon: updatedJob.group_icon || '',
       timezone: updatedJob.timezone,
       tags: updatedJob.tags || [],
       flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,

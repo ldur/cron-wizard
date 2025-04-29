@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, X, Search, Tags, Clock, AlarmClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -152,6 +153,7 @@ const Index = () => {
     // Refetch the job data directly before editing to ensure we have the latest
     const fetchLatestJobData = async () => {
       try {
+        // Update to pass an empty object to get the latest job data without making changes
         const latestJob = await updateCronJob(job.id, {});
         setEditingJob(latestJob);
         setIsFormVisible(true);
