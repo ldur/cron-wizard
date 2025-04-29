@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CronJob } from "@/types/CronJob";
 
@@ -42,7 +41,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
         targetConfig: targetConfig,
-        // Legacy fields - kept for backward compatibility
+        // Legacy fields are kept for backward compatibility but will be removed in the future
         function_arn: job.function_arn,
         payload: job.payload,
         state_machine_arn: job.state_machine_arn,
@@ -171,6 +170,8 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
     if (job.flexibleTimeWindowMode !== undefined) dbJob.flexible_time_window_mode = job.flexibleTimeWindowMode;
     if (job.flexibleWindowMinutes !== undefined) dbJob.flexible_window_minutes = job.flexibleWindowMinutes;
     if (job.targetType !== undefined) dbJob.target_type = job.targetType;
+    
+    // Handle targetConfig properly
     if (job.targetConfig !== undefined) {
       // Ensure targetConfig is always an object
       dbJob.target_config = 
