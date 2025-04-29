@@ -180,6 +180,15 @@ const Index = () => {
     }
   }, [jobs]);
 
+  // Add the missing handleTagToggle function
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
   // Update the filtering logic to include name filter and tag filter
   const filteredJobs = jobs.filter(job => 
     (!selectedGroup || job.groupId === selectedGroup) &&

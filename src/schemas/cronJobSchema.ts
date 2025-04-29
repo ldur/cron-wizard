@@ -23,6 +23,6 @@ export const cronJobSchema = z.object({
   flexibleWindowMinutes: z.number().nullable().optional(),
   targetType: z.enum(['LAMBDA', 'STEP_FUNCTION', 'API_GATEWAY', 'EVENTBRIDGE', 'SQS', 'ECS', 'KINESIS', 'SAGEMAKER']),
   
-  // Primary field for target configuration
-  targetConfig: z.record(z.string(), z.any()).optional(),
+  // Ensure targetConfig explicitly accepts a record type
+  targetConfig: z.record(z.string(), z.any()).optional().default({}),
 });

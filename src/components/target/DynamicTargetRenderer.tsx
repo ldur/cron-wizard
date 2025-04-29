@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -131,7 +130,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
     );
   }
 
-  // If no template is found for this target type
+  // If no template is found for this target type or templates[targetType] is not an array
   if (!templates || !templates[targetType] || !Array.isArray(templates[targetType]) || templates[targetType].length === 0) {
     return (
       <div className="p-4 border border-yellow-300 rounded bg-yellow-50">

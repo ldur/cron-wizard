@@ -287,7 +287,22 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
   }
 };
 
-// Update the toggleCronJobStatus function to fix the group_name and group_icon issue
+// Restore the deleteCronJob function that was accidentally removed
+export const deleteCronJob = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('cron_jobs')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting cron job:', error);
+    throw error;
+  }
+};
+
+// Fix the toggleCronJobStatus function to correct type issues
 export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused'): Promise<CronJob> => {
   try {
     // First, get the existing job
@@ -338,8 +353,8 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
         endpointName: updatedJob.endpoint_name,
         iacCode: updatedJob.iac_code,
         groupId: updatedJob.group_id,
-        groupName: updatedJob.group_name || '',
-        groupIcon: updatedJob.group_icon || '',
+        groupName: '', // Use empty string as fallback
+        groupIcon: '', // Use empty string as fallback
         timezone: updatedJob.timezone,
         tags: updatedJob.tags || [],
         flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
@@ -371,8 +386,8 @@ export const toggleCronJobStatus = async (id: string, status: 'active' | 'paused
       endpointName: updatedJob.endpoint_name,
       iacCode: updatedJob.iac_code,
       groupId: updatedJob.group_id,
-      groupName: updatedJob.group_name || '',
-      groupIcon: updatedJob.group_icon || '',
+      groupName: '', // Use empty string as fallback
+      groupIcon: '', // Use empty string as fallback
       timezone: updatedJob.timezone,
       tags: updatedJob.tags || [],
       flexibleTimeWindowMode: updatedJob.flexible_time_window_mode,
