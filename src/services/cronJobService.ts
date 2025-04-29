@@ -32,6 +32,32 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
         flexibleWindowMinutes: job.flexible_window_minutes,
         targetType: job.target_type,
         targetConfig: job.target_config || {},
+        // Legacy fields - kept for backward compatibility
+        function_arn: job.function_arn,
+        payload: job.payload,
+        state_machine_arn: job.state_machine_arn,
+        execution_role_arn: job.execution_role_arn,
+        input_payload: job.input_payload,
+        endpoint_url: job.endpoint_url,
+        http_method: job.http_method,
+        headers: job.headers,
+        body: job.body,
+        authorization_type: job.authorization_type,
+        event_bus_arn: job.event_bus_arn,
+        event_payload: job.event_payload,
+        queue_url: job.queue_url,
+        message_body: job.message_body,
+        message_group_id: job.message_group_id,
+        cluster_arn: job.cluster_arn,
+        task_definition_arn: job.task_definition_arn,
+        launch_type: job.launch_type,
+        network_configuration: job.network_configuration,
+        overrides: job.overrides,
+        stream_arn: job.stream_arn,
+        partition_key: job.partition_key,
+        training_job_definition_arn: job.training_job_definition_arn,
+        hyper_parameters: job.hyper_parameters,
+        input_data_config: job.input_data_config
       };
     });
 
@@ -61,7 +87,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexible_time_window_mode: job.flexibleTimeWindowMode,
       flexible_window_minutes: job.flexibleWindowMinutes,
       target_type: job.targetType,
-      target_config: job.targetConfig ? (typeof job.targetConfig === 'object' ? job.targetConfig : {}) : {}, // Ensure it's always an object
+      target_config: job.targetConfig || {}, // Primary field for target configuration
       command: job.scheduleExpression, // Required by database schema
     };
 
@@ -93,7 +119,7 @@ export const createCronJob = async (job: Omit<CronJob, 'id' | 'nextRun'>): Promi
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
-      targetConfig: data.target_config ? (typeof data.target_config === 'object' ? data.target_config : {}) : {},
+      targetConfig: data.target_config || {},
     };
   } catch (error) {
     console.error('Error creating cron job:', error);
@@ -171,7 +197,7 @@ export const updateCronJob = async (id: string, job: Partial<Omit<CronJob, 'id' 
       flexibleTimeWindowMode: data.flexible_time_window_mode,
       flexibleWindowMinutes: data.flexible_window_minutes,
       targetType: data.target_type,
-      targetConfig: data.target_config ? (typeof data.target_config === 'object' ? data.target_config : {}) : {},
+      targetConfig: data.target_config || {},
     };
     return result;
   } catch (error) {
