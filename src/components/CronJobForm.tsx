@@ -20,6 +20,7 @@ import { submitCronJob } from '@/services/cronJobFormService';
 import { listTimeZones } from 'timezone-support';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
+import DynamicTargetForm from './targetTemplates/DynamicTargetForm';
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
@@ -73,6 +74,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       flexibleTimeWindowMode: jobData?.flexibleTimeWindowMode || 'OFF',
       flexibleWindowMinutes: jobData?.flexibleWindowMinutes || null,
       targetType: jobData?.targetType || 'LAMBDA',
+      targetConfig: jobData?.targetConfig || {},
 
       // Target-specific fields
       function_arn: jobData?.function_arn || "",
@@ -124,6 +126,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         flexibleTimeWindowMode: jobData.flexibleTimeWindowMode || 'OFF',
         flexibleWindowMinutes: jobData.flexibleWindowMinutes || null,
         targetType: jobData.targetType || 'LAMBDA',
+        targetConfig: jobData.targetConfig || {},
         // Target fields also need to be reset
         function_arn: jobData?.function_arn || "",
         payload: jobData?.payload || null,
@@ -154,6 +157,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     }
   }, [jobData, form, groupId]);
 
+  // Watch targetType to detect changes
+  const selectedTargetType = form.watch("targetType");
+
   const onSubmitForm = async (values: z.infer<typeof cronJobSchema>) => {
     if (externalSubmit) {
       // Cast the form values to match the required CronJob type
@@ -176,6 +182,7 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         flexibleTimeWindowMode: values.flexibleTimeWindowMode,
         flexibleWindowMinutes: values.flexibleWindowMinutes,
         targetType: values.targetType,
+        targetConfig: values.targetConfig,
         
         // Target-specific fields
         function_arn: values.function_arn,
@@ -209,6 +216,9 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       externalSubmit(cronJobValues);
     } else {
       try {
+        // Log the final form data being submitted
+        console.log("Submitting form data:", values);
+        
         // Otherwise, use the default submit handler
         await submitCronJob(values, !!jobData);
         
@@ -234,6 +244,11 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
     }
   };
 
+  // Debug target config changes
+  useEffect(() => {
+    console.log("Current targetConfig:", form.watch("targetConfig"));
+  }, [form.watch("targetConfig")]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
@@ -255,10 +270,22 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-foreground mb-4">AWS Configuration</h2>
                 <TargetTypeField control={form.control} />
-                <TargetForm 
+                
+                {/* Dynamic Target Form based on templates */}
+                <DynamicTargetForm 
+                  targetType={selectedTargetType}
                   form={form}
-                  targetType={form.watch("targetType")}
+                  initialValues={jobData?.targetConfig}
                 />
+
+                {/* Legacy Target Form - kept for backward compatibility */}
+                <div className="mt-6 border-t pt-6 border-gray-200">
+                  <h3 className="text-lg font-medium text-foreground mb-4">Legacy Configuration</h3>
+                  <TargetForm 
+                    form={form}
+                    targetType={selectedTargetType}
+                  />
+                </div>
 
                 {/* Flexible Time Window */}
                 <div>
