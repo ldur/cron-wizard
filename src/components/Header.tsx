@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, UsersRound, Settings, CalendarClock } from "lucide-react";
+import { LayoutDashboard, UsersRound, Settings, CalendarClock, Target } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -38,6 +38,16 @@ const Header = () => {
             <Link to="/groups" className="flex items-center gap-2">
               <UsersRound className="h-4 w-4" />
               Groups
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant={isActive("/target-templates") ? "default" : "ghost"}
+          >
+            <Link to="/target-templates" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Target Templates
             </Link>
           </Button>
 
