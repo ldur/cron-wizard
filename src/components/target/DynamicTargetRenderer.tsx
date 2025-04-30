@@ -20,11 +20,15 @@ interface TemplateAttribute {
   name: string;
   data_type: "string" | "number" | "boolean" | "json";
   required: boolean;
-  default_value: any;
+  value: any;
 }
 
-interface TargetTemplate {
-  [key: string]: TemplateAttribute[];
+interface TargetTemplateData {
+  attributes: TemplateAttribute[];
+}
+
+interface TargetTemplates {
+  [key: string]: TargetTemplateData;
 }
 
 interface DynamicTargetRendererProps {
@@ -53,10 +57,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
         .single();
         
       if (error) throw error;
-      
-      // Add explicit type casting to handle the JSON response properly
-      const targetTemplates = data?.target_templates as unknown as TargetTemplate || {};
-      return targetTemplates;
+      return data?.target_templates as TargetTemplates || {};
     },
   });
 
@@ -66,13 +67,15 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
       // Initialize form values for the selected target type
       const defaultValues: Record<string, any> = {};
       
-      // Ensure templates[targetType] is an array before using forEach
-      if (Array.isArray(templates[targetType])) {
-        templates[targetType].forEach(attr => {
+      // Get attributes array from the new template structure
+      const attributes = templates[targetType]?.attributes;
+      
+      if (Array.isArray(attributes)) {
+        attributes.forEach(attr => {
           // If we have an initial value, use it, otherwise use the default from template
           const initialValue = initialValues && initialValues[attr.name] !== undefined 
             ? initialValues[attr.name] 
-            : attr.default_value;
+            : attr.value;
             
           defaultValues[attr.name] = initialValue;
         });
@@ -134,8 +137,8 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
     );
   }
 
-  // If no template is found for this target type or templates[targetType] is not an array
-  if (!templates || !templates[targetType] || !Array.isArray(templates[targetType]) || templates[targetType].length === 0) {
+  // Check if the template exists and has attributes array
+  if (!templates || !templates[targetType] || !Array.isArray(templates[targetType]?.attributes) || templates[targetType]?.attributes.length === 0) {
     return (
       <div className="p-4 border border-yellow-300 rounded bg-yellow-50">
         <p className="text-yellow-800">
@@ -147,7 +150,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
 
   return (
     <div className="space-y-4">
-      {Array.isArray(templates[targetType]) && templates[targetType].map((attribute) => (
+      {Array.isArray(templates[targetType]?.attributes) && templates[targetType]?.attributes.map((attribute) => (
         <div key={attribute.name} className="space-y-2">
           {attribute.data_type === "boolean" ? (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
