@@ -1,10 +1,32 @@
 
 import { useState } from "react";
-import { Plus, Edit, Trash2, X, Check, Briefcase, Folder } from "lucide-react";
+import { 
+  Plus, Edit, Trash2, X, Check, Briefcase, Folder,
+  // Reports icons
+  FileText, FileSpreadsheet, ClipboardList, Receipt, ChartBar, ChartPie, BarChart4, LineChart, PieChart, Presentation,
+  // Calendar icons
+  Calendar, CalendarDays, CalendarClock, CalendarRange, Clock, Timer, Hourglass, Alarm, AlarmClock, CalendarCheck, 
+  // Cloud operation icons
+  Cloud, CloudCog, Database, Server, ServerCog, CloudUpload, CloudDownload, CloudOff, Laptop, Globe,
+  // Maintenance icons
+  Wrench, Settings, Cog, Tool, Hammer, Screwdriver, HardHat, ShieldAlert, Bell, BellRing
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { createGroup, updateGroup, deleteGroup } from "@/services/cronJobService";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,12 +40,60 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   const [editingGroup, setEditingGroup] = useState<any | null>(null);
   const [groupName, setGroupName] = useState("");
   const [iconName, setIconName] = useState("folder");
+  const [iconSearchOpen, setIconSearchOpen] = useState(false);
   const { toast } = useToast();
 
-  // Available icons for groups - we're starting with just two options
+  // Available icons for groups - organized by category
   const availableIcons = [
-    { name: "folder", icon: Folder },
-    { name: "briefcase", icon: Briefcase }
+    // Reports category
+    { name: "file-text", icon: FileText, category: "Reports" },
+    { name: "file-spreadsheet", icon: FileSpreadsheet, category: "Reports" },
+    { name: "clipboard-list", icon: ClipboardList, category: "Reports" },
+    { name: "receipt", icon: Receipt, category: "Reports" },
+    { name: "chart-bar", icon: ChartBar, category: "Reports" },
+    { name: "chart-pie", icon: ChartPie, category: "Reports" },
+    { name: "bar-chart-4", icon: BarChart4, category: "Reports" },
+    { name: "line-chart", icon: LineChart, category: "Reports" },
+    { name: "pie-chart", icon: PieChart, category: "Reports" },
+    { name: "presentation", icon: Presentation, category: "Reports" },
+    
+    // Calendar category
+    { name: "calendar", icon: Calendar, category: "Calendar" },
+    { name: "calendar-days", icon: CalendarDays, category: "Calendar" },
+    { name: "calendar-clock", icon: CalendarClock, category: "Calendar" },
+    { name: "calendar-range", icon: CalendarRange, category: "Calendar" },
+    { name: "calendar-check", icon: CalendarCheck, category: "Calendar" },
+    { name: "clock", icon: Clock, category: "Calendar" },
+    { name: "timer", icon: Timer, category: "Calendar" },
+    { name: "hourglass", icon: Hourglass, category: "Calendar" },
+    { name: "alarm", icon: Alarm, category: "Calendar" },
+    { name: "alarm-clock", icon: AlarmClock, category: "Calendar" },
+    
+    // Cloud operations category
+    { name: "cloud", icon: Cloud, category: "Cloud Operations" },
+    { name: "cloud-cog", icon: CloudCog, category: "Cloud Operations" },
+    { name: "cloud-upload", icon: CloudUpload, category: "Cloud Operations" },
+    { name: "cloud-download", icon: CloudDownload, category: "Cloud Operations" },
+    { name: "cloud-off", icon: CloudOff, category: "Cloud Operations" },
+    { name: "database", icon: Database, category: "Cloud Operations" },
+    { name: "server", icon: Server, category: "Cloud Operations" },
+    { name: "server-cog", icon: ServerCog, category: "Cloud Operations" },
+    { name: "laptop", icon: Laptop, category: "Cloud Operations" },
+    { name: "globe", icon: Globe, category: "Cloud Operations" },
+    
+    // Maintenance category
+    { name: "folder", icon: Folder, category: "Other" },
+    { name: "briefcase", icon: Briefcase, category: "Other" },
+    { name: "wrench", icon: Wrench, category: "Maintenance" },
+    { name: "settings", icon: Settings, category: "Maintenance" },
+    { name: "cog", icon: Cog, category: "Maintenance" },
+    { name: "tool", icon: Tool, category: "Maintenance" },
+    { name: "hammer", icon: Hammer, category: "Maintenance" },
+    { name: "screwdriver", icon: Screwdriver, category: "Maintenance" },
+    { name: "hard-hat", icon: HardHat, category: "Maintenance" },
+    { name: "shield-alert", icon: ShieldAlert, category: "Maintenance" },
+    { name: "bell", icon: Bell, category: "Maintenance" },
+    { name: "bell-ring", icon: BellRing, category: "Maintenance" }
   ];
 
   // Helper function to get icon component by name
@@ -31,6 +101,15 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
     const iconObj = availableIcons.find(i => i.name === name);
     return iconObj ? iconObj.icon : Folder; // Default to Folder if not found
   };
+
+  // Group icons by category
+  const iconCategories = availableIcons.reduce((acc, icon) => {
+    if (!acc[icon.category]) {
+      acc[icon.category] = [];
+    }
+    acc[icon.category].push(icon);
+    return acc;
+  }, {} as Record<string, typeof availableIcons>);
 
   const handleOpenDialog = (group?: any) => {
     if (group) {
@@ -183,24 +262,57 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
                 <label htmlFor="iconName" className="text-sm font-medium">
                   Icon
                 </label>
-                <Select value={iconName} onValueChange={setIconName}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an icon" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableIcons.map(icon => {
-                      const IconComponent = icon.icon;
-                      return (
-                        <SelectItem key={icon.name} value={icon.name}>
-                          <div className="flex items-center gap-2">
-                            <IconComponent className="h-4 w-4" />
-                            <span className="capitalize">{icon.name}</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                
+                <Popover open={iconSearchOpen} onOpenChange={setIconSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={iconSearchOpen}
+                      className="w-full justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const IconComponent = getIconComponent(iconName);
+                          return <IconComponent className="h-4 w-4" />;
+                        })()}
+                        <span className="capitalize">{iconName.replace(/-/g, ' ')}</span>
+                      </div>
+                      <ChartBar className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search icons..." />
+                      <CommandEmpty>No icon found.</CommandEmpty>
+                      <div className="max-h-[300px] overflow-y-auto">
+                        {Object.entries(iconCategories).map(([category, icons]) => (
+                          <CommandGroup key={category} heading={category}>
+                            {icons.map((icon) => {
+                              const IconComponent = icon.icon;
+                              return (
+                                <CommandItem
+                                  key={icon.name}
+                                  value={icon.name}
+                                  onSelect={(currentValue) => {
+                                    setIconName(currentValue);
+                                    setIconSearchOpen(false);
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <IconComponent className="h-4 w-4" />
+                                    <span className="capitalize">{icon.name.replace(/-/g, ' ')}</span>
+                                  </div>
+                                  {iconName === icon.name && <Check className="h-4 w-4 ml-auto" />}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        ))}
+                      </div>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
