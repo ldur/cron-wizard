@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { availableIcons } from "./iconData";
 import { getIconComponent } from "./utils";
 
@@ -40,22 +41,24 @@ export const IconPicker = ({ value, onChange }: IconPickerProps) => {
         </div>
       </SelectTrigger>
       <SelectContent className="max-h-[300px]">
-        {Object.entries(iconsByCategory).map(([category, icons]) => (
-          <SelectGroup key={category}>
-            <SelectLabel>{category}</SelectLabel>
-            {icons.map((icon) => {
-              const ItemIcon = icon.icon;
-              return (
-                <SelectItem key={icon.name} value={icon.name}>
-                  <div className="flex items-center gap-2">
-                    <ItemIcon className="h-4 w-4" />
-                    <span className="capitalize">{icon.name.replace(/-/g, ' ')}</span>
-                  </div>
-                </SelectItem>
-              );
-            })}
-          </SelectGroup>
-        ))}
+        <ScrollArea className="h-[300px]">
+          {Object.entries(iconsByCategory).map(([category, icons]) => (
+            <SelectGroup key={category}>
+              <SelectLabel>{category}</SelectLabel>
+              {icons.map((icon) => {
+                const ItemIcon = icon.icon;
+                return (
+                  <SelectItem key={icon.name} value={icon.name}>
+                    <div className="flex items-center gap-2">
+                      <ItemIcon className="h-4 w-4" />
+                      <span className="capitalize">{icon.name.replace(/-/g, ' ')}</span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectGroup>
+          ))}
+        </ScrollArea>
       </SelectContent>
     </Select>
   );
