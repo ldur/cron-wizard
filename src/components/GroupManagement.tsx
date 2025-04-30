@@ -34,6 +34,13 @@ interface GroupManagementProps {
   onGroupsChanged: () => void;
 }
 
+// Define the icon type for better type safety
+interface IconItem {
+  name: string;
+  icon: React.ComponentType<any>;
+  category: string;
+}
+
 const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any | null>(null);
@@ -43,7 +50,7 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   const { toast } = useToast();
 
   // Available icons for groups - organized by category
-  const availableIcons = [
+  const availableIcons: IconItem[] = [
     // Reports category
     { name: "file-text", icon: FileText, category: "Reports" },
     { name: "file-spreadsheet", icon: FileSpreadsheet, category: "Reports" },
@@ -98,16 +105,22 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
     return iconObj ? iconObj.icon : Folder; // Default to Folder if not found
   };
 
-  // Group icons by category
-  const iconCategories = Object.entries(
-    availableIcons.reduce<Record<string, typeof availableIcons>>((acc, icon) => {
-      if (!acc[icon.category]) {
-        acc[icon.category] = [];
+  // Group icons by category - fixed to ensure we always have a valid iterable result
+  const groupIconsByCategory = () => {
+    const categorizedIcons: Record<string, IconItem[]> = {};
+    
+    availableIcons.forEach(icon => {
+      if (!categorizedIcons[icon.category]) {
+        categorizedIcons[icon.category] = [];
       }
-      acc[icon.category].push(icon);
-      return acc;
-    }, {})
-  );
+      categorizedIcons[icon.category].push(icon);
+    });
+    
+    return Object.entries(categorizedIcons);
+  };
+  
+  // Get categorized icons - this ensures we always have a valid array to map over
+  const iconCategories = groupIconsByCategory();
 
   const handleOpenDialog = (group?: any) => {
     if (group) {
@@ -148,7 +161,7 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
       }
       setIsDialogOpen(false);
       onGroupsChanged();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: `Failed to ${editingGroup ? "update" : "create"} group: ${error.message}`,
@@ -180,7 +193,7 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
         description: "The group has been deleted successfully.",
       });
       onGroupsChanged();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: `Failed to delete group: ${error.message}`,
