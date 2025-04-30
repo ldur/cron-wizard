@@ -11,15 +11,13 @@ interface GroupItemProps {
 }
 
 export const GroupItem = ({ group, onEdit, onDelete }: GroupItemProps) => {
-  const IconComponent = getIconComponent(group.icon_name || "folder");
+  const IconComponent = getIconComponent(group.icon_name);
   const isDefaultGroup = group.name === "Default";
 
   return (
-    <div
-      className="flex justify-between items-center p-2 border rounded-md hover:bg-muted/50"
-    >
+    <div className="flex justify-between items-center p-2 border rounded-md hover:bg-muted/50">
       <div className="flex items-center gap-2">
-        <IconComponent className="h-4 w-4 text-blue-500" />
+        {IconComponent && <IconComponent className="h-4 w-4 text-blue-500" />}
         <span>{group.name}</span>
       </div>
       <div className="flex gap-2">

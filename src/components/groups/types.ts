@@ -3,7 +3,7 @@
 export interface Group {
   id: string;
   name: string;
-  icon_name?: string;
+  icon_name: string; // Make this required, not optional
 }
 
 export interface IconItem {
@@ -13,4 +13,4 @@ export interface IconItem {
 }
 
 // Type for the categorized icons
-export type IconCategories = [string, IconItem[]][];
+export type IconCategories = Record<string, IconItem[]>;

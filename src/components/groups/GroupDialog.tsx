@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Group } from "./types";
 import { IconPicker } from "./IconPicker";
+import { getDefaultIcon } from "./utils";
 
 interface GroupDialogProps {
   isOpen: boolean;
@@ -22,15 +23,15 @@ interface GroupDialogProps {
 
 export const GroupDialog = ({ isOpen, onClose, onSave, group }: GroupDialogProps) => {
   const [groupName, setGroupName] = useState("");
-  const [iconName, setIconName] = useState("folder");
+  const [iconName, setIconName] = useState(getDefaultIcon().name);
   
   useEffect(() => {
     if (group) {
       setGroupName(group.name);
-      setIconName(group.icon_name || "folder");
+      setIconName(group.icon_name || getDefaultIcon().name);
     } else {
       setGroupName("");
-      setIconName("folder");
+      setIconName(getDefaultIcon().name);
     }
   }, [group, isOpen]);
 
