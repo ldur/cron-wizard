@@ -1,15 +1,14 @@
-
 import { useState } from "react";
 import { 
   Plus, Edit, Trash2, X, Check, Briefcase, Folder,
   // Reports icons
   FileText, FileSpreadsheet, ClipboardList, Receipt, ChartBar, ChartPie, BarChart4, LineChart, PieChart, Presentation,
   // Calendar icons
-  Calendar, CalendarDays, CalendarClock, CalendarRange, Clock, Timer, Hourglass, Alarm, AlarmClock, CalendarCheck, 
+  Calendar, CalendarDays, CalendarClock, CalendarRange, Clock, Timer, Hourglass, AlarmClock, CalendarCheck, 
   // Cloud operation icons
   Cloud, CloudCog, Database, Server, ServerCog, CloudUpload, CloudDownload, CloudOff, Laptop, Globe,
   // Maintenance icons
-  Wrench, Settings, Cog, Tool, Hammer, Screwdriver, HardHat, ShieldAlert, Bell, BellRing
+  Wrench, Settings, Cog, Hammer, HardHat, ShieldAlert, Bell, BellRing
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +65,6 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
     { name: "clock", icon: Clock, category: "Calendar" },
     { name: "timer", icon: Timer, category: "Calendar" },
     { name: "hourglass", icon: Hourglass, category: "Calendar" },
-    { name: "alarm", icon: Alarm, category: "Calendar" },
     { name: "alarm-clock", icon: AlarmClock, category: "Calendar" },
     
     // Cloud operations category
@@ -87,9 +85,7 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
     { name: "wrench", icon: Wrench, category: "Maintenance" },
     { name: "settings", icon: Settings, category: "Maintenance" },
     { name: "cog", icon: Cog, category: "Maintenance" },
-    { name: "tool", icon: Tool, category: "Maintenance" },
     { name: "hammer", icon: Hammer, category: "Maintenance" },
-    { name: "screwdriver", icon: Screwdriver, category: "Maintenance" },
     { name: "hard-hat", icon: HardHat, category: "Maintenance" },
     { name: "shield-alert", icon: ShieldAlert, category: "Maintenance" },
     { name: "bell", icon: Bell, category: "Maintenance" },
