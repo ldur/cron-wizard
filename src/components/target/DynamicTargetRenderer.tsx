@@ -66,14 +66,17 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
       // Initialize form values for the selected target type
       const defaultValues: Record<string, any> = {};
       
-      templates[targetType].forEach(attr => {
-        // If we have an initial value, use it, otherwise use the default from template
-        const initialValue = initialValues && initialValues[attr.name] !== undefined 
-          ? initialValues[attr.name] 
-          : attr.default_value;
-          
-        defaultValues[attr.name] = initialValue;
-      });
+      // Ensure templates[targetType] is an array before using forEach
+      if (Array.isArray(templates[targetType])) {
+        templates[targetType].forEach(attr => {
+          // If we have an initial value, use it, otherwise use the default from template
+          const initialValue = initialValues && initialValues[attr.name] !== undefined 
+            ? initialValues[attr.name] 
+            : attr.default_value;
+            
+          defaultValues[attr.name] = initialValue;
+        });
+      }
       
       // Update the target_config field in the form
       form.setValue('targetConfig', defaultValues);
