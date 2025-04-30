@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { 
-  Plus, Edit, Trash2, X, Check, Briefcase, Folder,
+  Plus, Edit, Trash2, X, Check, Briefcase, Folder, ChartBar,
   // Reports icons
-  FileText, FileSpreadsheet, ClipboardList, Receipt, ChartBar, ChartPie, BarChart4, LineChart, PieChart, Presentation,
+  FileText, FileSpreadsheet, ClipboardList, Receipt, ChartBar as ChartBarIcon, ChartPie, BarChart4, LineChart, PieChart, Presentation,
   // Calendar icons
   Calendar, CalendarDays, CalendarClock, CalendarRange, Clock, Timer, Hourglass, AlarmClock, CalendarCheck, 
   // Cloud operation icons
@@ -13,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Command,
   CommandEmpty,
@@ -49,7 +49,7 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
     { name: "file-spreadsheet", icon: FileSpreadsheet, category: "Reports" },
     { name: "clipboard-list", icon: ClipboardList, category: "Reports" },
     { name: "receipt", icon: Receipt, category: "Reports" },
-    { name: "chart-bar", icon: ChartBar, category: "Reports" },
+    { name: "chart-bar", icon: ChartBarIcon, category: "Reports" },
     { name: "chart-pie", icon: ChartPie, category: "Reports" },
     { name: "bar-chart-4", icon: BarChart4, category: "Reports" },
     { name: "line-chart", icon: LineChart, category: "Reports" },
@@ -99,13 +99,15 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   };
 
   // Group icons by category
-  const iconCategories = availableIcons.reduce((acc, icon) => {
-    if (!acc[icon.category]) {
-      acc[icon.category] = [];
-    }
-    acc[icon.category].push(icon);
-    return acc;
-  }, {} as Record<string, typeof availableIcons>);
+  const iconCategories = Object.entries(
+    availableIcons.reduce<Record<string, typeof availableIcons>>((acc, icon) => {
+      if (!acc[icon.category]) {
+        acc[icon.category] = [];
+      }
+      acc[icon.category].push(icon);
+      return acc;
+    }, {})
+  );
 
   const handleOpenDialog = (group?: any) => {
     if (group) {
@@ -282,7 +284,7 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
                       <CommandInput placeholder="Search icons..." />
                       <CommandEmpty>No icon found.</CommandEmpty>
                       <div className="max-h-[300px] overflow-y-auto">
-                        {Object.entries(iconCategories).map(([category, icons]) => (
+                        {iconCategories.map(([category, icons]) => (
                           <CommandGroup key={category} heading={category}>
                             {icons.map((icon) => {
                               const IconComponent = icon.icon;
