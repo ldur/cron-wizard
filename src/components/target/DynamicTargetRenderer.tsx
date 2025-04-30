@@ -57,7 +57,13 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
         .single();
         
       if (error) throw error;
-      return data?.target_templates as TargetTemplates || {};
+      
+      // Add explicit type checking and conversion
+      const rawTemplates = data?.target_templates;
+      if (rawTemplates && typeof rawTemplates === 'object' && !Array.isArray(rawTemplates)) {
+        return rawTemplates as unknown as TargetTemplates;
+      }
+      return {} as TargetTemplates;
     },
   });
 

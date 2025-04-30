@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, AlertTriangle } from "lucide-react";
@@ -57,11 +56,20 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
 
         if (error) throw error;
 
-        if (data?.target_templates && data.target_templates[targetType]) {
-          // Handle the new structure where attributes are inside an 'attributes' property
-          setAttributes(data.target_templates[targetType].attributes || []);
+        // Safely access the target_templates field
+        const rawTemplates = data?.target_templates;
+        if (rawTemplates && typeof rawTemplates === 'object' && !Array.isArray(rawTemplates)) {
+          const templates = rawTemplates as Record<string, any>;
+          
+          if (templates[targetType] && 
+              typeof templates[targetType] === 'object' && 
+              Array.isArray(templates[targetType].attributes)) {
+            setAttributes(templates[targetType].attributes || []);
+          } else {
+            // Initialize with empty array if template doesn't exist
+            setAttributes([]);
+          }
         } else {
-          // Initialize with empty array if template doesn't exist
           setAttributes([]);
         }
       } catch (error) {
@@ -121,13 +129,16 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
       // Get current templates
       const { data, error } = await supabase
         .from('settings')
-        .select('target_templates')
+        .select('target_templates, id')
         .single();
 
       if (error) throw error;
 
-      // Prepare updated templates object
-      const targetTemplates: TargetTemplates = data?.target_templates || {};
+      // Prepare updated templates object with proper type casting
+      let targetTemplates: Record<string, any> = {};
+      if (data?.target_templates && typeof data.target_templates === 'object' && !Array.isArray(data.target_templates)) {
+        targetTemplates = data.target_templates as Record<string, any>;
+      }
       
       // Update with the new format
       targetTemplates[targetType] = { attributes: attributes };
@@ -172,14 +183,17 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
       // Get current templates
       const { data, error } = await supabase
         .from('settings')
-        .select('target_templates')
+        .select('target_templates, id')
         .single();
 
       if (error) throw error;
 
       // Prepare updated templates object with the target type removed
-      const targetTemplates = data?.target_templates || {};
-      delete targetTemplates[targetType];
+      let targetTemplates: Record<string, any> = {};
+      if (data?.target_templates && typeof data.target_templates === 'object' && !Array.isArray(data.target_templates)) {
+        targetTemplates = data.target_templates as Record<string, any>;
+        delete targetTemplates[targetType];
+      }
 
       // Update database
       const { error: updateError } = await supabase
@@ -212,6 +226,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
     }
   };
 
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

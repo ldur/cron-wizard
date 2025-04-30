@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { TargetType, TargetTemplates, TemplateAttribute } from "@/pages/TargetTemplates";
+import { TargetType, TargetTemplateData } from "@/pages/TargetTemplates";
 
 interface TargetTemplatesTableProps {
   selectedTargetType: TargetType | null;
@@ -18,7 +18,7 @@ export const TargetTemplatesTable = ({
 }: TargetTemplatesTableProps) => {
   const [targetTypes, setTargetTypes] = useState<TargetType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [targetTemplates, setTargetTemplates] = useState<TargetTemplates | null>(null);
+  const [targetTemplates, setTargetTemplates] = useState<Record<string, TargetTemplateData> | null>(null);
   const { toast } = useToast();
 
   const allTargetTypes: TargetType[] = [
@@ -38,16 +38,18 @@ export const TargetTemplatesTable = ({
         if (error) throw error;
 
         // Get existing target templates or initialize empty object
-        const templates: TargetTemplates = {};
+        const templates: Record<string, TargetTemplateData> = {};
         
         if (data?.target_templates && 
             typeof data.target_templates === 'object' && 
             !Array.isArray(data.target_templates)) {
           
           // Process each key in the target_templates object
-          Object.keys(data.target_templates).forEach(key => {
+          const rawTemplates = data.target_templates as Record<string, any>;
+          
+          Object.keys(rawTemplates).forEach(key => {
             const targetType = key as TargetType;
-            const templateData = data.target_templates[key];
+            const templateData = rawTemplates[key];
             
             // Safely check if the templateData has the expected structure
             if (templateData && 
@@ -56,14 +58,14 @@ export const TargetTemplatesTable = ({
                 'attributes' in templateData && 
                 Array.isArray(templateData.attributes)) {
               
-              const attributes = templateData.attributes.map((attr: any) => ({
-                name: String(attr.name || ''),
-                data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
-                required: Boolean(attr.required),
-                default_value: attr.value
-              }));
-              
-              templates[targetType] = attributes as TemplateAttribute[];
+              templates[targetType] = {
+                attributes: templateData.attributes.map((attr: any) => ({
+                  name: String(attr.name || ''),
+                  data_type: (attr.data_type as "string" | "number" | "boolean" | "json") || "string",
+                  required: Boolean(attr.required),
+                  value: attr.value
+                }))
+              };
             }
           });
         }
@@ -91,8 +93,8 @@ export const TargetTemplatesTable = ({
   }, [toast]);
 
   const getAttributeCount = (targetType: TargetType): number => {
-    if (!targetTemplates || !targetTemplates[targetType]) return 0;
-    return targetTemplates[targetType].length;
+    if (!targetTemplates || !targetTemplates[targetType] || !targetTemplates[targetType].attributes) return 0;
+    return targetTemplates[targetType].attributes.length;
   };
 
   return (

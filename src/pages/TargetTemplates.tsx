@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import { TargetTemplatesTable } from "@/components/targetTemplates/TargetTemplatesTable";
 import { TargetTypeEditor } from "@/components/targetTemplates/TargetTypeEditor";
-import { Database } from "@/integrations/supabase/types";
 
 // Define a type for target type
 export type TargetType = "LAMBDA" | "STEP_FUNCTION" | "API_GATEWAY" | "EVENTBRIDGE" | "SQS" | "ECS" | "KINESIS" | "SAGEMAKER";
@@ -14,12 +13,17 @@ export interface TemplateAttribute {
   name: string;
   data_type: "string" | "number" | "boolean" | "json";
   required: boolean;
-  default_value?: string | number | boolean | null;
+  value?: any;
 }
 
 // Define shape of target templates structure
+export interface TargetTemplateData {
+  attributes: TemplateAttribute[];
+}
+
+// Define the template structure
 export interface TargetTemplates {
-  [key: string]: TemplateAttribute[];
+  [key: string]: TargetTemplateData;
 }
 
 const TargetTemplatesPage = () => {
