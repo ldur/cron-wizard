@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree, Briefcase, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
 import CronJobIacDialog from "./CronJobIacDialog";
 import { getTargetTypeIcon, targetTypeLabels } from "@/utils/targetTypeIcons";
+import { getIconComponent } from "./groups/utils";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -55,15 +55,10 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
   };
 
-  // Helper function to get the appropriate icon for a group
+  // Updated getGroupIcon function to use the getIconComponent utility
   const getGroupIcon = (iconName: string | undefined) => {
-    switch (iconName) {
-      case 'briefcase':
-        return <Briefcase className="h-4 w-4 text-blue-500 mr-2" />;
-      case 'folder':
-      default:
-        return <Folder className="h-4 w-4 text-blue-500 mr-2" />;
-    }
+    const IconComponent = getIconComponent(iconName || 'folder');
+    return IconComponent ? <IconComponent className="h-4 w-4 text-blue-500 mr-2" /> : null;
   };
 
   const sortedJobs = [...jobs].sort((a, b) => {
