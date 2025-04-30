@@ -41,6 +41,9 @@ interface IconItem {
   category: string;
 }
 
+// Type for the categorized icons
+type IconCategories = [string, IconItem[]][];
+
 const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any | null>(null);
@@ -106,9 +109,11 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
   };
 
   // Group icons by category - fixed to ensure we always have a valid iterable result
-  const groupIconsByCategory = () => {
+  const groupIconsByCategory = (): IconCategories => {
+    // Initialize with an empty object
     const categorizedIcons: Record<string, IconItem[]> = {};
     
+    // Group icons by their category
     availableIcons.forEach(icon => {
       if (!categorizedIcons[icon.category]) {
         categorizedIcons[icon.category] = [];
@@ -116,11 +121,12 @@ const GroupManagement = ({ groups, onGroupsChanged }: GroupManagementProps) => {
       categorizedIcons[icon.category].push(icon);
     });
     
+    // Convert to array of [category, icons[]] entries
     return Object.entries(categorizedIcons);
   };
   
-  // Get categorized icons - this ensures we always have a valid array to map over
-  const iconCategories = groupIconsByCategory();
+  // Get categorized icons - explicitly cast to ensure correct typing
+  const iconCategories: IconCategories = groupIconsByCategory();
 
   const handleOpenDialog = (group?: any) => {
     if (group) {
