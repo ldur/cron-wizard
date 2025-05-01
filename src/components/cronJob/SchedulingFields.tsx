@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, TextQuote } from "lucide-react";
 import {
   FormField,
   FormItem,
@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Control, useFormContext } from "react-hook-form";
 import TimeZoneSelect from "@/components/TimeZoneSelect";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import CronExpressionBuilder from "./CronExpressionBuilder";
 
 interface SchedulingFieldsProps {
   control: Control<any>;
@@ -27,11 +29,12 @@ interface SchedulingFieldsProps {
 
 const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
   const form = useFormContext();
+  const [scheduleMode, setScheduleMode] = useState<'builder' | 'manual'>('builder');
   
   return (
     <>
       <div className="grid grid-cols-1 gap-4">
-        {/* Schedule Expression */}
+        {/* Schedule Expression with Tabs for Builder and Manual Input */}
         <FormField
           control={control}
           name="scheduleExpression"
@@ -39,7 +42,25 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
             <FormItem>
               <FormLabel>Schedule Expression</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 0 0 * * *" {...field} />
+                <Tabs 
+                  defaultValue="builder" 
+                  className="w-full"
+                  onValueChange={(value) => setScheduleMode(value as 'builder' | 'manual')}
+                >
+                  <TabsList className="mb-2">
+                    <TabsTrigger value="builder">Builder</TabsTrigger>
+                    <TabsTrigger value="manual">Manual</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="builder">
+                    <CronExpressionBuilder value={field.value} onChange={field.onChange} />
+                  </TabsContent>
+                  <TabsContent value="manual">
+                    <div className="flex items-center">
+                      <TextQuote className="mr-2 h-4 w-4 opacity-70" />
+                      <Input placeholder="e.g., 0 0 * * *" {...field} />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </FormControl>
               <FormMessage />
             </FormItem>
