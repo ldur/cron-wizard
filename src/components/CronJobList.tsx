@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
 import CronJobIacDialog from "./CronJobIacDialog";
 import { getTargetTypeIcon, targetTypeLabels } from "@/utils/targetTypeIcons";
+import { getIconComponent } from "@/components/groups/utils";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -55,15 +56,13 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
   };
 
-  // Helper function to get the appropriate icon for a group
+  // Use the getIconComponent utility to get the appropriate icon for a group
   const getGroupIcon = (iconName: string | undefined) => {
-    switch (iconName) {
-      case 'briefcase':
-        return <Briefcase className="h-4 w-4 text-blue-500 mr-2" />;
-      case 'folder':
-      default:
-        return <Folder className="h-4 w-4 text-blue-500 mr-2" />;
+    const IconComponent = getIconComponent(iconName);
+    if (IconComponent) {
+      return <IconComponent className="h-4 w-4 text-blue-500 mr-2" />;
     }
+    return <Folder className="h-4 w-4 text-blue-500 mr-2" />;
   };
 
   const sortedJobs = [...jobs].sort((a, b) => {
