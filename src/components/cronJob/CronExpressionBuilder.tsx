@@ -33,6 +33,7 @@ export const CronExpressionBuilder: React.FC<CronExpressionBuilderProps> = ({
 
   // Initial state from provided value
   const [cronParts, setCronParts] = useState<CronParts>(parseCronExpression(value));
+  const [cronExpression, setCronExpression] = useState<string>(value);
 
   interface CronParts {
     minute: string;
@@ -68,6 +69,7 @@ export const CronExpressionBuilder: React.FC<CronExpressionBuilderProps> = ({
   // Combine parts into a cron expression and call parent onChange
   useEffect(() => {
     const newCronExpression = `${cronParts.minute} ${cronParts.hour} ${cronParts.dayOfMonth} ${cronParts.month} ${cronParts.dayOfWeek}`;
+    setCronExpression(newCronExpression);
     onChange(newCronExpression);
   }, [cronParts, onChange]);
 
@@ -209,6 +211,15 @@ export const CronExpressionBuilder: React.FC<CronExpressionBuilderProps> = ({
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Display current cron expression */}
+      <div className="mt-6 p-3 bg-muted rounded-md">
+        <FormLabel className="block mb-1">Current Cron Expression:</FormLabel>
+        <code className="text-sm font-mono bg-background p-2 rounded border block w-full">{cronExpression}</code>
+        <p className="text-xs text-muted-foreground mt-2">
+          Format: minute hour day-of-month month day-of-week
+        </p>
       </div>
     </div>
   );
