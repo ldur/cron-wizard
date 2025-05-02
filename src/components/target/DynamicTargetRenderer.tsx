@@ -68,13 +68,16 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
       const rawTemplates = data?.target_templates;
       if (rawTemplates && typeof rawTemplates === 'object' && !Array.isArray(rawTemplates)) {
         // Extract global variables if available
-        if (rawTemplates["GLOBAL_VARIABLES"] && 
-            typeof rawTemplates["GLOBAL_VARIABLES"] === 'object' &&
-            rawTemplates["GLOBAL_VARIABLES"].attributes && 
-            Array.isArray(rawTemplates["GLOBAL_VARIABLES"].attributes)) {
+        const globalVarsObject = rawTemplates["GLOBAL_VARIABLES"];
+        
+        if (globalVarsObject && 
+            typeof globalVarsObject === 'object' && 
+            !Array.isArray(globalVarsObject) && 
+            'attributes' in globalVarsObject && 
+            Array.isArray(globalVarsObject.attributes)) {
           
           const globalVars: Record<string, string> = {};
-          rawTemplates["GLOBAL_VARIABLES"].attributes.forEach((attr: any) => {
+          globalVarsObject.attributes.forEach((attr: any) => {
             if (attr.name && attr.value !== undefined) {
               globalVars[attr.name] = String(attr.value);
             }
