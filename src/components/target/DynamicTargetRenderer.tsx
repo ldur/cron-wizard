@@ -160,7 +160,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
     form.setValue('targetConfig', updatedConfig);
   };
   
-  // Function to replace all variables in all fields
+  // Function to replace all variables in all fields without submitting the form
   const handleReplaceAllVariables = () => {
     if (!templates || !targetType || !templates[targetType]) return;
     
@@ -261,6 +261,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
               size="sm" 
               className="ml-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
               onClick={handleReplaceAllVariables}
+              type="button" // Explicitly set to button to avoid form submission
             >
               <RefreshCw className="h-4 w-4 mr-1" /> Replace Variables
             </Button>
