@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormControl, FormDescription, FormItem, FormLabel } from '@/components/ui/form';
-import { parseSchedule } from '@/utils/cronParser';
 
 interface CronExpressionBuilderProps {
   value: string;
@@ -35,7 +34,6 @@ export const CronExpressionBuilder: React.FC<CronExpressionBuilderProps> = ({
   // Initial state from provided value
   const [cronParts, setCronParts] = useState<CronParts>(parseCronExpression(value));
   const [cronExpression, setCronExpression] = useState<string>(value);
-  const [humanReadable, setHumanReadable] = useState<string>('');
 
   interface CronParts {
     minute: string;
@@ -72,11 +70,6 @@ export const CronExpressionBuilder: React.FC<CronExpressionBuilderProps> = ({
   useEffect(() => {
     const newCronExpression = `${cronParts.minute} ${cronParts.hour} ${cronParts.dayOfMonth} ${cronParts.month} ${cronParts.dayOfWeek}`;
     setCronExpression(newCronExpression);
-    
-    // Generate human-readable description of the cron expression
-    const readableText = parseSchedule(newCronExpression);
-    setHumanReadable(readableText);
-    
     onChange(newCronExpression);
   }, [cronParts, onChange]);
 
@@ -220,16 +213,10 @@ export const CronExpressionBuilder: React.FC<CronExpressionBuilderProps> = ({
         </div>
       </div>
 
-      {/* Display current cron expression with human-readable interpretation */}
+      {/* Display current cron expression */}
       <div className="mt-6 p-3 bg-muted rounded-md">
         <FormLabel className="block mb-1">Current Cron Expression:</FormLabel>
         <code className="text-sm font-mono bg-background p-2 rounded border block w-full">{cronExpression}</code>
-        
-        <div className="mt-3 p-2 bg-background rounded border">
-          <div className="font-medium text-sm mb-1">Human-readable schedule:</div>
-          <div className="text-sm">{humanReadable}</div>
-        </div>
-        
         <p className="text-xs text-muted-foreground mt-2">
           Format: minute hour day-of-month month day-of-week
         </p>
