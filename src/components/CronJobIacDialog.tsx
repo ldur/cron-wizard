@@ -30,81 +30,90 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, 
   const targetType = job?.targetType || (formData?.targetType || 'LAMBDA');
   const targetConfig = job?.targetConfig || (formData?.targetConfig || {});
 
-  // Function to apply syntax highlighting to the code
-  const highlightCode = (code: string): string => {
+  // Function to apply syntax highlighting to bash/shell script
+  const highlightShellCode = (code: string): string => {
     if (!code) return '';
     
     return code
-      // Keywords
-      .replace(/\b(import|export|from|const|let|var|function|return|new|class|extends|interface|type|if|else|for|while|switch|case|break|continue|try|catch|throw|async|await|typeof|instanceof)\b/g, '<span class="text-[#9b87f5]">$1</span>')
-      // Types
-      .replace(/\b(string|number|boolean|null|undefined|any|void|object|Array|Promise|Record|Map|Set)\b/g, '<span class="text-[#86e1fc]">$1</span>')
       // Comments
-      .replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, '<span class="text-[#6a737d]">$1</span>')
+      .replace(/(#.*$)/gm, '<span class="text-[#6a737d]">$1</span>')
+      // AWS CLI specific commands
+      .replace(/\b(aws|s3|lambda|iam|ec2|ecs|eb|sqs|sns|dynamodb|cloudformation|cloudwatch|scheduler|events)\b/g, '<span class="text-[#9b87f5]">$1</span>')
+      // CLI options
+      .replace(/\b(--\w+[-\w]*)\b/g, '<span class="text-[#86e1fc]">$1</span>')
+      // Bash variables
+      .replace(/(\$\w+|\$\{\w+\})/g, '<span class="text-[#0EA5E9]">$1</span>')
       // Strings
       .replace(/(["'`])(.*?)\1/g, '<span class="text-[#F97316]">$1$2$1</span>')
       // Numbers
       .replace(/\b(\d+)\b/g, '<span class="text-[#0EA5E9]">$1</span>')
-      // Boolean, null, undefined
-      .replace(/\b(true|false|null|undefined)\b/g, '<span class="text-[#ff79c6]">$1</span>')
-      // Methods and properties
-      .replace(/(\.\s*[\w$]+)(?=\s*\()/g, '<span class="text-[#79B8FF]">$1</span>')
-      // Brackets and punctuation
-      .replace(/([(){}[\]<>])/g, '<span class="text-[#d8dee9]">$1</span>')
-      // Special characters
-      .replace(/([+\-*/%&|^!=<>?:;.,])/g, '<span class="text-[#89DDFF]">$1</span>');
+      // Common bash commands
+      .replace(/\b(echo|cat|mkdir|cd|cp|mv|rm|grep|sed|awk|curl|wget|sh|bash|source|export|set)\b/g, '<span class="text-[#ff79c6]">$1</span>');
   };
 
   // Handle code generation based on form data
   const handleGenerate = () => {
     if (onGenerate && formData) {
-      // Generate a simple IAC code template based on the form data
+      // Generate a simple shell script template based on the form data
       const targetType = formData.targetType || 'LAMBDA';
       
-      // Generate basic IAC code based on target type
-      let generatedCode = `// Infrastructure as Code for ${formData.name || 'Unnamed Job'}\n`;
-      generatedCode += `// Target Type: ${targetType}\n\n`;
+      // Generate basic shell script based on target type
+      let generatedCode = `#!/bin/bash\n\n`;
+      generatedCode += `# AWS CLI script for ${formData.name || 'Unnamed Job'}\n`;
+      generatedCode += `# Target Type: ${targetType}\n\n`;
       
-      generatedCode += `import { aws_events as events, aws_events_targets as targets, Duration } from 'aws-cdk-lib';\n`;
-      generatedCode += `import { Construct } from 'constructs';\n\n`;
-      
-      generatedCode += `export function create${targetType.charAt(0).toUpperCase() + targetType.slice(1).toLowerCase()}Job(scope: Construct) {\n`;
-      generatedCode += `  // Create the schedule rule\n`;
-      generatedCode += `  const rule = new events.Rule(scope, '${formData.name || 'Job'}Rule', {\n`;
-      generatedCode += `    schedule: events.Schedule.expression('${formData.scheduleExpression || 'cron(0 12 * * ? *)'}'),\n`;
-      generatedCode += `    description: '${formData.description || 'No description provided'}',\n`;
+      generatedCode += `# Set variables\n`;
+      generatedCode += `JOB_NAME="${formData.name || 'UnnamedJob'}"\n`;
+      generatedCode += `SCHEDULE_EXPRESSION="${formData.scheduleExpression || 'cron(0 12 * * ? *)'}"`;
       
       if (formData.timezone) {
-        generatedCode += `    timezone: '${formData.timezone}',\n`;
+        generatedCode += `\nTIMEZONE="${formData.timezone}"`;
       }
       
-      generatedCode += `  });\n\n`;
+      generatedCode += `\n\n# Create scheduler\n`;
       
       // Add target-specific code
       switch (targetType) {
         case 'LAMBDA':
-          generatedCode += `  // Add Lambda target\n`;
+          generatedCode += `# Lambda target configuration\n`;
           const lambdaArn = formData.targetConfig?.functionArn || 'YOUR_LAMBDA_ARN';
-          generatedCode += `  const lambdaArn = '${lambdaArn}';\n`;
-          generatedCode += `  rule.addTarget(new targets.LambdaFunction(lambdaFunction));\n`;
+          generatedCode += `LAMBDA_ARN="${lambdaArn}"\n\n`;
+          generatedCode += `aws scheduler create-schedule \\\n`;
+          generatedCode += `  --name "$JOB_NAME" \\\n`;
+          generatedCode += `  --schedule-expression "$SCHEDULE_EXPRESSION" \\\n`;
+          if (formData.timezone) {
+            generatedCode += `  --schedule-expression-timezone "$TIMEZONE" \\\n`;
+          }
+          generatedCode += `  --target "'{\\\"Arn\\\": \\\"$LAMBDA_ARN\\\", \\\"RoleArn\\\": \\\"YOUR_ROLE_ARN\\\"}'" \\\n`;
+          generatedCode += `  --flexible-time-window "'{\\\"Mode\\\": \\\"${formData.flexibleTimeWindowMode || 'OFF'}\\\"}'"`;
           break;
+          
         case 'API_GATEWAY':
-          generatedCode += `  // Add API Gateway target\n`;
+          generatedCode += `# API Gateway target configuration\n`;
           const apiEndpoint = formData.targetConfig?.endpointUrl || 'YOUR_API_ENDPOINT';
-          generatedCode += `  const apiEndpoint = '${apiEndpoint}';\n`;
-          generatedCode += `  rule.addTarget(new targets.ApiGateway({\n`;
-          generatedCode += `    httpMethod: '${formData.targetConfig?.httpMethod || 'GET'}',\n`;
-          generatedCode += `    path: '/path',\n`;
-          generatedCode += `  }));\n`;
+          generatedCode += `API_ENDPOINT="${apiEndpoint}"\n\n`;
+          generatedCode += `aws scheduler create-schedule \\\n`;
+          generatedCode += `  --name "$JOB_NAME" \\\n`;
+          generatedCode += `  --schedule-expression "$SCHEDULE_EXPRESSION" \\\n`;
+          if (formData.timezone) {
+            generatedCode += `  --schedule-expression-timezone "$TIMEZONE" \\\n`;
+          }
+          generatedCode += `  --target "'{\\\"Arn\\\": \\\"$API_ENDPOINT\\\", \\\"RoleArn\\\": \\\"YOUR_ROLE_ARN\\\", \\\"HttpParameters\\\": {\\\"Method\\\": \\\"${formData.targetConfig?.httpMethod || 'GET'}\\\"}'" \\\n`;
+          generatedCode += `  --flexible-time-window "'{\\\"Mode\\\": \\\"${formData.flexibleTimeWindowMode || 'OFF'}\\\"}'"`;
           break;
+          
         default:
-          generatedCode += `  // Add ${targetType} target\n`;
-          generatedCode += `  // Configuration: ${JSON.stringify(targetConfig)}\n`;
-          generatedCode += `  // TODO: Configure specific target properties\n`;
+          generatedCode += `# ${targetType} target configuration\n`;
+          generatedCode += `# TODO: Add specific parameters for ${targetType}\n\n`;
+          generatedCode += `aws scheduler create-schedule \\\n`;
+          generatedCode += `  --name "$JOB_NAME" \\\n`;
+          generatedCode += `  --schedule-expression "$SCHEDULE_EXPRESSION" \\\n`;
+          if (formData.timezone) {
+            generatedCode += `  --schedule-expression-timezone "$TIMEZONE" \\\n`;
+          }
+          generatedCode += `  --target "'{\\\"Arn\\\": \\\"TARGET_ARN\\\", \\\"RoleArn\\\": \\\"YOUR_ROLE_ARN\\\"}'" \\\n`;
+          generatedCode += `  --flexible-time-window "'{\\\"Mode\\\": \\\"${formData.flexibleTimeWindowMode || 'OFF'}\\\"}'"`;
       }
-      
-      generatedCode += `\n  return rule;\n`;
-      generatedCode += `}\n`;
       
       onGenerate(generatedCode);
     }
@@ -125,13 +134,13 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, 
             </span>
           </DialogTitle>
           <DialogDescription>
-            Infrastructure as Code for {endpointName}
+            AWS CLI Script for {endpointName}
           </DialogDescription>
         </DialogHeader>
         
         <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
           <Code className="h-4 w-4" />
-          <span>TypeScript IAC Code</span>
+          <span>Shell Script</span>
         </div>
         
         <ScrollArea className="flex-1 border rounded-md bg-[#1A1F2C] text-[#C8C8C9]">
@@ -139,12 +148,12 @@ const CronJobIacDialog = ({ open, onOpenChange, job, iacCode, onSave, formData, 
             <pre className="p-4 text-sm overflow-visible whitespace-pre-wrap">
               <code 
                 className="font-mono"
-                dangerouslySetInnerHTML={{ __html: highlightCode(codeToShow) }}
+                dangerouslySetInnerHTML={{ __html: highlightShellCode(codeToShow) }}
               />
             </pre>
           ) : (
             <div className="p-4 text-sm text-muted-foreground italic">
-              No IAC code provided for this job.
+              No AWS CLI Script provided for this job.
             </div>
           )}
         </ScrollArea>
