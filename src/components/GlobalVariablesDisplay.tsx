@@ -84,7 +84,7 @@ const GlobalVariablesDisplay = () => {
             {globalVariables.map((variable) => (
               <div key={variable.name} className="flex items-center justify-between">
                 <span className="font-medium flex items-center">
-                  <code className="text-sm bg-muted px-1 py-0.5 rounded mr-2">${{variable.name}}</code>
+                  <code className="text-sm bg-muted px-1 py-0.5 rounded mr-2">${variable.name}</code>
                   {variable.name}
                 </span>
                 <Badge variant="outline" className="px-3 py-1">
