@@ -25,7 +25,7 @@ serve(async (req) => {
 
     const { targetType, targetConfig, jobName } = await req.json();
 
-    console.log('Generating AWS CLI script for:', { targetType, jobName });
+    console.log('Generating AWS CLI script for this Eventbridge Scheduler Target:', { targetType, jobName });
     console.log('Target config:', targetConfig);
 
     const systemPrompt = `
