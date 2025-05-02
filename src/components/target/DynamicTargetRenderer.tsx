@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { CronJob } from '@/types/CronJob';
+import { Button } from '@/components/ui/button';
 import { 
   FormField, 
   FormItem, 
@@ -158,6 +159,60 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
     setTargetConfig(updatedConfig);
     form.setValue('targetConfig', updatedConfig);
   };
+  
+  // Function to replace all variables in all fields
+  const handleReplaceAllVariables = () => {
+    if (!templates || !targetType || !templates[targetType]) return;
+    
+    const attributes = templates[targetType]?.attributes;
+    if (!Array.isArray(attributes) || attributes.length === 0) return;
+    
+    const updatedConfig = { ...targetConfig };
+    let hasChanges = false;
+    
+    // Process each field
+    attributes.forEach(attr => {
+      const currentValue = updatedConfig[attr.name];
+      
+      if (attr.data_type === 'string' && typeof currentValue === 'string') {
+        const substituted = substituteVariables(currentValue);
+        if (substituted !== currentValue) {
+          updatedConfig[attr.name] = substituted;
+          hasChanges = true;
+        }
+      } else if (attr.data_type === 'json' && typeof currentValue === 'string') {
+        try {
+          const substituted = substituteVariables(currentValue);
+          if (substituted !== currentValue) {
+            try {
+              updatedConfig[attr.name] = JSON.parse(substituted);
+              hasChanges = true;
+            } catch (e) {
+              updatedConfig[attr.name] = substituted;
+              hasChanges = true;
+            }
+          }
+        } catch (e) {
+          console.error('Error processing JSON field:', e);
+        }
+      }
+    });
+    
+    if (hasChanges) {
+      setTargetConfig(updatedConfig);
+      form.setValue('targetConfig', updatedConfig);
+      
+      toast({
+        title: "Variables Replaced",
+        description: "All variables have been replaced with their global values.",
+      });
+    } else {
+      toast({
+        title: "No Changes",
+        description: "No variables found to replace in the current configuration.",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -197,9 +252,19 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
     <div className="space-y-4">
       {Object.keys(globalVariables).length > 0 && (
         <div className="p-4 border border-blue-100 rounded bg-blue-50 mb-4">
-          <p className="text-sm text-blue-800">
-            <strong>Available Global Variables:</strong> {Object.keys(globalVariables).map(key => `\${${key}}`).join(', ')}
-          </p>
+          <div className="flex justify-between items-start mb-2">
+            <p className="text-sm text-blue-800">
+              <strong>Available Global Variables:</strong> {Object.keys(globalVariables).map(key => `\${${key}}`).join(', ')}
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+              onClick={handleReplaceAllVariables}
+            >
+              <RefreshCw className="h-4 w-4 mr-1" /> Replace Variables
+            </Button>
+          </div>
           <p className="text-xs text-blue-700 mt-1">
             You can use these variables in string fields and they will be automatically replaced with their values.
           </p>
