@@ -81,9 +81,9 @@ const AwsCliScriptDialog = ({
           <span>AWS CLI Script</span>
         </div>
         
-        <ScrollArea className="flex-1 border rounded-md bg-[#1A1F2C] text-[#C8C8C9]">
+        <ScrollArea className="flex-1 max-h-[50vh] border rounded-md bg-[#1A1F2C] text-[#C8C8C9]">
           {scriptContent ? (
-            <pre className="p-4 text-sm overflow-visible whitespace-pre-wrap">
+            <pre className="p-4 text-sm whitespace-pre-wrap">
               <code 
                 className="font-mono"
                 dangerouslySetInnerHTML={{ __html: highlightCode(scriptContent) }}
