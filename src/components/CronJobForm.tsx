@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -18,6 +19,11 @@ import { submitCronJob } from '@/services/cronJobFormService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import TargetFormWrapper from './target/TargetFormWrapper';
+import CronJobIacDialog from './CronJobIacDialog';
+import AwsCliScriptDialog from './AwsCliScriptDialog';
+import { AlertCircle, Code, Terminal } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from '@/integrations/supabase/client';
 
 // Import schema definition
 import { cronJobSchema } from '@/schemas/cronJobSchema';
@@ -46,6 +52,12 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // State for dialogs
+  const [iacDialogOpen, setIacDialogOpen] = useState(false);
+  const [awsCliDialogOpen, setAwsCliDialogOpen] = useState(false);
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  const [generatedAwsScript, setGeneratedAwsScript] = useState('');
 
   // Debug logs
   useEffect(() => {
@@ -98,6 +110,11 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
         targetType: jobData.targetType || 'LAMBDA',
         targetConfig: jobData.targetConfig || {},
       });
+      
+      // Set the generated script from iacCode if it exists
+      if (jobData.iacCode) {
+        setGeneratedAwsScript(jobData.iacCode);
+      }
     }
   }, [jobData, form, groupId]);
 
@@ -160,6 +177,66 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
       }
     }
   };
+  
+  // Function to generate AWS CLI script
+  const generateAwsCliScript = async () => {
+    try {
+      setIsGeneratingScript(true);
+      
+      // Get current form values
+      const formValues = form.getValues();
+      
+      // Call the edge function to generate the script
+      const { data, error } = await supabase.functions.invoke('generate-aws-cli', {
+        body: {
+          targetType: formValues.targetType,
+          targetConfig: formValues.targetConfig,
+          jobName: formValues.name
+        },
+      });
+      
+      if (error) {
+        console.error("Error generating AWS CLI script:", error);
+        toast({
+          title: "Script Generation Failed",
+          description: error.message || "Failed to generate AWS CLI script",
+          variant: "destructive",
+        });
+        throw error;
+      }
+      
+      // Update the generated script state
+      setGeneratedAwsScript(data.script);
+      
+      // Set the script to the iacCode field
+      form.setValue('iacCode', data.script);
+      
+      toast({
+        title: "AWS CLI Script Generated",
+        description: "The AWS CLI script has been generated successfully.",
+      });
+    } catch (error) {
+      console.error("Error in AWS CLI script generation:", error);
+      toast({
+        title: "Script Generation Error",
+        description: "An unexpected error occurred while generating the AWS CLI script.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingScript(false);
+    }
+  };
+
+  // Function to save the script to the iacCode field
+  const handleSaveScript = (script: string) => {
+    form.setValue('iacCode', script);
+    setAwsCliDialogOpen(false);
+    
+    toast({
+      title: "Script Saved",
+      description: "The AWS CLI script has been saved to the job configuration.",
+    });
+  };
 
   // Debug target config changes
   useEffect(() => {
@@ -194,6 +271,50 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
                   form={form}
                   initialValues={jobData?.targetConfig}
                 />
+
+                {/* AWS CLI Script Generation */}
+                <div className="mt-6 border-t border-gray-200 pt-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-medium">AWS CLI Script</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Generate AWS CLI commands based on your target configuration
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center"
+                        onClick={() => setAwsCliDialogOpen(true)}
+                        disabled={!form.getValues().iacCode && !generatedAwsScript}
+                      >
+                        <Code className="h-4 w-4 mr-2" />
+                        View Script
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="default"
+                        className="flex items-center"
+                        onClick={generateAwsCliScript}
+                        disabled={isGeneratingScript}
+                      >
+                        <Terminal className="h-4 w-4 mr-2" />
+                        {isGeneratingScript ? 'Generating...' : (form.getValues().iacCode ? 'Regenerate Script' : 'Generate Script')}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {form.getValues().iacCode && (
+                    <Alert variant="default" className="bg-secondary/30 border-secondary">
+                      <AlertCircle className="h-4 w-4 text-secondary" />
+                      <AlertDescription>
+                        AWS CLI script has been generated. Click "View Script" to see and manage it.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
 
                 {/* Flexible Time Window */}
                 <div>
@@ -268,6 +389,39 @@ const CronJobForm: React.FC<CronJobFormProps> = ({
           </Button>
         </div>
       </form>
+      
+      {/* IAC Dialog */}
+      <CronJobIacDialog 
+        open={iacDialogOpen}
+        onOpenChange={setIacDialogOpen}
+        job={{
+          name: form.getValues().name,
+          isApi: form.getValues().isApi,
+          endpointName: form.getValues().endpointName,
+          iacCode: form.getValues().iacCode,
+          targetType: form.getValues().targetType,
+          targetConfig: form.getValues().targetConfig
+        }}
+        onSave={(code) => {
+          form.setValue('iacCode', code);
+          setIacDialogOpen(false);
+        }}
+      />
+      
+      {/* AWS CLI Dialog */}
+      <AwsCliScriptDialog 
+        open={awsCliDialogOpen}
+        onOpenChange={setAwsCliDialogOpen}
+        job={{
+          name: form.getValues().name,
+          targetType: form.getValues().targetType,
+          targetConfig: form.getValues().targetConfig
+        }}
+        scriptContent={generatedAwsScript || form.getValues().iacCode || ''}
+        onSave={handleSaveScript}
+        onGenerate={generateAwsCliScript}
+        isGenerating={isGeneratingScript}
+      />
     </Form>
   );
 };
