@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Globe } from "lucide-react";
+import { Globe, Variable } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GlobalVariable {
@@ -70,7 +70,7 @@ const GlobalVariablesDisplay = () => {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
+            <Variable className="h-5 w-5" />
             Global Variables
           </CardTitle>
           <CardDescription>
@@ -83,12 +83,20 @@ const GlobalVariablesDisplay = () => {
           <div className="space-y-4">
             {globalVariables.map((variable) => (
               <div key={variable.name} className="flex items-center justify-between">
-                <span className="font-medium">{variable.name}</span>
+                <span className="font-medium flex items-center">
+                  <code className="text-sm bg-muted px-1 py-0.5 rounded mr-2">${{variable.name}}</code>
+                  {variable.name}
+                </span>
                 <Badge variant="outline" className="px-3 py-1">
                   {variable.value}
                 </Badge>
               </div>
             ))}
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
+                Use these variables in target configuration fields with <code className="text-xs bg-muted px-1 py-0.5 rounded">{"${variable_name}"}</code> syntax
+              </p>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

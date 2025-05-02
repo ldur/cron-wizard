@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -31,6 +31,11 @@ interface TargetTemplates {
   [key: string]: TargetTemplateData;
 }
 
+interface GlobalVariable {
+  name: string;
+  value: string;
+}
+
 interface DynamicTargetRendererProps {
   targetType: CronJob['targetType'];
   form: any;
@@ -43,9 +48,10 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
   initialValues
 }) => {
   const { toast } = useToast();
-  const [targetConfig, setTargetConfig] = React.useState<Record<string, any>>(
+  const [targetConfig, setTargetConfig] = useState<Record<string, any>>(
     initialValues || {}
   );
+  const [globalVariables, setGlobalVariables] = useState<Record<string, string>>({});
 
   // Fetch target templates from settings
   const { data: templates, isLoading, error } = useQuery({
@@ -61,6 +67,21 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
       // Add explicit type checking and conversion
       const rawTemplates = data?.target_templates;
       if (rawTemplates && typeof rawTemplates === 'object' && !Array.isArray(rawTemplates)) {
+        // Extract global variables if available
+        if (rawTemplates["GLOBAL_VARIABLES"] && 
+            typeof rawTemplates["GLOBAL_VARIABLES"] === 'object' &&
+            rawTemplates["GLOBAL_VARIABLES"].attributes && 
+            Array.isArray(rawTemplates["GLOBAL_VARIABLES"].attributes)) {
+          
+          const globalVars: Record<string, string> = {};
+          rawTemplates["GLOBAL_VARIABLES"].attributes.forEach((attr: any) => {
+            if (attr.name && attr.value !== undefined) {
+              globalVars[attr.name] = String(attr.value);
+            }
+          });
+          setGlobalVariables(globalVars);
+        }
+        
         return rawTemplates as unknown as TargetTemplates;
       }
       return {} as TargetTemplates;
@@ -68,7 +89,7 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
   });
 
   // Update form values when target type changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (templates && targetType && templates[targetType]) {
       // Initialize form values for the selected target type
       const defaultValues: Record<string, any> = {};
@@ -93,6 +114,16 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
     }
   }, [targetType, templates, form, initialValues]);
 
+  // Apply variable substitution to a string value using global variables
+  const substituteVariables = (value: string): string => {
+    if (typeof value !== 'string') return value;
+    
+    // Look for ${variableName} patterns and replace with global variable values
+    return value.replace(/\${([^}]+)}/g, (match, variableName) => {
+      return globalVariables[variableName] || match;
+    });
+  };
+
   // Handle field value changes
   const handleFieldChange = (name: string, value: any, dataType: string) => {
     let processedValue = value;
@@ -102,9 +133,14 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
       processedValue = Number(value);
     } else if (dataType === 'boolean') {
       processedValue = Boolean(value);
+    } else if (dataType === 'string' && typeof value === 'string') {
+      // Apply variable substitution to string values
+      processedValue = substituteVariables(value);
     } else if (dataType === 'json' && typeof value === 'string') {
       try {
-        processedValue = JSON.parse(value);
+        // First substitute variables in the JSON string
+        const substitutedJsonStr = substituteVariables(value);
+        processedValue = JSON.parse(substitutedJsonStr);
       } catch (e) {
         // Keep as string if not valid JSON
         console.error('Invalid JSON:', e);
@@ -156,6 +192,17 @@ const DynamicTargetRenderer: React.FC<DynamicTargetRendererProps> = ({
 
   return (
     <div className="space-y-4">
+      {Object.keys(globalVariables).length > 0 && (
+        <div className="p-4 border border-blue-100 rounded bg-blue-50 mb-4">
+          <p className="text-sm text-blue-800">
+            <strong>Available Global Variables:</strong> {Object.keys(globalVariables).map(key => `\${${key}}`).join(', ')}
+          </p>
+          <p className="text-xs text-blue-700 mt-1">
+            You can use these variables in string fields and they will be automatically replaced with their values.
+          </p>
+        </div>
+      )}
+      
       {Array.isArray(templates[targetType]?.attributes) && templates[targetType]?.attributes.map((attribute) => (
         <div key={attribute.name} className="space-y-2">
           {attribute.data_type === "boolean" ? (
