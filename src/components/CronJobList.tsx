@@ -13,9 +13,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
-import CronJobIacDialog from "./CronJobIacDialog";
 import { getTargetTypeIcon, targetTypeLabels } from "@/utils/targetTypeIcons";
 import { getIconComponent } from "@/components/groups/utils";
+import AwsCliScriptDialog from "./AwsCliScriptDialog";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -234,10 +234,11 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         </Card>
       ))}
 
-      <CronJobIacDialog 
+      <AwsCliScriptDialog 
         open={isIacDialogOpen}
         onOpenChange={setIsIacDialogOpen}
         job={selectedJob}
+        scriptContent={selectedJob?.iacCode || ''}
       />
     </div>
   );
