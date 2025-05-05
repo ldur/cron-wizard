@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, AlertTriangle, Variable } from "lucide-react";
 import AttributeForm from "@/components/targetTemplates/AttributeForm";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
   const [saveSuccess, setSaveSuccess] = useState(false);
   const { toast } = useToast();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const isGlobalVariables = targetType === "GLOBAL_VARIABLES";
 
   // Fetch template for the selected target type
   useEffect(() => {
@@ -153,7 +155,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
 
       toast({
         title: "Success",
-        description: "Template saved successfully",
+        description: isGlobalVariables ? "Global variables saved successfully" : "Template saved successfully",
       });
       setSaveSuccess(true);
       
@@ -168,7 +170,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
       console.error('Error saving template:', error);
       toast({
         title: "Error",
-        description: "Failed to save template",
+        description: isGlobalVariables ? "Failed to save global variables" : "Failed to save template",
         variant: "destructive",
       });
     } finally {
@@ -205,7 +207,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
 
       toast({
         title: "Success",
-        description: "Template deleted successfully",
+        description: isGlobalVariables ? "Global variables deleted successfully" : "Template deleted successfully",
       });
       
       // Reset attributes
@@ -218,7 +220,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
       console.error('Error deleting template:', error);
       toast({
         title: "Error",
-        description: "Failed to delete template",
+        description: isGlobalVariables ? "Failed to delete global variables" : "Failed to delete template",
         variant: "destructive",
       });
     } finally {
@@ -230,19 +232,30 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Attributes</h3>
+        <h3 className="text-lg font-medium">
+          {isGlobalVariables ? (
+            <span className="flex items-center">
+              <Variable className="h-5 w-5 mr-2" />
+              Global Variables
+            </span>
+          ) : (
+            "Attributes"
+          )}
+        </h3>
         <div className="flex gap-2">
           <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
-                Delete Template
+                {isGlobalVariables ? "Delete All Variables" : "Delete Template"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {isGlobalVariables ? "Delete Global Variables" : "Delete Template"}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete this template? This action cannot be undone.
+                  Are you sure you want to delete {isGlobalVariables ? "all global variables" : "this template"}? This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -263,21 +276,31 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
             size="sm"
             className="flex items-center gap-1"
           >
-            <Plus className="w-4 h-4" /> Add Attribute
+            <Plus className="w-4 h-4" /> Add {isGlobalVariables ? "Variable" : "Attribute"}
           </Button>
         </div>
       </div>
 
       {attributes.length === 0 ? (
         <div className="p-4 border rounded-md bg-muted/50 flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">No attributes defined. Click "Add Attribute" to start.</p>
+          <p className="text-muted-foreground text-sm">
+            {isGlobalVariables 
+              ? "No global variables defined. Click \"Add Variable\" to start." 
+              : "No attributes defined. Click \"Add Attribute\" to start."}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
           {attributes.map((attribute, index) => (
             <div key={index} className="p-4 border rounded-md bg-card">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium">{attribute.name || "New Attribute"}</h4>
+                <h4 className="font-medium">
+                  {isGlobalVariables ? (
+                    attribute.name ? `$${attribute.name}` : "New Variable"
+                  ) : (
+                    attribute.name || "New Attribute"
+                  )}
+                </h4>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -290,6 +313,7 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
               <AttributeForm 
                 attribute={attribute}
                 onChange={(updatedAttribute) => updateAttribute(index, updatedAttribute)}
+                isGlobalVariable={isGlobalVariables}
               />
             </div>
           ))}
@@ -302,9 +326,19 @@ export const TargetTypeEditor = ({ targetType, onUpdate }: TargetTypeEditorProps
           disabled={loading}
           className={saveSuccess ? "bg-green-500 hover:bg-green-600" : ""}
         >
-          {loading ? "Saving..." : saveSuccess ? "Saved!" : "Save Template"}
+          {loading ? "Saving..." : saveSuccess ? "Saved!" : isGlobalVariables ? "Save Variables" : "Save Template"}
         </Button>
       </div>
+
+      {isGlobalVariables && (
+        <div className="mt-4 p-4 border border-blue-100 rounded-md bg-blue-50">
+          <h4 className="font-medium text-blue-800 mb-2">How to use global variables</h4>
+          <p className="text-sm text-blue-700">
+            Use <code className="bg-blue-100 px-1 py-0.5 rounded">$&#123;variable_name&#125;</code> in any target configuration field. 
+            Variables will be automatically replaced with their values.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

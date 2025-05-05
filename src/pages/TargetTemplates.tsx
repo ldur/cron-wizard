@@ -27,12 +27,18 @@ export interface TargetTemplates {
 }
 
 const TargetTemplatesPage = () => {
-  const [selectedTargetType, setSelectedTargetType] = useState<TargetType | null>(null);
+  const [selectedTargetType, setSelectedTargetType] = useState<TargetType | "GLOBAL_VARIABLES" | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Function to trigger refresh when template is updated
   const handleTemplateUpdate = () => {
     setRefreshKey(prevKey => prevKey + 1);
+  };
+
+  // Helper to get appropriate title based on selected type
+  const getEditorTitle = () => {
+    if (!selectedTargetType) return "Target Template Editor";
+    return selectedTargetType === "GLOBAL_VARIABLES" ? "Edit Global Variables" : `Edit ${selectedTargetType} Template`;
   };
 
   return (
@@ -58,11 +64,11 @@ const TargetTemplatesPage = () => {
             {selectedTargetType ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Edit {selectedTargetType} Template</CardTitle>
+                  <CardTitle>{getEditorTitle()}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <TargetTypeEditor 
-                    targetType={selectedTargetType} 
+                    targetType={selectedTargetType}
                     onUpdate={handleTemplateUpdate}
                   />
                 </CardContent>

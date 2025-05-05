@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -21,9 +22,10 @@ interface Attribute {
 interface AttributeFormProps {
   attribute: Attribute;
   onChange: (attribute: Attribute) => void;
+  isGlobalVariable?: boolean;
 }
 
-const AttributeForm = ({ attribute, onChange }: AttributeFormProps) => {
+const AttributeForm = ({ attribute, onChange, isGlobalVariable = false }: AttributeFormProps) => {
   const [localAttribute, setLocalAttribute] = useState<Attribute>(attribute);
 
   // Update local state when prop changes
@@ -67,17 +69,20 @@ const AttributeForm = ({ attribute, onChange }: AttributeFormProps) => {
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">
+          {isGlobalVariable ? "Variable Name" : "Name"}
+          {isGlobalVariable && <span className="ml-1 text-xs text-muted-foreground">(without $ prefix)</span>}
+        </Label>
         <Input
           id="name"
           value={localAttribute.name}
           onChange={(e) => handleChange('name', e.target.value)}
-          placeholder="Enter attribute name"
+          placeholder={isGlobalVariable ? "Enter variable name" : "Enter attribute name"}
         />
       </div>
       
       <div>
-        <Label htmlFor="data-type">Data Type</Label>
+        <Label htmlFor="data-type">{isGlobalVariable ? "Variable Type" : "Data Type"}</Label>
         <Select
           value={localAttribute.data_type}
           onValueChange={(value) => 
@@ -96,17 +101,19 @@ const AttributeForm = ({ attribute, onChange }: AttributeFormProps) => {
         </Select>
       </div>
       
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="required"
-          checked={localAttribute.required}
-          onCheckedChange={(checked) => handleChange('required', checked)}
-        />
-        <Label htmlFor="required">Required</Label>
-      </div>
+      {!isGlobalVariable && (
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="required"
+            checked={localAttribute.required}
+            onCheckedChange={(checked) => handleChange('required', checked)}
+          />
+          <Label htmlFor="required">Required</Label>
+        </div>
+      )}
       
       <div>
-        <Label htmlFor="default-value">Default Value</Label>
+        <Label htmlFor="default-value">{isGlobalVariable ? "Value" : "Default Value"}</Label>
         {localAttribute.data_type === 'boolean' ? (
           <div className="flex items-center space-x-2 mt-2">
             <Switch
@@ -136,7 +143,7 @@ const AttributeForm = ({ attribute, onChange }: AttributeFormProps) => {
                 handleChange('value', e.target.value);
               }
             }}
-            placeholder="Enter JSON value"
+            placeholder={`Enter JSON value`}
             rows={5}
           />
         ) : (
@@ -152,7 +159,7 @@ const AttributeForm = ({ attribute, onChange }: AttributeFormProps) => {
                   : e.target.value
               )
             }
-            placeholder={`Enter default ${localAttribute.data_type} value`}
+            placeholder={`Enter ${isGlobalVariable ? "" : "default "}${localAttribute.data_type} value`}
           />
         )}
       </div>
