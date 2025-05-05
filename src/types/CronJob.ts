@@ -22,4 +22,7 @@ export interface CronJob {
   
   // Configuration for target-specific settings
   targetConfig?: Record<string, any>;
+  
+  // Add the nextRun property
+  nextRun?: string;
 }
