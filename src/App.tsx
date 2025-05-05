@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Groups from "./pages/Groups";
 import Settings from "./pages/Settings";
 import TargetTemplates from "./pages/TargetTemplates";
+import JobHistory from "./pages/JobHistory";
 import NotFound from "./pages/NotFound";
 import { toast } from "@/hooks/use-toast";
 
@@ -57,6 +58,7 @@ const App = () => {
             <Route path="/groups" element={<Groups />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/target-templates" element={<TargetTemplates />} />
+            <Route path="/job-history" element={<JobHistory />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

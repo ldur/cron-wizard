@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, UsersRound, Settings, CalendarClock, Target } from "lucide-react";
+import { LayoutDashboard, UsersRound, Settings, CalendarClock, Target, History } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -28,6 +28,16 @@ const Header = () => {
             <Link to="/" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant={isActive("/job-history") ? "default" : "ghost"}
+          >
+            <Link to="/job-history" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Job History
             </Link>
           </Button>
 
