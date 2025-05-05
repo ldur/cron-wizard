@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Variable } from "lucide-react";
+import { Variable } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GlobalVariable {
@@ -83,9 +83,8 @@ const GlobalVariablesDisplay = () => {
           <div className="space-y-4">
             {globalVariables.map((variable) => (
               <div key={variable.name} className="flex items-center justify-between">
-                <span className="font-medium flex items-center">
-                  <code className="text-sm bg-muted px-1 py-0.5 rounded mr-2">${variable.name}</code>
-                  {variable.name}
+                <span className="font-medium">
+                  <code className="text-sm bg-muted px-1 py-0.5 rounded">${variable.name}</code>
                 </span>
                 <Badge variant="outline" className="px-3 py-1">
                   {variable.value}
