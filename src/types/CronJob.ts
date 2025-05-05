@@ -1,4 +1,5 @@
 
+
 export interface CronJob {
   id: string;
   name: string;
@@ -26,3 +27,4 @@ export interface CronJob {
   // Add the nextRun property
   nextRun?: string;
 }
+

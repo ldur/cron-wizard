@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree, Briefcase, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { getIconComponent } from "@/components/groups/utils";
 import { format } from "date-fns";
 import AwsCliScriptDialog from "./AwsCliScriptDialog";
 import { parseSchedule } from "@/utils/cronParser";
+import NextRunsPopover from "./NextRunsPopover";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -100,6 +100,20 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     return <Folder className="h-4 w-4 text-blue-500 mr-2" />;
   };
 
+  if (jobs.length === 0) {
+    return (
+      <div className="p-10 text-center">
+        <div className="mb-4 inline-flex rounded-full bg-muted p-3">
+          <Clock className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h3 className="mb-2 text-xl font-semibold">No jobs scheduled</h3>
+        <p className="text-muted-foreground mb-4">
+          Your cron jobs will appear here once created.
+        </p>
+      </div>
+    );
+  }
+
   const sortedJobs = [...jobs].sort((a, b) => {
     if (sortBy === 'name') {
       return sortOrder === 'asc' 
@@ -116,20 +130,6 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         : b.status.localeCompare(a.status);
     }
   });
-
-  if (jobs.length === 0) {
-    return (
-      <div className="p-10 text-center">
-        <div className="mb-4 inline-flex rounded-full bg-muted p-3">
-          <Clock className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h3 className="mb-2 text-xl font-semibold">No jobs scheduled</h3>
-        <p className="text-muted-foreground mb-4">
-          Your cron jobs will appear here once created.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -184,8 +184,14 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                 </div>
               </div>
               <div className="w-1/6 flex items-center">
-                <Calendar className="h-4 w-4 text-blue-500 mr-2" />
-                <span className="text-sm">{formatNextRunDate(job.nextRun)}</span>
+                <NextRunsPopover 
+                  scheduleExpression={job.scheduleExpression}
+                  timezone={job.timezone}
+                  startTime={job.startTime}
+                  endTime={job.endTime}
+                  status={job.status}
+                />
+                <span className="text-sm ml-2">{formatNextRunDate(job.nextRun)}</span>
               </div>
 
               <div className="w-1/6">
