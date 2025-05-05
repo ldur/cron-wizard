@@ -32,13 +32,14 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
   const form = useFormContext();
   const [scheduleMode, setScheduleMode] = useState<'builder' | 'manual'>('builder');
   const scheduleExpression = useWatch({ control, name: "scheduleExpression" });
+  const timezone = useWatch({ control, name: "timezone" });
   const [naturalLanguage, setNaturalLanguage] = useState<string>("");
   
   // Update natural language description when cron expression changes
   useEffect(() => {
     if (scheduleExpression) {
       try {
-        const description = parseSchedule(scheduleExpression);
+        const description = parseSchedule(scheduleExpression, timezone);
         setNaturalLanguage(description);
       } catch (error) {
         console.error("Error parsing cron expression:", error);
@@ -47,7 +48,7 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
     } else {
       setNaturalLanguage("");
     }
-  }, [scheduleExpression]);
+  }, [scheduleExpression, timezone]);
   
   return (
     <>

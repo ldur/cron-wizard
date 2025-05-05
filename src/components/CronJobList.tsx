@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree, Briefcase, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -81,9 +82,9 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
   };
 
   // Get natural language description of cron expression
-  const getNaturalLanguage = (cronExpression: string): string => {
+  const getNaturalLanguage = (cronExpression: string, timezone?: string | null): string => {
     try {
-      return parseSchedule(cronExpression);
+      return parseSchedule(cronExpression, timezone);
     } catch (error) {
       console.error("Error parsing cron expression:", error);
       return "";
@@ -172,7 +173,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   </span>
                 </p>
                 <p className="text-xs text-blue-600 italic mt-0.5">
-                  {getNaturalLanguage(job.scheduleExpression)}
+                  {getNaturalLanguage(job.scheduleExpression, job.timezone)}
                 </p>
               </div>
               

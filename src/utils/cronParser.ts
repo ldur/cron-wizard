@@ -1,19 +1,23 @@
 // In a real app, you would use a more sophisticated parser library
-// This is a very simplified version for demonstration
+// This is a simplified version for demonstration
 
-export const parseSchedule = (cronExpression: string): string => {
+export const parseSchedule = (cronExpression: string, timezone?: string | null): string => {
   const parts = cronExpression.split(' ');
   if (parts.length !== 5) return 'Invalid cron expression';
 
   const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+  
+  // Determine if we should use 24-hour format based on timezone
+  // This is a simple heuristic - European timezones generally use 24-hour format
+  const use24HourFormat = shouldUse24HourFormat(timezone);
 
   // Fix the day mapping to ensure correct weekday is shown
   if (minute === '0' && hour === '0' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
-    return 'Daily at midnight';
+    return use24HourFormat ? 'Daily at 00:00' : 'Daily at midnight';
   }
   
   if (minute === '0' && hour === '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
-    return 'Every hour at the start of the hour';
+    return use24HourFormat ? 'Every hour at xx:00' : 'Every hour at the start of the hour';
   }
   
   if (minute === '*/5' && hour === '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
@@ -29,51 +33,87 @@ export const parseSchedule = (cronExpression: string): string => {
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '1-5') {
-    return 'Every weekday at 9am';
+    return use24HourFormat ? 'Every weekday at 09:00' : 'Every weekday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '1') {
-    return 'Every Monday at 9am';
+    return use24HourFormat ? 'Every Monday at 09:00' : 'Every Monday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '2') {
-    return 'Every Tuesday at 9am';
+    return use24HourFormat ? 'Every Tuesday at 09:00' : 'Every Tuesday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '3') {
-    return 'Every Wednesday at 9am';
+    return use24HourFormat ? 'Every Wednesday at 09:00' : 'Every Wednesday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '4') {
-    return 'Every Thursday at 9am';
+    return use24HourFormat ? 'Every Thursday at 09:00' : 'Every Thursday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '5') {
-    return 'Every Friday at 9am';
+    return use24HourFormat ? 'Every Friday at 09:00' : 'Every Friday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '6') {
-    return 'Every Saturday at 9am';
+    return use24HourFormat ? 'Every Saturday at 09:00' : 'Every Saturday at 9am';
   }
   
   if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '0') {
-    return 'Every Sunday at 9am';
+    return use24HourFormat ? 'Every Sunday at 09:00' : 'Every Sunday at 9am';
   }
   
   if (minute === '0' && hour !== '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
-    return `Daily at ${formatHour(parseInt(hour))}`;
+    return `Daily at ${formatHour(parseInt(hour), use24HourFormat)}`;
   }
 
   if (minute !== '*' && hour !== '*' && dayOfMonth === '*' && month === '*' && dayOfWeek !== '*') {
     const days = parseDaysOfWeek(dayOfWeek);
-    return `Every ${days} at ${formatHour(parseInt(hour))}:${formatMinute(parseInt(minute))}`;
+    return `Every ${days} at ${formatHour(parseInt(hour), use24HourFormat)}:${formatMinute(parseInt(minute))}`;
   }
   
   if (minute !== '*' && hour !== '*' && dayOfMonth !== '*' && month === '*' && dayOfWeek === '*') {
-    return `Monthly on day ${dayOfMonth} at ${formatHour(parseInt(hour))}:${formatMinute(parseInt(minute))}`;
+    return `Monthly on day ${dayOfMonth} at ${formatHour(parseInt(hour), use24HourFormat)}:${formatMinute(parseInt(minute))}`;
   }
 
   return `Custom schedule (${cronExpression})`;
+};
+
+// Helper function to determine if we should use 24-hour format based on timezone
+const shouldUse24HourFormat = (timezone?: string | null): boolean => {
+  if (!timezone) return false;
+  
+  // List of timezones that typically use 24-hour format
+  const timezonesWith24HourFormat = [
+    // European timezones
+    'Europe/',
+    'CET', 'CEST', 'EET', 'EEST', 'WET', 'WEST',
+    // Some other regions that typically use 24-hour format
+    'Africa/',
+    'Asia/',
+    'Indian/',
+  ];
+  
+  return timezonesWith24HourFormat.some(tz => timezone.includes(tz));
+};
+
+// Updated formatHour function to support 24-hour format
+const formatHour = (hour: number, use24HourFormat: boolean): string => {
+  if (use24HourFormat) {
+    return hour < 10 ? `0${hour}` : `${hour}`;
+  }
+  
+  if (hour === 0 || hour === 24) {
+    return '12am';
+  }
+  if (hour === 12) {
+    return '12pm';
+  }
+  if (hour > 12) {
+    return `${hour - 12}pm`;
+  }
+  return `${hour}am`;
 };
 
 export const convertToCron = (naturalLanguage: string): string => {
@@ -180,19 +220,6 @@ export const convertToCron = (naturalLanguage: string): string => {
 
   // Default to every hour if we can't parse
   return '0 * * * *';
-};
-
-const formatHour = (hour: number): string => {
-  if (hour === 0 || hour === 24) {
-    return '12am';
-  }
-  if (hour === 12) {
-    return '12pm';
-  }
-  if (hour > 12) {
-    return `${hour - 12}pm`;
-  }
-  return `${hour}am`;
 };
 
 const formatMinute = (minute: number): string => {
