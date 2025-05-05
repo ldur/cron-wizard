@@ -16,6 +16,7 @@ export const cronJobSchema = z.object({
   isApi: z.boolean().default(false),
   endpointName: z.string().nullable().optional(),
   iacCode: z.string().nullable().optional(),
+  sdkCode: z.string().nullable().optional(),
   groupId: z.string().optional(),
   timezone: z.string().optional(),
   tags: z.array(z.string()).default([]),

@@ -10,7 +10,7 @@ export interface CronJob {
   isApi: boolean;
   endpointName: string | null;
   iacCode: string | null;
-  sdkCode?: string | null;
+  sdkCode: string | null;
   groupId?: string;
   groupName?: string;
   groupIcon?: string;
