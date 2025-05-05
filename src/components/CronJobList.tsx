@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/types/CronJob";
 import { getTargetTypeIcon, targetTypeLabels } from "@/utils/targetTypeIcons";
 import { getIconComponent } from "@/components/groups/utils";
+import { format } from "date-fns";
 import AwsCliScriptDialog from "./AwsCliScriptDialog";
 
 interface CronJobListProps {
@@ -61,6 +62,24 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
   };
 
+  // Format the next run date in a user-friendly way
+  const formatNextRunDate = (nextRunISOString: string) => {
+    try {
+      const nextRunDate = new Date(nextRunISOString);
+      
+      // Check if the date is valid
+      if (isNaN(nextRunDate.getTime())) {
+        return "Invalid date";
+      }
+      
+      // Format the date - using date-fns for better formatting
+      return format(nextRunDate, "MMM d, yyyy 'at' h:mm a");
+    } catch (error) {
+      console.error("Error formatting next run date:", error);
+      return "Error";
+    }
+  };
+
   // Use the getIconComponent utility to get the appropriate icon for a group
   const getGroupIcon = (iconName: string | undefined) => {
     const IconComponent = getIconComponent(iconName);
@@ -76,10 +95,10 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     } else if (sortBy === 'nextRun') {
-      // Changed to use scheduleExpression instead of nextRun
+      // Changed to use nextRun field for sorting
       return sortOrder === 'asc' 
-        ? a.scheduleExpression.localeCompare(b.scheduleExpression)
-        : b.scheduleExpression.localeCompare(a.scheduleExpression);
+        ? new Date(a.nextRun).getTime() - new Date(b.nextRun).getTime()
+        : new Date(b.nextRun).getTime() - new Date(a.nextRun).getTime();
     } else {
       return sortOrder === 'asc'
         ? a.status.localeCompare(b.status)
@@ -151,7 +170,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
               </div>
               <div className="w-1/6 flex items-center">
                 <Calendar className="h-4 w-4 text-blue-500 mr-2" />
-                <span className="text-sm">Next Run TBD</span>
+                <span className="text-sm">{formatNextRunDate(job.nextRun)}</span>
               </div>
 
               <div className="w-1/6">
