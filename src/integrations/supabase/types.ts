@@ -24,6 +24,7 @@ export type Database = {
           is_api: boolean
           name: string
           schedule_expression: string
+          sdk_code: string | null
           start_time: string | null
           status: string
           tags: string[]
@@ -46,6 +47,7 @@ export type Database = {
           is_api?: boolean
           name: string
           schedule_expression: string
+          sdk_code?: string | null
           start_time?: string | null
           status: string
           tags?: string[]
@@ -68,6 +70,7 @@ export type Database = {
           is_api?: boolean
           name?: string
           schedule_expression?: string
+          sdk_code?: string | null
           start_time?: string | null
           status?: string
           tags?: string[]

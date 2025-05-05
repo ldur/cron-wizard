@@ -14,7 +14,8 @@ interface CronJobIacDialogProps {
     targetConfig?: Record<string, any>;
   } | null;
   iacCode?: string;
-  onSave?: (code: string) => void;
+  sdkCode?: string;
+  onSave?: (code: string, type?: 'cli' | 'sdk') => void;
   formData?: any;
   onGenerate?: (code: string) => void;
 }
@@ -24,15 +25,17 @@ const CronJobIacDialog = ({
   onOpenChange, 
   job, 
   iacCode, 
+  sdkCode,
   onSave, 
   formData, 
   onGenerate 
 }: CronJobIacDialogProps) => {
-  // Determine which iacCode to use (either from job or direct prop)
-  const codeToShow = job?.iacCode || iacCode || '';
+  // Determine which code to use (either from job or direct prop)
+  const cliCodeToShow = job?.iacCode || iacCode || '';
+  const sdkCodeToShow = sdkCode || '';
   
   // Handle code generation based on form data
-  const handleGenerate = () => {
+  const handleGenerate = (type: 'cli' | 'sdk') => {
     if (onGenerate && formData) {
       // Generate a simple shell script template based on the form data
       const targetType = formData.targetType || 'LAMBDA';
@@ -99,6 +102,13 @@ const CronJobIacDialog = ({
     }
   };
 
+  // Handle saving code
+  const handleSave = (code: string, type: 'cli' | 'sdk' = 'cli') => {
+    if (onSave) {
+      onSave(code, type);
+    }
+  };
+
   // Use the AwsCliScriptDialog component with our props
   return (
     <AwsCliScriptDialog
@@ -108,9 +118,10 @@ const CronJobIacDialog = ({
         name: job?.name || (formData?.name || 'Unnamed Job'),
         targetType: job?.targetType || (formData?.targetType || 'LAMBDA')
       }}
-      scriptContent={codeToShow}
-      onSave={onSave}
-      onGenerate={formData && onGenerate ? handleGenerate : undefined}
+      scriptContent={cliCodeToShow}
+      sdkContent={sdkCodeToShow}
+      onSave={handleSave}
+      onGenerate={formData && onGenerate ? (type) => handleGenerate(type) : undefined}
     />
   );
 };

@@ -4,7 +4,7 @@ project_id = "tywwuwbzlofgncqxzkid"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage"]
+schemas = ["public", "storage", "graphql_public"]
 
 [db]
 port = 54322
@@ -12,6 +12,7 @@ port = 54322
 [studio]
 enabled = true
 port = 54323
+api_url = "http://localhost"
 
 [inbucket]
 enabled = true
@@ -26,5 +27,8 @@ enabled = true
 [realtime]
 enabled = true
 
+[functions]
 [functions.generate-aws-cli]
+verify_jwt = true
+[functions.generate-aws-sdk]
 verify_jwt = true
