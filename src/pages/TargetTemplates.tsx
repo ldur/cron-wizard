@@ -6,7 +6,7 @@ import { TargetTemplatesTable } from "@/components/targetTemplates/TargetTemplat
 import { TargetTypeEditor } from "@/components/targetTemplates/TargetTypeEditor";
 
 // Define a type for target type
-export type TargetType = "LAMBDA" | "STEP_FUNCTION" | "API_GATEWAY" | "EVENTBRIDGE" | "SQS" | "ECS" | "KINESIS" | "SAGEMAKER" | "GLOBAL_VARIABLES";
+export type TargetType = "LAMBDA" | "STEP_FUNCTION" | "API_GATEWAY" | "EVENTBRIDGE" | "SQS" | "ECS" | "KINESIS" | "SAGEMAKER";
 
 // Define types for target template attributes
 export interface TemplateAttribute {
@@ -27,7 +27,7 @@ export interface TargetTemplates {
 }
 
 const TargetTemplatesPage = () => {
-  const [selectedTargetType, setSelectedTargetType] = useState<TargetType | null>(null);
+  const [selectedTargetType, setSelectedTargetType] = useState<TargetType | "GLOBAL_VARIABLES" | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Function to trigger refresh when template is updated

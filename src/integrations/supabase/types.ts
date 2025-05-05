@@ -89,50 +89,6 @@ export type Database = {
           },
         ]
       }
-      job_history: {
-        Row: {
-          created_at: string | null
-          end_time: string | null
-          id: string
-          job_id: string
-          runtime_seconds: number | null
-          start_time: string
-          status: string
-          status_text: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          end_time?: string | null
-          id?: string
-          job_id: string
-          runtime_seconds?: number | null
-          start_time?: string
-          status: string
-          status_text?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          end_time?: string | null
-          id?: string
-          job_id?: string
-          runtime_seconds?: number | null
-          start_time?: string
-          status?: string
-          status_text?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_history_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "cron_jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       schedule_groups: {
         Row: {
           created_at: string
