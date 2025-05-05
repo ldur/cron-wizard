@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Control } from "react-hook-form";
+import TagInput from "@/components/TagInput";
 
 interface GeneralFormFieldsProps {
   control: Control<any>;
@@ -71,6 +72,24 @@ const GeneralFormFields: React.FC<GeneralFormFieldsProps> = ({ control }) => {
                 placeholder="Write a description for this cron job."
                 className="resize-none"
                 {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Tags */}
+      <FormField
+        control={control}
+        name="tags"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tags</FormLabel>
+            <FormControl>
+              <TagInput 
+                tags={field.value || []} 
+                onChange={field.onChange}
               />
             </FormControl>
             <FormMessage />
