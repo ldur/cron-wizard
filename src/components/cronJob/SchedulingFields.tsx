@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from "date-fns";
-import { CalendarIcon, TextQuote } from "lucide-react";
+import { CalendarIcon, TextQuote, Info } from "lucide-react";
 import {
   FormField,
   FormItem,
@@ -18,10 +17,12 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Control, useFormContext } from "react-hook-form";
+import { Control, useFormContext, useWatch } from "react-hook-form";
 import TimeZoneSelect from "@/components/TimeZoneSelect";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CronExpressionBuilder from "./CronExpressionBuilder";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { parseSchedule } from "@/utils/cronParser";
 
 interface SchedulingFieldsProps {
   control: Control<any>;
@@ -30,6 +31,23 @@ interface SchedulingFieldsProps {
 const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
   const form = useFormContext();
   const [scheduleMode, setScheduleMode] = useState<'builder' | 'manual'>('builder');
+  const scheduleExpression = useWatch({ control, name: "scheduleExpression" });
+  const [naturalLanguage, setNaturalLanguage] = useState<string>("");
+  
+  // Update natural language description when cron expression changes
+  useEffect(() => {
+    if (scheduleExpression) {
+      try {
+        const description = parseSchedule(scheduleExpression);
+        setNaturalLanguage(description);
+      } catch (error) {
+        console.error("Error parsing cron expression:", error);
+        setNaturalLanguage("Invalid cron expression");
+      }
+    } else {
+      setNaturalLanguage("");
+    }
+  }, [scheduleExpression]);
   
   return (
     <>
@@ -62,6 +80,16 @@ const SchedulingFields: React.FC<SchedulingFieldsProps> = ({ control }) => {
                   </TabsContent>
                 </Tabs>
               </FormControl>
+              {naturalLanguage && (
+                <Alert variant="default" className="mt-2 bg-blue-50 border-blue-200">
+                  <div className="flex items-center">
+                    <Info className="h-4 w-4 text-blue-500 mr-2" />
+                    <AlertDescription className="text-blue-700">
+                      {naturalLanguage}
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
               <FormMessage />
             </FormItem>
           )}
