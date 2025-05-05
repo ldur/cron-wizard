@@ -7,11 +7,13 @@ import {
   MessageSquare, 
   Box, 
   ArrowLeftRight,
-  Wand2
+  Wand2,
+  Variable
 } from "lucide-react";
 import { CronJob } from "@/types/CronJob";
+import { TargetType } from "@/pages/TargetTemplates";
 
-export const getTargetTypeIcon = (targetType: CronJob['targetType']) => {
+export const getTargetTypeIcon = (targetType: TargetType | CronJob['targetType']) => {
   switch (targetType) {
     case 'LAMBDA':
       return Code;
@@ -29,6 +31,8 @@ export const getTargetTypeIcon = (targetType: CronJob['targetType']) => {
       return ArrowLeftRight;
     case 'SAGEMAKER':
       return Wand2;
+    case 'GLOBAL_VARIABLES':
+      return Variable;
     default:
       return Code;
   }

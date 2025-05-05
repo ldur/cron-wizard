@@ -5,10 +5,11 @@ import { FormLabel } from '@/components/ui/form';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import DynamicTargetRenderer from './DynamicTargetRenderer';
+import { TargetType } from '@/pages/TargetTemplates';
 
 interface TargetFormWrapperProps {
   form: any;
-  targetType: CronJob['targetType'];
+  targetType: CronJob['targetType'] | Exclude<TargetType, 'GLOBAL_VARIABLES'>;
   initialValues?: Record<string, any>;
   showLegacy?: boolean;
 }

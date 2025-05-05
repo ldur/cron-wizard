@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { getTargetTypeIcon } from "@/utils/targetTypeIcons";
 import { supabase } from "@/integrations/supabase/client";
 import GlobalVariablesDisplay from "@/components/GlobalVariablesDisplay";
+import { TargetType } from "@/pages/TargetTemplates";
 
 const Settings = () => {
-  const [targetTypes, setTargetTypes] = useState<string[]>([]);
+  const [targetTypes, setTargetTypes] = useState<TargetType[]>([]);
 
   useEffect(() => {
     const fetchTargetTemplates = async () => {
@@ -27,7 +28,7 @@ const Settings = () => {
         if (data?.target_templates && typeof data.target_templates === 'object') {
           // Filter out GLOBAL_VARIABLES from the display of target types
           const types = Object.keys(data.target_templates)
-            .filter(key => key !== "GLOBAL_VARIABLES");
+            .filter(key => key !== "GLOBAL_VARIABLES") as TargetType[];
           
           setTargetTypes(types);
         }
@@ -42,7 +43,7 @@ const Settings = () => {
   // Helper function to render target type badges
   const renderTargetTypeBadges = () => {
     return targetTypes.map(targetType => {
-      const IconComponent = getTargetTypeIcon(targetType as any);
+      const IconComponent = getTargetTypeIcon(targetType);
       return (
         <Badge key={targetType} variant="outline" className="flex items-center gap-2 px-3 py-1">
           <IconComponent className="h-4 w-4" />
