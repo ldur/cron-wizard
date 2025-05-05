@@ -51,6 +51,11 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     setIsIacDialogOpen(true);
   };
 
+  // Helper function to check if a job has IAC code
+  const hasIacCode = (job: CronJob) => {
+    return Boolean(job.iacCode || job.sdkCode);
+  };
+
   const getSortIcon = (field: 'name' | 'nextRun' | 'status') => {
     if (sortBy !== field) return null;
     return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
@@ -158,11 +163,13 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                           variant="ghost"
                           size="sm"
                           className="p-0 h-auto mr-2"
-                          onClick={() => handleShowIacCode(job)}
+                          onClick={() => hasIacCode(job) && handleShowIacCode(job)}
+                          disabled={!hasIacCode(job)}
+                          aria-disabled={!hasIacCode(job)}
                         >
                           {(() => {
                             const Icon = getTargetTypeIcon(job.targetType);
-                            return <Icon className="h-4 w-4 text-blue-500" />;
+                            return <Icon className={`h-4 w-4 ${hasIacCode(job) ? 'text-blue-500' : 'text-gray-400'}`} />;
                           })()}
                         </Button>
                         <span className="text-sm truncate max-w-[150px]">
@@ -171,7 +178,10 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {`View IAC code for ${targetTypeLabels[job.targetType]}`}
+                      {hasIacCode(job) 
+                        ? `View IAC code for ${targetTypeLabels[job.targetType]}`
+                        : `No IAC code available for ${targetTypeLabels[job.targetType]}`
+                      }
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -238,7 +248,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         open={isIacDialogOpen}
         onOpenChange={setIsIacDialogOpen}
         job={selectedJob}
-        scriptContent={selectedJob?.iacCode || ''}
+        scriptContent={selectedJob?.iacCode || selectedJob?.sdkCode || ''}
       />
     </div>
   );
