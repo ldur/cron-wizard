@@ -63,8 +63,8 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
   };
 
-  // Format the next run date in a user-friendly way
-  const formatNextRunDate = (nextRunISOString: string) => {
+  // Format the next run date in a user-friendly way using timezone-aware formatting
+  const formatNextRunDate = (nextRunISOString: string, timezone?: string | null) => {
     try {
       const nextRunDate = new Date(nextRunISOString);
       
@@ -73,8 +73,17 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
         return "Invalid date";
       }
       
-      // Format the date - using date-fns for better formatting
-      return format(nextRunDate, "MMM d, yyyy 'at' h:mm a");
+      // Check if the timezone is European/uses 24-hour clock
+      const is24HourFormat = timezone?.startsWith("Europe/") || 
+                            timezone?.startsWith("Africa/") ||
+                            timezone?.includes("CET") || 
+                            timezone?.includes("EET") || 
+                            timezone?.includes("WET");
+      
+      // Use 24-hour format (HH) for European timezones, 12-hour (h) for others
+      const timeFormat = is24HourFormat ? "HH:mm" : "h:mm a";
+      return format(nextRunDate, `MMM d, yyyy 'at' ${timeFormat}`);
+      
     } catch (error) {
       console.error("Error formatting next run date:", error);
       return "Error";
@@ -183,6 +192,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   <span className="text-sm">{job.groupName || "Default"}</span>
                 </div>
               </div>
+
               <div className="w-1/6 flex items-center">
                 <NextRunsPopover 
                   scheduleExpression={job.scheduleExpression}
@@ -191,7 +201,7 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                   endTime={job.endTime}
                   status={job.status}
                 />
-                <span className="text-sm ml-2">{formatNextRunDate(job.nextRun)}</span>
+                <span className="text-sm ml-2">{formatNextRunDate(job.nextRun, job.timezone)}</span>
               </div>
 
               <div className="w-1/6">
