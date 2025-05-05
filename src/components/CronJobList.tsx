@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Play, Pause, Edit, Trash, Clock, Calendar, ArrowDown, ArrowUp, Globe, Code, Terminal, FolderTree, Briefcase, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import { getTargetTypeIcon, targetTypeLabels } from "@/utils/targetTypeIcons";
 import { getIconComponent } from "@/components/groups/utils";
 import { format } from "date-fns";
 import AwsCliScriptDialog from "./AwsCliScriptDialog";
+import { parseSchedule } from "@/utils/cronParser";
 
 interface CronJobListProps {
   jobs: CronJob[];
@@ -77,6 +77,16 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
     } catch (error) {
       console.error("Error formatting next run date:", error);
       return "Error";
+    }
+  };
+
+  // Get natural language description of cron expression
+  const getNaturalLanguage = (cronExpression: string): string => {
+    try {
+      return parseSchedule(cronExpression);
+    } catch (error) {
+      console.error("Error parsing cron expression:", error);
+      return "";
     }
   };
 
@@ -161,7 +171,11 @@ const CronJobList = ({ jobs, onEdit, onDelete, onToggleStatus }: CronJobListProp
                     {job.timezone || "UTC"}
                   </span>
                 </p>
+                <p className="text-xs text-blue-600 italic mt-0.5">
+                  {getNaturalLanguage(job.scheduleExpression)}
+                </p>
               </div>
+              
               <div className="w-1/6">
                 <div className="flex items-center">
                   {getGroupIcon(job.groupIcon)}
