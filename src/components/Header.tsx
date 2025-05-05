@@ -3,6 +3,7 @@
 // This file is read-only, so we'll need to create a wrapper instead
 
 import { History } from "lucide-react";
+import { useEffect } from "react";
 
 const HeaderWrapper = () => {
   // This is a wrapper that will be used in place of the original Header component
