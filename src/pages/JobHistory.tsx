@@ -103,12 +103,12 @@ const JobHistory = () => {
               {/* Job Filter */}
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-muted-foreground" />
-                <Select value={selectedJobId || ''} onValueChange={(value) => setSelectedJobId(value || null)}>
+                <Select value={selectedJobId || "all"} onValueChange={(value) => setSelectedJobId(value === "all" ? null : value)}>
                   <SelectTrigger className="min-w-[200px]">
                     <SelectValue placeholder="All Jobs" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Jobs</SelectItem>
+                    <SelectItem value="all">All Jobs</SelectItem>
                     {jobs.map(job => (
                       <SelectItem key={job.id} value={job.id}>{job.name}</SelectItem>
                     ))}
@@ -119,12 +119,12 @@ const JobHistory = () => {
               {/* Status Filter */}
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={selectedStatus || ''} onValueChange={(value) => setSelectedStatus(value || null)}>
+                <Select value={selectedStatus || "all"} onValueChange={(value) => setSelectedStatus(value === "all" ? null : value)}>
                   <SelectTrigger className="min-w-[200px]">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="Running">Running</SelectItem>
                     <SelectItem value="Finished">Finished</SelectItem>
                     <SelectItem value="Failed">Failed</SelectItem>
