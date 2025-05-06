@@ -15,17 +15,17 @@ const Header = () => {
     <header className="bg-background border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-2">
-          <CalendarClock className="h-6 w-6 text-accent" />
-          <h1 className="text-2xl font-semibold font-mono">
-            <Link to="/">Scheduler</Link>
-          </h1>
+          <Link to="/" className="flex items-center gap-2 z-50">
+            <CalendarClock className="h-6 w-6 text-accent" />
+            <h1 className="text-2xl font-semibold font-mono">Scheduler</h1>
+          </Link>
         </div>
         <nav className="hidden md:flex space-x-4">
           <Button
             asChild
             variant={isActive("/") ? "default" : "ghost"}
           >
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 z-50">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </Link>
