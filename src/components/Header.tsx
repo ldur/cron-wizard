@@ -1,21 +1,32 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, UsersRound, Settings, CalendarClock, Target, History } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Function to check if a path is active
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
+  // Function to force navigation even when in edit mode
+  const forceNavigate = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(path);
+  };
+
   return (
     <header className="bg-background border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2 z-50">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 z-50"
+            onClick={forceNavigate("/")}
+          >
             <CalendarClock className="h-6 w-6 text-accent" />
             <h1 className="text-2xl font-semibold font-mono">Scheduler</h1>
           </Link>
@@ -25,7 +36,11 @@ const Header = () => {
             asChild
             variant={isActive("/") ? "default" : "ghost"}
           >
-            <Link to="/" className="flex items-center gap-2 z-50">
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 z-50"
+              onClick={forceNavigate("/")}
+            >
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </Link>
