@@ -13,8 +13,8 @@ const Header = () => {
   };
 
   // Function to force navigation even when in edit mode
-  const forceNavigate = (path: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
+  const forceNavigate = (path: string) => {
+    // Using direct navigation instead of handling through click events
     navigate(path);
   };
 
@@ -22,28 +22,23 @@ const Header = () => {
     <header className="bg-background border-b">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-2">
-          <Link 
-            to="/" 
-            className="flex items-center gap-2 z-50"
-            onClick={forceNavigate("/")}
+          {/* Using a div with onClick instead of Link for more direct control */}
+          <div 
+            className="flex items-center gap-2 cursor-pointer z-50"
+            onClick={() => forceNavigate("/")}
           >
             <CalendarClock className="h-6 w-6 text-accent" />
             <h1 className="text-2xl font-semibold font-mono">Scheduler</h1>
-          </Link>
+          </div>
         </div>
         <nav className="hidden md:flex space-x-4">
           <Button
-            asChild
             variant={isActive("/") ? "default" : "ghost"}
+            onClick={() => forceNavigate("/")}
+            className="flex items-center gap-2 z-50"
           >
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 z-50"
-              onClick={forceNavigate("/")}
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </Link>
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
           </Button>
 
           <Button
